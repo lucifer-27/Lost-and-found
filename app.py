@@ -9,7 +9,7 @@ def get_db_connection():
         host="localhost",
         user="root",
         password="Ansh*270406",
-        database="lostfound"
+        database="LostAndFound"
     )
 
 @app.route("/", methods=["GET", "POST"])
