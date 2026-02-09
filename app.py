@@ -19,31 +19,45 @@ def login():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
+        role = request.form["role"]
 
         # Basic college email validation
         if not re.match(r".+@college\.edu$", email):
             error = "Use your college email ID"
-            return render_template("login.html", error=error)
+            return render_template("index.html", error=error)
 
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM users WHERE email=%s AND password=%s",
-            (email, password)
+            "SELECT role FROM users WHERE email=%s AND password=%s AND role=%",
+            (email, password,role)
         )
         user = cursor.fetchone()
         conn.close()
 
         if user:
-            return redirect(url_for("home"))
+            if role == "student":
+                return redirect(url_for("student"))
+            elif role == "staff":
+                return redirect(url_for("staff"))
+            elif role == "admin":
+                return redirect(url_for("admin"))
         else:
             error = "Invalid email or password"
 
     return render_template("login.html", error=error)
 
-@app.route("/home")
-def home():
-    return render_template("home.html")
+@app.route("/student")
+def student():
+    return "<h1>Student Dashboard</h1>"
+
+@app.route("/staff")
+def staff():
+    return "<h1>Staff Dashboard</h1>"
+
+@app.route("/admin")
+def admin():
+    return "<h1>Admin Dashboard</h1>"
 
 if __name__ == "__main__":
     app.run(debug=True)
