@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
 import re
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 
 def get_db_connection():
     return mysql.connector.connect(
@@ -21,7 +21,6 @@ def login():
         password = request.form["password"]
         role = request.form["role"]
 
-        # Basic college email validation
         if not re.match(r".+@college\.edu$", email):
             error = "Use your college email ID"
             return render_template("index.html", error=error)
@@ -29,8 +28,8 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT role FROM users WHERE email=%s AND password=%s AND role=%",
-            (email, password,role)
+            "SELECT role FROM users WHERE email=%s AND password=%s AND role=%s",
+            (email, password, role)
         )
         user = cursor.fetchone()
         conn.close()
@@ -43,10 +42,9 @@ def login():
             elif role == "admin":
                 return redirect(url_for("admin"))
         else:
-            error = "Invalid email or password"
+            error = "Invalid email, password, or role"
 
     return render_template("index.html", error=error)
-
 
 @app.route("/student")
 def student():
