@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFind - Digital Lost & Found</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="material-symbols-rounded">search</span>
+                CampusFind
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#browse" class="nav-link">Browse Items</a>
+                <a href="#about" class="nav-link">About Us</a>
+                <a href="#help" class="nav-link">Help Center</a>
+            </div>
+            <div class="nav-actions">
+                <a href="#login" class="btn btn-primary">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Home Section -->
+        <section id="home" class="section active-section">
+            <!-- Hero Section -->
+            <div class="hero">
+                <div class="hero-icon">
+                    <span class="material-symbols-rounded">search</span>
+                </div>
+                <h1 class="hero-title">CampusFind</h1>
+                <p class="hero-subtitle">Your Digital Lost & Found Portal</p>
+                <p class="hero-description">Helping students reunite with their belongings</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="container">
+                <h2 class="section-title">📊 Platform Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">247</div>
+                        <div class="stat-label">Items Found</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">189</div>
+                        <div class="stat-label">Items Returned</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">1.2k</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">95%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <h2 class="section-title">📁 Browse by Category</h2>
+                <div class="category-grid">
+                    <div class="category-card">
+                        <span class="material-symbols-rounded category-icon">devices</span>
+                        <h3>Electronics</h3>
+                        <p>Phones, laptops, chargers</p>
+                    </div>
+                    <div class="category-card">
+                        <span class="material-symbols-rounded category-icon">menu_book</span>
+                        <h3>Books</h3>
+                        <p>Textbooks, notebooks</p>
+                    </div>
+                    <div class="category-card">
+                        <span class="material-symbols-rounded category-icon">checkroom</span>
+                        <h3>Clothing</h3>
+                        <p>Jackets, bags, accessories</p>
+                    </div>
+                    <div class="category-card">
+                        <span class="material-symbols-rounded category-icon">key</span>
+                        <h3>Keys</h3>
+                        <p>Room keys, car keys</p>
+                    </div>
+                    <div class="category-card">
+                        <span class="material-symbols-rounded category-icon">badge</span>
+                        <h3>IDs & Cards</h3>
+                        <p>Student IDs, credit cards</p>
+                    </div>
+                    <div class="category-card">
+                        <span class="material-symbols-rounded category-icon">category</span>
+                        <h3>Others</h3>
+                        <p>Miscellaneous items</p>
+                    </div>
+                </div>
+
+                <!-- Recent Items -->
+                <h2 class="section-title">🔔 Recently Reported Items</h2>
+                <div class="items-container">
+                    <!-- Item 1 -->
+                    <div class="item-card">
+                        <div class="item-image">
+                            <img src="https://picsum.photos/400/300?random=1" alt="Apple AirPods Pro">
+                        </div>
+                        <div class="item-content">
+                            <h3 class="item-title">Apple AirPods Pro</h3>
+                            <div class="item-badges">
+                                <span class="badge badge-pending">PENDING</span>
+                                <span class="badge badge-category-electronics">Electronics</span>
+                                <span class="badge badge-found">🟢 Found</span>
+                            </div>
+                            <p class="item-description">Found in the library 2nd floor quiet zone. White case with a scratch.</p>
+                            <div class="item-details">
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">location_on</span>
+                                    <span>Main Library</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">calendar_today</span>
+                                    <span>2023-10-24</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">schedule</span>
+                                    <span>2h ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="item-card">
+                        <div class="item-image">
+                            <img src="https://picsum.photos/400/300?random=2" alt="Blue Denim Jacket">
+                        </div>
+                        <div class="item-content">
+                            <h3 class="item-title">Blue Denim Jacket</h3>
+                            <div class="item-badges">
+                                <span class="badge badge-verified">VERIFIED</span>
+                                <span class="badge badge-category-clothing">Clothing</span>
+                                <span class="badge badge-found">🟢 Found</span>
+                            </div>
+                            <p class="item-description">Left on the chair in the cafeteria near the window.</p>
+                            <div class="item-details">
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">location_on</span>
+                                    <span>Student Union Cafe</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">calendar_today</span>
+                                    <span>2023-10-24</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">schedule</span>
+                                    <span>5h ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="item-card">
+                        <div class="item-image">
+                            <img src="https://picsum.photos/400/300?random=3" alt="Calculus Textbook">
+                        </div>
+                        <div class="item-content">
+                            <h3 class="item-title">Calculus Textbook</h3>
+                            <div class="item-badges">
+                                <span class="badge badge-verified">VERIFIED</span>
+                                <span class="badge badge-category-books">Books</span>
+                                <span class="badge badge-lost">🔴 Lost</span>
+                            </div>
+                            <p class="item-description">Lost somewhere between Science Block A and the Gym.</p>
+                            <div class="item-details">
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">location_on</span>
+                                    <span>Science Block</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">calendar_today</span>
+                                    <span>2023-10-23</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">schedule</span>
+                                    <span>1d ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="item-card">
+                        <div class="item-image">
+                            <img src="https://picsum.photos/400/300?random=4" alt="Silver Hydroflask">
+                        </div>
+                        <div class="item-content">
+                            <h3 class="item-title">Silver Hydroflask</h3>
+                            <div class="item-badges">
+                                <span class="badge badge-pending">PENDING</span>
+                                <span class="badge badge-category-others">Others</span>
+                                <span class="badge badge-found">🟢 Found</span>
+                            </div>
+                            <p class="item-description">Found in the locker room.</p>
+                            <div class="item-details">
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">location_on</span>
+                                    <span>Gym</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">calendar_today</span>
+                                    <span>2023-10-22</span>
+                                </div>
+                                <div class="item-detail">
+                                    <span class="material-symbols-rounded">schedule</span>
+                                    <span>2d ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Login Section -->
+        <section id="login" class="section">
+            <div class="container-small">
+                <div class="login-container">
+                    <h1 class="login-title">🔐 Login to CampusFind</h1>
+                    <p class="login-subtitle">Select your role to continue</p>
+                    
+                    <div class="login-buttons">
+                        <a href="#student-dashboard" class="login-card">
+                            <span class="material-symbols-rounded login-icon">school</span>
+                            <h3>Student Login</h3>
+                            <p>Access your dashboard and report items</p>
+                        </a>
+                        
+                        <a href="#admin-dashboard" class="login-card">
+                            <span class="material-symbols-rounded login-icon">admin_panel_settings</span>
+                            <h3>Admin Login</h3>
+                            <p>Verify and manage submissions</p>
+                        </a>
+                        
+                        <a href="#security-dashboard" class="login-card">
+                            <span class="material-symbols-rounded login-icon">shield</span>
+                            <h3>Security Login</h3>
+                            <p>Coordinate item returns</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Browse Section -->
+        <section id="browse" class="section">
+            <div class="container">
+                <h1 class="page-title">🔍 Browse Items</h1>
+                
+                <!-- Filters -->
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="type-filter">Type</label>
+                        <select id="type-filter" class="filter-select">
+                            <option>All</option>
+                            <option>Lost</option>
+                            <option>Found</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="category-filter">Category</label>
+                        <select id="category-filter" class="filter-select">
+                            <option>All</option>
+                            <option>Electronics</option>
+                            <option>Books</option>
+                            <option>Clothing</option>
+                            <option>Keys</option>
+                            <option>IDs & Cards</option>
+                            <option>Others</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="status-filter">Status</label>
+                        <select id="status-filter" class="filter-select">
+                            <option>All</option>
+                            <option>Pending</option>
+                            <option>Verified</option>
+                            <option>Rejected</option>
+                            <option>Returned</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <span class="material-symbols-rounded search-icon">search</span>
+                    <input type="text" class="search-input" placeholder="Search by title, description, or location...">
+                </div>
+                
+                <p class="results-count"><strong>4 items found</strong></p>
+                
+                <!-- Same items list as home -->
+                <div class="items-container">
+                    <!-- Items would repeat here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section">
+            <div class="container">
+                <h1 class="page-title">ℹ️ About CampusFind</h1>
+                
+                <div class="content-card">
+                    <h2>Our Mission</h2>
+                    <p>CampusFind is a centralized Digital Lost & Found portal designed to help university students reunite with their lost belongings quickly and efficiently.</p>
+                    
+                    <h2>How It Works</h2>
+                    <ol>
+                        <li><strong>Report:</strong> Students can report lost or found items with details and images</li>
+                        <li><strong>Verify:</strong> Admin team reviews and verifies all submissions</li>
+                        <li><strong>Browse:</strong> Students can search through verified items</li>
+                        <li><strong>Coordinate:</strong> Security personnel help facilitate returns</li>
+                    </ol>
+                    
+                    <h2>Features</h2>
+                    <ul>
+                        <li>🔐 Role-based access (Student, Admin, Security)</li>
+                        <li>📸 Image upload support</li>
+                        <li>🏷️ Smart categorization</li>
+                        <li>✅ Admin verification workflow</li>
+                        <li>🔍 Advanced search and filtering</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Help Section -->
+        <section id="help" class="section">
+            <div class="container">
+                <h1 class="page-title">❓ Help Center</h1>
+                
+                <div class="faq-container">
+                    <details class="faq-item">
+                        <summary class="faq-question">How do I report a lost item?</summary>
+                        <div class="faq-answer">
+                            <p>Click on 'Login', select Student, then click 'Report' and fill in the item details.</p>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary class="faq-question">How long does verification take?</summary>
+                        <div class="faq-answer">
+                            <p>Our admin team typically verifies items within 24 hours.</p>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary class="faq-question">Can I edit my report after submission?</summary>
+                        <div class="faq-answer">
+                            <p>Please contact admin support for any changes to submitted reports.</p>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary class="faq-question">How do I claim an item?</summary>
+                        <div class="faq-answer">
+                            <p>Contact the person who found the item using the contact information provided, or visit the Security office.</p>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary class="faq-question">Who can access this platform?</summary>
+                        <div class="faq-answer">
+                            <p>All registered students, admin staff, and security personnel can access CampusFind.</p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 CampusFind. All rights reserved.</p>
+            <p>Helping students reunite with their belongings</p>
+        </div>
+    </footer>
+</body>
+</html>
