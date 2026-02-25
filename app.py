@@ -29,7 +29,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    role = db.Column(db.String(20), nullable=False)   # student / staff
+    role = db.Column(db.String(20), nullable=False)   # student / staff / admin
     password_hash = db.Column(db.String(200), nullable=False)
 
 
@@ -44,7 +44,6 @@ class Item(db.Model):
     status = db.Column(db.String(20), default="active")
     reported_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 # create database
 with app.app_context():
@@ -69,14 +68,20 @@ def register():
         role = request.form.get("role")
         password = request.form.get("password")
         confirm = request.form.get("confirm_password")
+        admin_code = request.form.get("admin_code")
 
         # password match
         if password != confirm:
             return render_template("register.html", error="Passwords do not match")
 
-        # PDEU email validation
+        # PDPU email validation
         if not re.match(r"^[A-Za-z0-9]+@[A-Za-z0-9]+\.pdpu\.ac\.in$", email.lower()):
             return render_template("register.html", error="Use college email: rollno@dept.pdpu.ac.in")
+
+        # protect admin creation
+        if role == "admin":
+            if admin_code != "campusadmin123":
+                return render_template("register.html", error="Invalid admin code")
 
         # check duplicate
         existing = User.query.filter_by(email=email).first()
@@ -125,8 +130,10 @@ def login():
 
             if role == "student":
                 return redirect(url_for("student"))
-            else:
+            elif role == "staff":
                 return redirect(url_for("staff"))
+            elif role == "admin":
+                return redirect(url_for("admin"))
 
         return render_template("login.html", error="Invalid email or password")
 
@@ -150,6 +157,23 @@ def staff():
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
     return render_template("staff.html")
+
+# 🟣 ADMIN DASHBOARD
+@app.route("/admin")
+def admin():
+    if "user" not in session or session.get("role") != "admin":
+        return redirect(url_for("login"))
+
+    total_users = User.query.count()
+    total_items = Item.query.count()
+    active_items = Item.query.filter_by(status="active").count()
+
+    return render_template(
+        "admin.html",
+        total_users=total_users,
+        total_items=total_items,
+        active_items=active_items
+    )
 
 # ---------------- ITEMS ----------------
 @app.route("/items")
