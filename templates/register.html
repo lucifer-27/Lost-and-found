@@ -1,205 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Register | CampusFind</title>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Register | CampusFind</title>
 
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-<!-- Google Fonts: Inter -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-<style>
-    body { font-family: 'Inter', sans-serif; }
-    .hover-lift {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .hover-lift:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
-    }
-</style>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
 
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    primary: '#0071e3',
-                    brandGray: '#f5f5f7',
-                },
-                borderRadius: {
-                    'card': '12px',
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0071e3',
+                        brandGray: '#f5f5f7',
+                    },
+                    borderRadius: {
+                        'card': '12px',
+                    }
                 }
             }
         }
-    }
-</script>
+    </script>
 </head>
 
 <body class="bg-brandGray min-h-screen flex items-center justify-center p-4">
 
-<main class="w-full max-w-md">
-    <section class="bg-white p-8 shadow-xl rounded-card border border-gray-100">
+    <main class="w-full max-w-md">
+        <section class="bg-white p-8 shadow-xl rounded-card border border-gray-100">
 
-        <!-- Logo -->
-        <div class="flex flex-col items-center mb-8">
-            <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-                <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                </svg>
-            </div>
-            <h1 class="text-2xl font-bold text-gray-900">Create Account</h1>
-            <p class="text-sm text-gray-500 mt-1">Join CampusFind at PDEU</p>
-        </div>
-
-        <!-- ✅ Flask error message -->
-        {% if error %}
-        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
-            {{ error }}
-        </div>
-        {% endif %}
-
-        <!-- ✅ Flask success message -->
-        {% if success %}
-        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
-            {{ success }}
-        </div>
-        {% endif %}
-
-        <!-- ✅ Form posts to Flask /register route -->
-        <form action="/register" method="POST" class="space-y-5">
-
-            <!-- Full Name -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="full_name">Full Name</label>
-                <input
-                    id="full_name" name="full_name" type="text"
-                    placeholder="e.g. Ansh Raval"
-                    required
-                    class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"/>
-            </div>
-
-            <!-- Email -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="email">College Email</label>
-                <input
-                    id="email" name="email" type="email"
-                    placeholder="rollno@dept.pdpu.ac.in"
-                    pattern=".+@.+\.pdpu\.ac\.in"
-                    title="Use your college email — rollno@dept.pdpu.ac.in"
-                    required
-                    class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"/>
-                <p class="text-xs text-gray-400 mt-1">Format: rollno@dept.pdpu.ac.in</p>
-            </div>
-
-            <!-- Role -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="role">Register As</label>
-                <select
-                    id="role" name="role" required
-                    class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white">
-                    <option value="">-- Select Role --</option>
-                    <option value="student">Student</option>
-                    <option value="staff">Security Staff</option>
-                    <option value="admin">Admin</option>
-                </select>
-            </div>
-
-            <!-- Roll No + Department side by side -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="roll_no">Roll Number</label>
-                    <input
-                        id="roll_no" name="roll_no" type="text"
-                        placeholder="e.g. 24BCP122"
-                        required
-                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"/>
+            <!-- Logo -->
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                    <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                    </svg>
                 </div>
+                <h1 class="text-2xl font-bold text-gray-900">Create Account</h1>
+                <p class="text-sm text-gray-500 mt-1">Join CampusFind at PDEU</p>
+            </div>
+
+            {% if error %}
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if success %}
+            <div
+                class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
+                {{ success }}
+            </div>
+            {% endif %}
+
+            <form action="{{ url_for('register') }}" method="POST" class="space-y-5">
+
+                <!-- Email -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="department">Department</label>
-                    <select
-                        id="department" name="department" required
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="email">College Email</label>
+                    <input id="email" name="email" type="email" placeholder="rollno@pdpu.ac.in"
+                        pattern=".+@pdpu\.ac\.in" title="Use your PDEU email" required
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                    <p class="text-xs text-gray-400 mt-1">Format: rollno@pdpu.ac.in</p>
+                </div>
+
+                <!-- Role -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="role">Register As</label>
+                    <select id="role" name="role" required
                         class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white">
-                        <option value="">Select</option>
-                        <option value="bcp">BCP</option>
-                        <option value="bce">BCE</option>
-                        <option value="bcs">BCS</option>
-                        <option value="bme">BME</option>
-                        <option value="bec">BEC</option>
-                        <option value="bch">BCH</option>
-                        <option value="other">Other</option>
+                        <option value="">-- Select Role --</option>
+                        <option value="student">Student</option>
+                        <option value="staff">Security Staff</option>
                     </select>
                 </div>
+
+                <!-- Roll Number (NO placeholder now) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="roll_no">Roll Number</label>
+                    <input id="roll_no" name="roll_no" type="text" required
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Password</label>
+                    <input id="password" name="password" type="password" minlength="8" required
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="confirm_password">Confirm
+                        Password</label>
+                    <input id="confirm_password" name="confirm_password" type="password" minlength="8" required
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                </div>
+
+                <!-- Terms -->
+                <div class="flex items-start gap-2">
+                    <input id="terms" name="terms" type="checkbox" required
+                        class="h-4 w-4 mt-0.5 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer" />
+                    <label class="text-sm text-gray-600 cursor-pointer" for="terms">
+                        I agree to the
+                        <a href="#" class="text-primary font-medium hover:underline">Terms of Service</a>
+                        and
+                        <a href="#" class="text-primary font-medium hover:underline">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit"
+                        class="hover-lift w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all text-base flex items-center justify-center">
+                        Create Account
+                    </button>
+                </div>
+
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray-600 mb-2">
+                    Already have an account?
+                    <a class="font-medium text-primary hover:underline" href="/login">Login here</a>
+                </p>
             </div>
 
-            <!-- Password -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Password</label>
-                <input
-                    id="password" name="password" type="password"
-                    placeholder="Min. 8 characters"
-                    minlength="8"
-                    required
-                    class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"/>
-            </div>
+        </section>
 
-            <!-- Confirm Password -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="confirm_password">Confirm Password</label>
-                <input
-                    id="confirm_password" name="confirm_password" type="password"
-                    placeholder="Re-enter your password"
-                    minlength="8"
-                    required
-                    class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors"/>
-            </div>
-
-            <!-- Terms -->
-            <div class="flex items-start gap-2">
-                <input id="terms" name="terms" type="checkbox" required
-                    class="h-4 w-4 mt-0.5 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer"/>
-                <label class="text-sm text-gray-600 cursor-pointer" for="terms">
-                    I agree to the
-                    <a href="#" class="text-primary font-medium hover:underline">Terms of Service</a>
-                    and
-                    <a href="#" class="text-primary font-medium hover:underline">Privacy Policy</a>
-                </label>
-            </div>
-
-            <!-- Submit -->
-            <div class="pt-2">
-                <button
-                    type="submit"
-                    class="hover-lift w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all text-base flex items-center justify-center">
-                    Create Account
-                </button>
-            </div>
-
-        </form>
-
-        <!-- Footer links -->
-        <div class="mt-8 text-center">
-            <p class="text-sm text-gray-600 mb-2">
-                Already have an account?
-                <a class="font-medium text-primary hover:underline" href="/login">Login here</a>
-            </p>
-            <p class="text-sm text-gray-600">
-                Trouble registering?
-                <a class="font-medium text-primary hover:underline" href="#">Contact Support</a>
-            </p>
-        </div>
-
-    </section>
-
-    <p class="mt-6 text-center text-xs text-gray-400">
-        © 2025 CampusFind — PDEU. All rights reserved.
-    </p>
-</main>
+        <p class="mt-6 text-center text-xs text-gray-400">
+            © 2026 CampusFind — PDEU. All rights reserved.
+        </p>
+    </main>
 
 </body>
+
 </html>
