@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Security Staff Dashboard - CampusFind</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans">
+
+<!-- NAVIGATION -->
+<nav class="bg-blue-900 text-white shadow-md">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between h-16 items-center">
+
+<div class="flex-shrink-0 flex items-center">
+<span class="text-xl font-bold tracking-tight">
+CampusFind<span class="text-blue-400">Staff</span>
+</span>
+</div>
+
+<div class="hidden md:flex space-x-8 items-center">
+
+<a class="hover:text-blue-300 font-medium" href="/report-found">
+Report Found Item
+</a>
+
+<a class="hover:text-blue-300 font-medium" href="/items">
+View All Items
+</a>
+
+<a class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-semibold"
+href="/logout">
+Logout
+</a>
+
+</div>
+
+</div>
+</div>
+</nav>
+
+<!-- HERO -->
+<header class="bg-blue-800 py-12 px-4 border-b border-blue-700">
+<div class="max-w-7xl mx-auto text-center md:text-left">
+<h1 class="text-3xl md:text-4xl font-extrabold text-white">
+Security Dashboard
+</h1>
+<p class="mt-2 text-blue-100 text-lg">
+Manage lost property and verify claims.
+</p>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+<!-- QUICK ACTIONS -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+
+<a class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-500 hover:shadow-md transition-all"
+href="/report-found">
+<h3 class="text-lg font-bold text-slate-800">Report Found Item</h3>
+<p class="text-sm text-slate-500 mt-1">Log a recovered item.</p>
+</a>
+
+<a class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-500 hover:shadow-md transition-all"
+href="/items">
+<h3 class="text-lg font-bold text-slate-800">View All Items</h3>
+<p class="text-sm text-slate-500 mt-1">Search the inventory.</p>
+</a>
+
+<a class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-500 hover:shadow-md transition-all"
+href="/claim">
+<h3 class="text-lg font-bold text-slate-800">Process Claims</h3>
+<p class="text-sm text-slate-500 mt-1">Verify ownership and return item.</p>
+</a>
+
+<a class="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-blue-500 hover:shadow-md transition-all"
+href="/notifications">
+<h3 class="text-lg font-bold text-slate-800">Notifications</h3>
+<p class="text-sm text-slate-500 mt-1">System alerts and updates.</p>
+</a>
+
+</section>
+
+<!-- RECENT ITEMS TABLE -->
+<section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
+<div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+<h2 class="text-xl font-bold text-slate-800">Recently Found Items</h2>
+</div>
+
+<div class="p-10 text-center text-slate-500">
+Use "Process Claims" to verify student ownership and return items.
+</div>
+
+</section>
+
+</main>
+
+<footer class="mt-12 py-8 bg-slate-100 border-t border-slate-200">
+<div class="max-w-7xl mx-auto px-4 text-center">
+<p class="text-sm text-slate-500">
+© 2025 CampusFind Security Administration
+</p>
+</div>
+</footer>
+
+</body>
+</html>

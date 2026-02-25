@@ -1,414 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusFind - Digital Lost & Found</title>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CampusFind | PDEU Lost &amp; Found Portal</title>
 
-    
+
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'brand-blue':   '#0071e3',
+                    'brand-purple': '#7c3aed',
+                },
+                borderRadius: {
+                    'custom': '12px',
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    @keyframes float {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      50%  { transform: translateY(-20px) rotate(5deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+    .animate-float          { animation: float 6s ease-in-out infinite; }
+    .animate-float-delayed  { animation: float 8s ease-in-out infinite; animation-delay: 2s; }
+    .hero-gradient          { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+    ::-webkit-scrollbar       { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <span class="material-symbols-rounded">search</span>
-                CampusFind
+
+<body class="bg-slate-50 text-slate-900 font-sans">
+
+<!-- ===== NAVBAR ===== -->
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <span class="material-icons text-brand-blue text-3xl">search</span>
+                <span class="text-2xl font-bold tracking-tight text-brand-blue">CampusFind</span>
             </div>
-            <div class="nav-links">
-                <a href="#home" class="nav-link active">Home</a>
-                <a href="#browse" class="nav-link">Browse Items</a>
-                <a href="#about" class="nav-link">About Us</a>
-                <a href="#help" class="nav-link">Help Center</a>
+
+            <!-- Nav Links -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">Home</a>
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="/items">Browse Items</a>
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">About Us</a>
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">Help Center</a>
             </div>
-            <div class="nav-actions">
-                <a href="#login" class="btn btn-primary">Login</a>
+
+            <!-- Login button — goes to login.html -->
+            <div class="flex items-center">
+                {% if session.get('user') %}
+                    <a href="{{ url_for('logout') }}"
+                    class="bg-red-500 text-white px-6 py-2 rounded-custom font-semibold text-sm">
+                    Logout
+                    </a>
+                {% else %}
+                    <a href="/login"
+                    class="bg-brand-blue text-white px-6 py-2 rounded-custom font-semibold text-sm">
+                    Login
+                    </a>
+                {% endif %}
             </div>
+
         </div>
     </nav>
+</header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Home Section -->
-        <section id="home" class="section active-section">
-            <!-- Hero Section -->
-            <div class="hero">
-                <div class="hero-icon">
-                    <span class="material-symbols-rounded">search</span>
-                </div>
-                <h1 class="hero-title">CampusFind</h1>
-                <p class="hero-subtitle">Your Digital Lost & Found Portal</p>
-                <p class="hero-description">Helping students reunite with their belongings</p>
+<main>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero-gradient relative overflow-hidden py-20 lg:py-32">
+        <!-- Floating shapes (pure CSS animation) -->
+        <div class="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full animate-float blur-sm"></div>
+        <div class="absolute bottom-10 right-20 w-32 h-32 bg-white/20 rounded-lg animate-float-delayed blur-sm"></div>
+        <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full animate-float"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center text-white">
+            <h1 class="lg:text-7xl font-extrabold mb-6 drop-shadow-lg text-4xl">CampusFind</h1>
+            <p class="text-xl lg:text-2xl font-light mb-10 opacity-90 max-w-2xl mx-auto">
+                Your Digital Lost &amp; Found Portal for PDEU. Helping you reconnect with your belongings swiftly and securely.
+            </p>
+
+            <!--  Both buttons go to login page -->
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                {% if session.get('user') %}
+
+                <a href="/report-found"
+                    class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
+                    I Found Something
+                </a>
+
+                <a href="/report-lost"
+                    class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
+                    I Lost Something
+                </a>
+
+                {% else %}
+
+                <a href="/login"
+                    class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
+                    I Found Something
+                </a>
+
+                <a href="/login"
+                    class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
+                    I Lost Something
+                </a>
+
+                {% endif %}   
             </div>
+    </section>
 
-            <!-- Statistics -->
-            <div class="container">
-                <h2 class="section-title">📊 Platform Statistics</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number">247</div>
-                        <div class="stat-label">Items Found</div>
+    <!-- ===== STATISTICS ===== -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-4 gap-8 grid-cols-1 sm:grid-cols-2">
+
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">inventory_2</span>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number">189</div>
-                        <div class="stat-label">Items Returned</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">1.2k</div>
-                        <div class="stat-label">Active Users</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">95%</div>
-                        <div class="stat-label">Success Rate</div>
-                    </div>
+                    <div class="text-3xl font-bold text-slate-800">1,240+</div>
+                    <div class="text-slate-500 text-sm">Items Found</div>
                 </div>
 
-                <!-- Categories -->
-                <h2 class="section-title">📁 Browse by Category</h2>
-                <div class="category-grid">
-                    <div class="category-card">
-                        <span class="material-symbols-rounded category-icon">devices</span>
-                        <h3>Electronics</h3>
-                        <p>Phones, laptops, chargers</p>
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">handshake</span>
                     </div>
-                    <div class="category-card">
-                        <span class="material-symbols-rounded category-icon">menu_book</span>
-                        <h3>Books</h3>
-                        <p>Textbooks, notebooks</p>
-                    </div>
-                    <div class="category-card">
-                        <span class="material-symbols-rounded category-icon">checkroom</span>
-                        <h3>Clothing</h3>
-                        <p>Jackets, bags, accessories</p>
-                    </div>
-                    <div class="category-card">
-                        <span class="material-symbols-rounded category-icon">key</span>
-                        <h3>Keys</h3>
-                        <p>Room keys, car keys</p>
-                    </div>
-                    <div class="category-card">
-                        <span class="material-symbols-rounded category-icon">badge</span>
-                        <h3>IDs & Cards</h3>
-                        <p>Student IDs, credit cards</p>
-                    </div>
-                    <div class="category-card">
-                        <span class="material-symbols-rounded category-icon">category</span>
-                        <h3>Others</h3>
-                        <p>Miscellaneous items</p>
-                    </div>
+                    <div class="text-3xl font-bold text-slate-800">850+</div>
+                    <div class="text-slate-500 text-sm">Items Returned</div>
                 </div>
 
-                <!-- Recent Items -->
-                <h2 class="section-title">🔔 Recently Reported Items</h2>
-                <div class="items-container">
-                    <!-- Item 1 -->
-                    <div class="item-card">
-                        <div class="item-image">
-                            <img src="https://picsum.photos/400/300?random=1" alt="Apple AirPods Pro">
-                        </div>
-                        <div class="item-content">
-                            <h3 class="item-title">Apple AirPods Pro</h3>
-                            <div class="item-badges">
-                                <span class="badge badge-pending">PENDING</span>
-                                <span class="badge badge-category-electronics">Electronics</span>
-                                <span class="badge badge-found">🟢 Found</span>
-                            </div>
-                            <p class="item-description">Found in the library 2nd floor quiet zone. White case with a scratch.</p>
-                            <div class="item-details">
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">location_on</span>
-                                    <span>Main Library</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">calendar_today</span>
-                                    <span>2023-10-24</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">schedule</span>
-                                    <span>2h ago</span>
-                                </div>
-                            </div>
-                        </div>
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">groups</span>
                     </div>
-
-                    <!-- Item 2 -->
-                    <div class="item-card">
-                        <div class="item-image">
-                            <img src="https://picsum.photos/400/300?random=2" alt="Blue Denim Jacket">
-                        </div>
-                        <div class="item-content">
-                            <h3 class="item-title">Blue Denim Jacket</h3>
-                            <div class="item-badges">
-                                <span class="badge badge-verified">VERIFIED</span>
-                                <span class="badge badge-category-clothing">Clothing</span>
-                                <span class="badge badge-found">🟢 Found</span>
-                            </div>
-                            <p class="item-description">Left on the chair in the cafeteria near the window.</p>
-                            <div class="item-details">
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">location_on</span>
-                                    <span>Student Union Cafe</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">calendar_today</span>
-                                    <span>2023-10-24</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">schedule</span>
-                                    <span>5h ago</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Item 3 -->
-                    <div class="item-card">
-                        <div class="item-image">
-                            <img src="https://picsum.photos/400/300?random=3" alt="Calculus Textbook">
-                        </div>
-                        <div class="item-content">
-                            <h3 class="item-title">Calculus Textbook</h3>
-                            <div class="item-badges">
-                                <span class="badge badge-verified">VERIFIED</span>
-                                <span class="badge badge-category-books">Books</span>
-                                <span class="badge badge-lost">🔴 Lost</span>
-                            </div>
-                            <p class="item-description">Lost somewhere between Science Block A and the Gym.</p>
-                            <div class="item-details">
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">location_on</span>
-                                    <span>Science Block</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">calendar_today</span>
-                                    <span>2023-10-23</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">schedule</span>
-                                    <span>1d ago</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Item 4 -->
-                    <div class="item-card">
-                        <div class="item-image">
-                            <img src="https://picsum.photos/400/300?random=4" alt="Silver Hydroflask">
-                        </div>
-                        <div class="item-content">
-                            <h3 class="item-title">Silver Hydroflask</h3>
-                            <div class="item-badges">
-                                <span class="badge badge-pending">PENDING</span>
-                                <span class="badge badge-category-others">Others</span>
-                                <span class="badge badge-found">🟢 Found</span>
-                            </div>
-                            <p class="item-description">Found in the locker room.</p>
-                            <div class="item-details">
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">location_on</span>
-                                    <span>Gym</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">calendar_today</span>
-                                    <span>2023-10-22</span>
-                                </div>
-                                <div class="item-detail">
-                                    <span class="material-symbols-rounded">schedule</span>
-                                    <span>2d ago</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="text-3xl font-bold text-slate-800">5,000+</div>
+                    <div class="text-slate-500 text-sm">Active Users</div>
                 </div>
+
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">trending_up</span>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800">68%</div>
+                    <div class="text-slate-500 text-sm">Success Rate</div>
+                </div>
+
             </div>
-        </section>
-
-        <!-- Login Section -->
-<section id="login" class="section">
-    <div class="container-small">
-        <div class="login-container">
-            <h1 class="login-title">🔐 Login to CampusFind</h1>
-            <p class="login-subtitle">Use your college email to continue</p>
-
-            {% if error %}
-                <p class="error">{{ error }}</p>
-            {% endif %}
-
-            <form method="POST">
-                <input type="email"
-                        name="email"
-                        placeholder="College Email ID"
-                        required
-                        class="login-input">
-
-                <input type="password"
-                        name="password"
-                        placeholder="Password"
-                        required
-                        class="login-input">
-
-                <!-- 🔽 ADDED ROLE SELECT (IMPORTANT) -->
-                <select name="role" required class="login-input">
-                    <option value="">Login as</option>
-                    <option value="student">Student</option>
-                    <option value="staff">Staff</option>
-                    <option value="admin">Admin</option>
-                </select>
-
-                <button type="submit" class="btn btn-primary login-btn">
-                    Login
-                </button>
-            </form>
-
         </div>
-    </div>
-</section>
+    </section>
 
-        <!-- Browse Section -->
-        <section id="browse" class="section">
-            <div class="container">
-                <h1 class="page-title">🔍 Browse Items</h1>
-                
-                <!-- Filters -->
-                <div class="filters-container">
-                    <div class="filter-group">
-                        <label for="type-filter">Type</label>
-                        <select id="type-filter" class="filter-select">
-                            <option>All</option>
-                            <option>Lost</option>
-                            <option>Found</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="category-filter">Category</label>
-                        <select id="category-filter" class="filter-select">
-                            <option>All</option>
-                            <option>Electronics</option>
-                            <option>Books</option>
-                            <option>Clothing</option>
-                            <option>Keys</option>
-                            <option>IDs & Cards</option>
-                            <option>Others</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="status-filter">Status</label>
-                        <select id="status-filter" class="filter-select">
-                            <option>All</option>
-                            <option>Pending</option>
-                            <option>Verified</option>
-                            <option>Rejected</option>
-                            <option>Returned</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="search-container">
-                    <span class="material-symbols-rounded search-icon">search</span>
-                    <input type="text" class="search-input" placeholder="Search by title, description, or location...">
-                </div>
-                
-                <p class="results-count"><strong>4 items found</strong></p>
-                
-                <!-- Same items list as home -->
-                <div class="items-container">
-                    <!-- Items would repeat here -->
-                </div>
+    <!-- ===== CATEGORIES ===== -->
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-slate-800 mb-12 text-center">Browse by Category</h2>
+            <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-6 grid-cols-1 sm:grid-cols-2">
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">devices</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Electronics</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">description</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Documents</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">watch</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Accessories</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">vpn_key</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Keys</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">badge</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">IDs &amp; Cards</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">more_horiz</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Others</span>
+                </a>
+
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- About Section -->
-        <section id="about" class="section">
-            <div class="container">
-                <h1 class="page-title">ℹ️ About CampusFind</h1>
-                
-                <div class="content-card">
-                    <h2>Our Mission</h2>
-                    <p>CampusFind is a centralized Digital Lost & Found portal designed to help university students reunite with their lost belongings quickly and efficiently.</p>
-                    
-                    <h2>How It Works</h2>
-                    <ol>
-                        <li><strong>Report:</strong> Students can report lost or found items with details and images</li>
-                        <li><strong>Verify:</strong> Admin team reviews and verifies all submissions</li>
-                        <li><strong>Browse:</strong> Students can search through verified items</li>
-                        <li><strong>Coordinate:</strong> Security personnel help facilitate returns</li>
-                    </ol>
-                    
-                    <h2>Features</h2>
-                    <ul>
-                        <li>🔐 Role-based access (Student, Admin, Security)</li>
-                        <li>📸 Image upload support</li>
-                        <li>🏷️ Smart categorization</li>
-                        <li>✅ Admin verification workflow</li>
-                        <li>🔍 Advanced search and filtering</li>
+    <!-- ===== RECENT ITEMS ===== -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800">Recent Found Items</h2>
+                    <p class="text-slate-500 mt-2">Latest items reported by our community members</p>
+                </div>
+                <a class="text-brand-blue font-semibold flex items-center hover:underline" href="/items">
+                    View All <span class="material-icons text-sm ml-1">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                {% for item in recent_items %}
+                <div class="group bg-white rounded-custom border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
+                    <div class="relative h-48 bg-slate-100">
+                        {% if item.image_filename %}
+                        <img alt="{{ item.name }}" class="w-full h-full object-cover" src="{{ url_for('static', filename='uploads/' + item.image_filename) }}"/>
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                            <span class="material-icons text-gray-400 text-4xl">image_not_supported</span>
+                        </div>
+                        {% endif %}
+                        <span class="absolute top-3 right-3 {% if item.type == 'found' %}bg-green-500{% else %}bg-red-500{% endif %} text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">{{ item.type }}</span>
+                    </div>
+                    <div class="p-5">
+                        <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{{ item.category }}</span>
+                        <h3 class="font-bold text-slate-800 text-lg mt-2 mb-2 group-hover:text-brand-blue transition-colors">{{ item.name }}</h3>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">location_on</span>{{ item.location }}
+                            </div>
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">calendar_today</span>{{ item.date }}
+                            </div>
+                        </div>
+                        <a class="w-full mt-5 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-custom hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all inline-block text-center" href="/items">View Details</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-span-full text-center py-10 text-gray-500">
+                    No items reported recently.
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-icons text-white text-3xl">search</span>
+                        <span class="text-2xl font-bold tracking-tight text-white">CampusFind</span>
+                    </div>
+                    <p class="max-w-md mb-6 leading-relaxed">
+                        Dedicated to helping the PDEU community recover lost items. Our platform connects finders with owners through a secure and verified process.
+                    </p>
+                    <div class="flex gap-4">
+                        <a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all" href="#">
+                            <span class="material-icons text-xl">facebook</span>
+                        </a>
+                        <a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all" href="#">
+                            <span class="material-icons text-xl">alternate_email</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-6">Quick Links</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li><a class="hover:text-white transition-colors" href="#">Home</a></li>
+                        <li><a class="hover:text-white transition-colors" href="/items">Browse Items</a></li>
+                        <li><a class="hover:text-white transition-colors" href="#">Reporting Guidelines</a></li>
+                        <li><a class="hover:text-white transition-colors" href="#">Privacy Policy</a></li>
                     </ul>
                 </div>
-            </div>
-        </section>
 
-        <!-- Help Section -->
-        <section id="help" class="section">
-            <div class="container">
-                <h1 class="page-title">❓ Help Center</h1>
-                
-                <div class="faq-container">
-                    <details class="faq-item">
-                        <summary class="faq-question">How do I report a lost item?</summary>
-                        <div class="faq-answer">
-                            <p>Click on 'Login', select Student, then click 'Report' and fill in the item details.</p>
-                        </div>
-                    </details>
-                    
-                    <details class="faq-item">
-                        <summary class="faq-question">How long does verification take?</summary>
-                        <div class="faq-answer">
-                            <p>Our admin team typically verifies items within 24 hours.</p>
-                        </div>
-                    </details>
-                    
-                    <details class="faq-item">
-                        <summary class="faq-question">Can I edit my report after submission?</summary>
-                        <div class="faq-answer">
-                            <p>Please contact admin support for any changes to submitted reports.</p>
-                        </div>
-                    </details>
-                    
-                    <details class="faq-item">
-                        <summary class="faq-question">How do I claim an item?</summary>
-                        <div class="faq-answer">
-                            <p>Contact the person who found the item using the contact information provided, or visit the Security office.</p>
-                        </div>
-                    </details>
-                    
-                    <details class="faq-item">
-                        <summary class="faq-question">Who can access this platform?</summary>
-                        <div class="faq-answer">
-                            <p>All registered students, admin staff, and security personnel can access CampusFind.</p>
-                        </div>
-                    </details>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Contact Us</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="material-icons text-slate-500 text-sm mt-0.5">place</span>
+                            PDEU Campus, Knowledge Corridor, Gandhinagar
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="material-icons text-slate-500 text-sm mt-0.5">email</span>
+                            support@campusfind.pdeu.ac.in
+                        </li>
+                    </ul>
                 </div>
-            </div>
-        </section>
-    </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 CampusFind. All rights reserved.</p>
-            <p>Helping students reunite with their belongings</p>
+            </div>
+            <div class="pt-12 border-t border-slate-800 text-center text-xs">
+                © 2025 CampusFind PDEU. All rights reserved. Developed for students, by students.
+            </div>
         </div>
     </footer>
+
+</main>
 </body>
 </html>

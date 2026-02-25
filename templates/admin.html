@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>CampusFind | Admin Dashboard</title>
+  <!-- BEGIN: External Scripts -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <!-- END: External Scripts -->
+  <style data-purpose="custom-layout">
+    /* Custom scrollbar for dense data tables */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen">
+  <!-- BEGIN: MainHeader -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center gap-2">
+          <div class="bg-indigo-600 p-2 rounded-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="2"></path>
+            </svg>
+          </div>
+          <span class="text-xl font-bold tracking-tight text-slate-800">CampusFind <span
+              class="text-indigo-600">Admin</span></span>
+        </div>
+        <nav class="flex items-center gap-4">
+          <div class="text-sm text-slate-500 mr-4">Welcome, Administrator</div>
+          <a href="/logout"
+            class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md text-sm font-medium transition-colors inline-block text-center">
+            Logout
+          </a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <!-- END: MainHeader -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- BEGIN: StatsGrid -->
+    <!-- This section displays high-level metrics for quick administrative oversight -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" data-purpose="dashboard-stats">
+      <!-- Total Reports Card -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Reports</span>
+          <span class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+              <path
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+              </path>
+            </svg>
+          </span>
+        </div>
+        <div class="text-3xl font-bold text-slate-800">{{ total_reports }}</div>
+        <div class="text-xs text-emerald-600 mt-2 font-medium">All time reports</div>
+      </div>
+      <!-- Pending Verification Card -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Pending Verification</span>
+          <span class="p-2 bg-amber-50 text-amber-600 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </span>
+        </div>
+        <div class="text-3xl font-bold text-slate-800">{{ pending_items }}</div>
+        <div class="text-xs text-amber-600 mt-2 font-medium">Active Items</div>
+      </div>
+      <!-- Flagged Users Card -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Users</span>
+          <span class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+              <path
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+              </path>
+            </svg>
+          </span>
+        </div>
+        <div class="text-3xl font-bold text-slate-800">{{ users_count }}</div>
+        <div class="text-xs text-blue-600 mt-2 font-medium">Registered Accounts</div>
+      </div>
+      <!-- Claims Processed Card -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Claims Processed</span>
+          <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </span>
+        </div>
+        <div class="text-3xl font-bold text-slate-800">{{ claims }}</div>
+        <div class="text-xs text-slate-400 mt-2">Successfully returned</div>
+      </div>
+    </section>
+    <!-- END: StatsGrid -->
+    <div class="grid grid-cols-1 gap-8">
+      <!-- BEGIN: PendingVerificationTable -->
+      <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+        data-purpose="pending-verification-section">
+        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+          <h2 class="text-lg font-bold text-slate-800">Pending Verification</h2>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">42 New</span>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+                <th class="px-6 py-4">Report ID</th>
+                <th class="px-6 py-4">Student Email</th>
+                <th class="px-6 py-4">Item</th>
+                <th class="px-6 py-4">Category</th>
+                <th class="px-6 py-4">Date</th>
+                <th class="px-6 py-4 text-center">Flagged Status</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="text-sm divide-y divide-slate-100">
+              {% for report in pending_reports %}
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 font-mono text-xs text-slate-500">#ITEM-{{ report.id }}</td>
+                <td class="px-6 py-4 font-medium text-slate-700">User ID: {{ report.reported_by }}</td>
+                <td class="px-6 py-4">{{ report.name }}</td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-1 rounded bg-slate-100 text-slate-600 text-xs">{{ report.category }}</span>
+                </td>
+                <td class="px-6 py-4 text-slate-500">{{ report.date }}</td>
+                <td class="px-6 py-4 text-center">
+                  <span class="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Active"></span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <div class="flex justify-end gap-2">
+                    <button
+                      class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition-colors">Action</button>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" class="px-6 py-8 text-center text-gray-500">No active reports.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 text-xs text-slate-500 text-center">
+          Showing up to 10 latest pending items.
+        </div>
+    </div>
+    </section>
+    <!-- END: PendingVerificationTable -->
+    <!-- BEGIN: ManageUsersTable -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+      data-purpose="manage-users-section">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+        <h2 class="text-lg font-bold text-slate-800">Manage Users</h2>
+        <div class="relative">
+          <input
+            class="text-xs border-slate-200 rounded-lg pl-8 pr-3 py-1.5 focus:ring-indigo-500 focus:border-indigo-500 w-64"
+            placeholder="Search users..." type="text" />
+          <svg class="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" fill="none" stroke="currentColor"
+            viewbox="0 0 24 24">
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"
+              stroke-width="2"></path>
+          </svg>
+        </div>
+      </div>
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
+              <th class="px-6 py-4">Student Name</th>
+              <th class="px-6 py-4">University ID</th>
+              <th class="px-6 py-4">Join Date</th>
+              <th class="px-6 py-4">Reputation</th>
+              <th class="px-6 py-4 text-right">Security Action</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm divide-y divide-slate-100">
+            {% for user in users %}
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center">
+                  <div
+                    class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold mr-3 text-xs">
+                    {{ user.full_name[:2].upper() }}</div>
+                  <div>
+                    <div class="font-medium text-slate-700">{{ user.full_name }}</div>
+                    <div class="text-xs text-slate-500">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 font-mono text-xs">{{ user.roll_no or 'N/A' }}</td>
+              <td class="px-6 py-4 text-slate-500 capitalize">{{ user.role }}</td>
+              <td class="px-6 py-4">
+                <span class="text-emerald-600 font-semibold">Active</span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button
+                  class="text-xs font-bold text-slate-400 hover:text-red-600 uppercase tracking-tighter border border-slate-200 rounded px-2 py-1 hover:border-red-200 transition-all">Flag
+                  User</button>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-gray-500">No users found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <!-- END: ManageUsersTable -->
+    </div>
+  </main>
+  <!-- BEGIN: Footer -->
+  <footer class="mt-12 border-t border-slate-200 bg-white py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <p class="text-sm text-slate-400">© 2023 CampusFind Administration Panel. Internal Use Only.</p>
+    </div>
+  </footer>
+  <!-- END: Footer -->
+</body>
+
+</html>

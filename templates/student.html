@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Dashboard - CampusFind</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      borderRadius: { 'card': '12px' },
+      colors: {
+        campus: {
+          primary: '#2563eb',
+          secondary: '#64748b',
+          accent: '#f8fafc'
+        }
+      }
+    }
+  }
+}
+</script>
+
+<style>
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+}
+.material-icons { vertical-align: middle; }
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between h-16">
+
+<div class="flex items-center">
+<span class="text-2xl font-bold text-blue-600 flex items-center">
+<span class="material-icons mr-2">search</span>
+CampusFind
+</span>
+</div>
+
+<div class="hidden md:flex items-center space-x-8">
+<a class="text-gray-600 hover:text-blue-600 font-medium" href="/items">Browse Items</a>
+
+<a class="text-gray-600 hover:text-blue-600 relative" href="/notifications">
+<span class="material-icons">notifications</span>
+</a>
+
+<a href="/logout" class="flex items-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full border border-gray-200">
+<span class="material-icons text-sm">logout</span>
+<span class="font-medium text-sm">Logout</span>
+</a>
+</div>
+
+</div>
+</div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+<!-- HERO -->
+<section class="mb-8">
+<div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-card p-8 md:p-12 text-white shadow-lg">
+<h1 class="text-3xl md:text-4xl font-bold mb-2">Welcome to CampusFind</h1>
+<p class="text-blue-100 text-lg">Report your lost items or check if someone found them.</p>
+</div>
+</section>
+
+<!-- QUICK ACTIONS -->
+<section class="mb-12">
+<h2 class="text-xl font-bold text-gray-800 mb-6">Quick Actions</h2>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+<!-- Report Lost -->
+<a href="/report-lost" class="bg-white p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+<div class="w-12 h-12 bg-red-50 text-red-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-red-600 group-hover:text-white">
+<span class="material-icons">report_problem</span>
+</div>
+<h3 class="font-bold text-gray-900 mb-1">Report Lost Item</h3>
+<p class="text-gray-500 text-sm">Submit details about an item you've misplaced.</p>
+</a>
+
+<!-- Browse Items -->
+<a href="/items" class="bg-white p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+<div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white">
+<span class="material-icons">manage_search</span>
+</div>
+<h3 class="font-bold text-gray-900 mb-1">Browse Found Items</h3>
+<p class="text-gray-500 text-sm">Check if someone has already turned it in.</p>
+</a>
+
+<!-- Notifications -->
+<a href="/notifications" class="bg-white p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+<div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-amber-600 group-hover:text-white">
+<span class="material-icons">notifications_active</span>
+</div>
+<h3 class="font-bold text-gray-900 mb-1">Notifications</h3>
+<p class="text-gray-500 text-sm">View updates on your reports.</p>
+</a>
+
+</div>
+</section>
+
+<!-- RECENTLY FOUND -->
+<section>
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-bold text-gray-800">Recently Found Items</h2>
+<a class="text-blue-600 hover:underline text-sm font-semibold" href="/items">View All Items</a>
+</div>
+
+<div class="bg-white rounded-card shadow-sm border border-gray-100 p-10 text-center text-gray-500">
+No claims can be made from student dashboard.<br>
+Please visit the security office with proof of ownership.
+</div>
+
+</section>
+
+</main>
+
+<footer class="mt-12 py-8 bg-white border-t border-gray-100">
+<div class="max-w-7xl mx-auto px-4 text-center">
+<p class="text-gray-400 text-sm">© 2025 CampusFind Lost & Found Portal</p>
+</div>
+</footer>
+
+</body>
+</html>
