@@ -75,8 +75,8 @@ def register():
             return render_template("register.html", error="Passwords do not match")
 
         # PDEU email validation
-        if not re.match(r".+@pdeu\.ac\.in$", email.lower()):
-            return render_template("register.html", error="Use your PDEU email ID")
+        if not re.match(r"^[A-Za-z0-9]+@[A-Za-z0-9]+\.pdpu\.ac\.in$", email.lower()):
+            return render_template("register.html", error="Use college email: rollno@dept.pdpu.ac.in")
 
         # check duplicate
         existing = User.query.filter_by(email=email).first()
