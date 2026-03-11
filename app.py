@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.secret_key = "lostandfound_secret_key_123"
+app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key")
 
 # auto reload templates
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -75,12 +75,12 @@ def register():
             return render_template("register.html", error="Passwords do not match")
 
         # PDPU email validation
-        if not re.match(r"^[A-Za-z0-9]+@[A-Za-z0-9]+\.pdpu\.ac\.in$", email.lower()):
+        if not re.match(r"^[A-Za-z0-9]+@[A-Za-z0-9]+\.[A-Za-z0-9]+\.pdpu\.ac\.in$", email.lower()):
             return render_template("register.html", error="Use college email: rollno@dept.pdpu.ac.in")
 
         # protect admin creation
         if role == "admin":
-            if admin_code != "campusadmin123":
+            if not admin_code or admin_code != "campusadmin123":
                 return render_template("register.html", error="Invalid admin code")
 
         # check duplicate
@@ -146,11 +146,15 @@ def logout():
     return redirect(url_for("home"))
 
 # ---------------- DASHBOARDS ----------------
+# Student
+
 @app.route("/student")
 def student():
     if "user" not in session or session.get("role") != "student":
         return redirect(url_for("login"))
     return render_template("student.html")
+
+# Staff
 
 @app.route("/staff")
 def staff():
@@ -158,7 +162,7 @@ def staff():
         return redirect(url_for("login"))
     return render_template("staff.html")
 
-# 🟣 ADMIN DASHBOARD
+# ADMIN DASHBOARD
 @app.route("/admin")
 def admin():
     if "user" not in session or session.get("role") != "admin":
@@ -174,11 +178,45 @@ def admin():
         total_items=total_items,
         active_items=active_items
     )
+# ---------------- REPORT ITEM ----------------
+@app.route("/report", methods=["GET", "POST"])
+def report():
 
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+
+        name = request.form.get("name")
+        category = request.form.get("category")
+        type_ = request.form.get("type")
+        date = request.form.get("date")
+        location = request.form.get("location")
+        description = request.form.get("description")
+
+        item = Item(
+            name=name,
+            category=category,
+            type=type_,
+            date=date,
+            location=location,
+            description=description,
+            reported_by=session["user_id"]
+        )
+
+        db.session.add(item)
+        db.session.commit()
+
+        return redirect(url_for("items"))
+
+    return render_template("report.html")
 # ---------------- ITEMS ----------------
 @app.route("/items")
 def items():
-    items = Item.query.order_by(Item.created_at.desc()).all()
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    items = Item.query.order_by(Item.created_at.desc()).limit(50).all()
     return render_template("items.html", items=items)
 
 # ---------------- RUN ----------------
