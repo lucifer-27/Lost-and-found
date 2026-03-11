@@ -1,9 +1,11 @@
 import os
 import re
+import base64
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 # ---------------- APP SETUP ----------------
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -22,6 +24,10 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 # database
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "campusfind.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# upload folder
+UPLOAD_FOLDER = os.path.join(basedir, "upload")
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
 
@@ -218,7 +224,39 @@ def items():
 
     items = Item.query.order_by(Item.created_at.desc()).limit(50).all()
     return render_template("items.html", items=items)
+# --------------- Camera ----------------
+@app.route("/camera")
+def camera():
+    return render_template("camera.html")
 
+#--------------- Upload Image-----------
+@app.route("/upload", methods=["GET","POST"])
+def upload():
+
+    if request.method == "POST":
+
+        image_data = request.form.get("image")
+
+        if not image_data:
+            return "No image received"
+
+        # remove base64 header
+        image_data = image_data.split(",")[1]
+
+        image_bytes = base64.b64decode(image_data)
+
+        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+        filename = f"camera_{datetime.now().timestamp()}.png"
+
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+
+        return "Image saved successfully"
+
+    return render_template("camera.html")
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)

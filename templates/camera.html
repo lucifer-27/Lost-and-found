@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Take Photo of Item</h2>
+
+<video id="video" width="320" height="240" autoplay></video>
+
+<br><br>
+
+<button type="button" onclick="capture()">Capture Photo</button>
+
+<br><br>
+
+<canvas id="canvas" width="320" height="240"></canvas>
+
+<br><br>
+
+<form method="POST" action="/upload">
+    <input type="hidden" name="image" id="image_data">
+    <button type="submit">Upload Image</button>
+</form>
+
+<script>
+
+const video = document.getElementById("video")
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream
+})
+.catch(err => {
+    alert("Camera access denied")
+})
+
+function capture(){
+
+    const canvas = document.getElementById("canvas")
+    const context = canvas.getContext("2d")
+
+    context.drawImage(video,0,0,320,240)
+
+    const image = canvas.toDataURL("image/png")
+
+    document.getElementById("image_data").value = image
+}
+
+</script>
+
+{% endblock %}
