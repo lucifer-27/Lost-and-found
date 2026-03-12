@@ -81,7 +81,7 @@ def register():
             return render_template("register.html", error="Passwords do not match")
 
         # PDPU email validation
-        if not re.match(r"^[A-Za-z0-9]+@[A-Za-z0-9]+\.[A-Za-z0-9]+\.pdpu\.ac\.in$", email.lower()):
+        if not re.match(r"^[A-Za-z0-9]+@[A-Za-z0-9]+\.pdpu\.ac\.in$", email.lower()):
             return render_template("register.html", error="Use college email: rollno@dept.pdpu.ac.in")
 
         # protect admin creation
@@ -168,7 +168,7 @@ def staff():
         return redirect(url_for("login"))
     return render_template("staff.html")
 
-# ADMIN DASHBOARD
+# 🟣 ADMIN DASHBOARD
 @app.route("/admin")
 def admin():
     if "user" not in session or session.get("role") != "admin":
