@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Notifications - CampusFind</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          borderRadius: { 'card': '12px' },
+          colors: {
+            campus: {
+              primary: '#2563eb',
+              secondary: '#64748b',
+              accent: '#f8fafc'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+    }
+
+    .material-icons {
+      vertical-align: middle;
+    }
+
+
+    #mark-all-read-toggle:checked~section .mark-all-read-btn {
+      display: none;
+    }
+
+    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] {
+      background-color: #ffffff !important;
+      border-color: #e5e7eb !important;
+      border-left-width: 1px !important;
+    }
+
+    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] .bg-blue-100 {
+      background-color: #f3f4f6 !important;
+    }
+
+    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] .material-icons.text-blue-600 {
+      color: #9ca3af !important;
+    }
+
+    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] .bg-blue-600.rounded-full.mt-2 {
+      display: none !important;
+    }
+
+    #view-past-toggle:checked~div .view-past-btn {
+      display: none;
+    }
+
+    #view-past-toggle:checked~#notifications-container .past-notification {
+      display: flex !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- BEGIN: MainHeader -->
+  <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+
+        <div class="flex items-center">
+          <span class="text-2xl font-bold text-blue-600 flex items-center">
+            <span class="material-icons mr-2">search</span>
+            CampusFind
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+  <!-- END: MainHeader -->
+  <!-- BEGIN: NotificationsContent -->
+  <main class="max-w-3xl mx-auto px-4 py-8">
+    <!-- Hidden CSS-only checkboxes -->
+    <input type="checkbox" id="mark-all-read-toggle" class="hidden" />
+    <input type="checkbox" id="view-past-toggle" class="hidden" />
+
+    <!-- BEGIN: SectionTitle -->
+    <section class="mb-8 flex items-center justify-between" data-purpose="page-heading">
+      <div class="flex items-center">
+        <a href="/staff"
+          class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+          title="Back to Dashboard">
+          <span class="material-icons">arrow_back</span>
+        </a>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">Your Notifications</h2>
+          <p class="text-sm text-gray-500">Stay updated on your lost and found items</p>
+        </div>
+      </div>
+      <label for="mark-all-read-toggle"
+        class="mark-all-read-btn flex items-center space-x-1 text-sm font-medium text-blue-600 bg-white border border-gray-200 shadow-sm px-4 py-2 rounded-full hover:bg-gray-50 hover:text-blue-700 transition-colors cursor-pointer">
+        <span class="material-icons text-sm">done_all</span>
+        <span class="hidden sm:inline">Mark all as read</span>
+      </label>
+    </section>
+    <!-- END: SectionTitle -->
+    <div id="notifications-container" class="space-y-4" data-purpose="notification-feed">
+      <div class="bg-white rounded-card shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+        <span class="material-icons text-5xl mb-4 text-gray-300 block">notifications_none</span>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">No notifications yet</h3>
+        <p class="text-sm text-gray-500">When you receive updates about your items, they'll appear here.</p>
+      </div>
+    </div>
+    <!-- END: NotificationsList -->
+    <!-- BEGIN: LoadMore -->
+    <div class="mt-8 text-center" data-purpose="pagination-ui">
+      <label for="view-past-toggle"
+        class="view-past-btn inline-flex items-center justify-center mx-auto space-x-2 px-6 py-2.5 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm cursor-pointer">
+        <span class="material-icons text-sm text-gray-500">history</span>
+        <span>View Past Notifications</span>
+      </label>
+    </div>
+    <!-- END: LoadMore -->
+  </main>
+  <!-- END: NotificationsContent -->
+  <!-- BEGIN: Footer -->
+  <footer class="mt-12 py-8 border-t border-gray-200 text-center text-gray-400 text-xs">
+    <p>© 2026 CampusFind PDEU. All Rights Reserved.</p>
+  </footer>
+  <!-- END: Footer -->
+
+</body>
+
+</html>

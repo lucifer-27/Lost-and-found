@@ -267,7 +267,12 @@ def report_found():
 def notifications():
     if "user" not in session:
         return redirect(url_for("login"))
-    return render_template("notifications.html")
+    
+    role = session.get("role")
+    if role == "staff":
+        return render_template("notification_staff.html")
+    else:
+        return render_template("notification_student.html")
 
 # ---------------- ITEMS ----------------
 @app.route("/items")
@@ -276,7 +281,12 @@ def items():
         return redirect(url_for("login"))
 
     items = Item.query.order_by(Item.created_at.desc()).limit(50).all()
-    return render_template("items.html", items=items)
+    
+    role = session.get("role")
+    if role == "staff":
+        return render_template("items_staff.html", items=items)
+    else:
+        return render_template("items_student.html", items=items)
 # --------------- Camera ----------------
 @app.route("/camera")
 def camera():
