@@ -8,6 +8,8 @@
   <title>Browse Items | CampusFind</title>
   <!-- Tailwind CSS v3 with Plugins -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <style data-purpose="custom-layout">
     /* Custom sizing for specific components that need precise dimensions */
     .item-card-image {
@@ -40,14 +42,10 @@
         </div>
         <span class="text-xl font-bold tracking-tight text-gray-900">CampusFind</span>
       </div>
-      <nav class="hidden md:flex space-x-8">
-        <a class="text-gray-500 hover:text-indigo-600 font-medium" href="#">Report Item</a>
-        <a class="text-indigo-600 font-semibold border-b-2 border-indigo-600" href="#">Browse Items</a>
-        <a class="text-gray-500 hover:text-indigo-600 font-medium" href="#">My Claims</a>
-      </nav>
+
       <div class="flex items-center gap-4">
         {% if session.get('user') %}
-        <a href="/dashboard" class="text-sm font-medium text-gray-700">Dashboard</a>
+        <a href="/student" class="text-sm font-medium text-gray-700">Dashboard</a>
         <a href="/logout"
           class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition">Logout</a>
         {% else %}
@@ -121,7 +119,7 @@
             id="filter-date" type="date" />
         </div>
         <div>
-          <button
+          <button id="apply-filters-btn"
             class="w-full bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-gray-800 transition">
             Apply Filters
           </button>
@@ -130,8 +128,9 @@
     </section>
     <!-- END: FilterRow -->
     <!-- BEGIN: ResultsHeader -->
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-lg font-medium text-gray-700">Showing <span class="font-bold">24</span> results</h2>
+    <div class="flex justify-between items-center mb-6" id="results-count-header" style="display: none;">
+      <h2 class="text-lg font-medium text-gray-700">Showing <span class="font-bold whitespace-pre"
+          id="results-count-num">0</span> results</h2>
       <div class="flex items-center text-sm text-gray-500">
         <span>Sort by:</span>
         <select class="ml-2 border-none bg-transparent font-semibold text-gray-900 focus:ring-0 cursor-pointer">
@@ -145,8 +144,10 @@
     <section class="space-y-6" data-purpose="item-results-list">
       {% for item in items %}
       <article
-        class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col md:flex-row"
-        data-purpose="item-card">
+        class="item-card hidden bg-white border border-gray-200 rounded-xl flex-col md:flex-row overflow-hidden shadow-sm hover:shadow-md transition"
+        data-purpose="item-card" data-name="{{ item.name | lower }}" data-category="{{ item.category | lower }}"
+        data-type="{{ item.type | lower }}" data-status="{{ item.status | lower }}"
+        data-description="{{ item.description | lower }}">
         <div class="flex-shrink-0">
           {% if item.image_filename %}
           <img alt="{{ item.name }}" class="item-card-image"
@@ -259,7 +260,113 @@
       </div>
     </div>
   </footer>
+  </footer>
   <!-- END: MainFooter -->
+
+  <!-- INTERACTIVE LOGIC -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const searchInput = document.getElementById("main-search");
+      const filterType = document.getElementById("filter-type");
+      const filterCategory = document.getElementById("filter-category");
+      const applyBtn = document.getElementById("apply-filters-btn");
+      const itemCards = document.querySelectorAll(".item-card");
+      const resultsHeader = document.getElementById("results-count-header");
+      const resultsNum = document.getElementById("results-count-num");
+      const noItemsMsg = document.getElementById("no-items-msg");
+
+      let hasSearched = false;
+
+      function createEmptyStateMsg() {
+        if (!noItemsMsg) {
+          const list = document.querySelector('[data-purpose="item-results-list"]');
+          const msg = document.createElement('div');
+          msg.id = 'no-items-msg';
+          msg.className = 'text-center py-10 text-gray-500 text-lg hidden';
+          msg.innerText = 'No items found matching your filter criteria.';
+          list.appendChild(msg);
+          return msg;
+        }
+        return noItemsMsg;
+      }
+
+      const emptyStateMsg = createEmptyStateMsg();
+
+      function updateItemVisibility() {
+        const query = searchInput.value.toLowerCase().trim();
+        const typeFilter = filterType.value.toLowerCase();
+        const categoryFilter = filterCategory.value.toLowerCase();
+
+        // Show initial prompt if no interaction yet
+        if (!hasSearched && query === '' && typeFilter === 'all types' && categoryFilter === 'all categories') {
+          itemCards.forEach(card => {
+            card.classList.remove('flex');
+            card.classList.add('hidden');
+          });
+          resultsHeader.style.display = 'none';
+          emptyStateMsg.classList.add('hidden');
+
+          if (!document.getElementById("start-search-prompt")) {
+            const prompt = document.createElement('div');
+            prompt.id = "start-search-prompt";
+            prompt.className = "text-center py-16 text-gray-500 text-xl font-medium";
+            prompt.innerText = "Type a keyword or apply a filter to start browsing.";
+            const list = document.querySelector('[data-purpose="item-results-list"]');
+            list.prepend(prompt);
+          } else {
+            document.getElementById("start-search-prompt").classList.remove('hidden');
+          }
+          return;
+        }
+
+        hasSearched = true;
+        const prompt = document.getElementById("start-search-prompt");
+        if (prompt) prompt.classList.add('hidden');
+
+        let count = 0;
+
+        itemCards.forEach(card => {
+          const name = card.getAttribute('data-name');
+          const desc = card.getAttribute('data-description');
+          const type = card.getAttribute('data-type');
+          const cat = card.getAttribute('data-category');
+
+          let matchesSearch = query === '' || name.includes(query) || (desc && desc.includes(query));
+          let matchesType = typeFilter === 'all types' || type === typeFilter;
+          let matchesCat = categoryFilter === 'all categories' || cat.includes(categoryFilter) || categoryFilter.includes(cat);
+
+          if (matchesSearch && matchesType && matchesCat) {
+            card.classList.remove('hidden');
+            card.classList.add('flex');
+            count++;
+          } else {
+            card.classList.remove('flex');
+            card.classList.add('hidden');
+          }
+        });
+
+        resultsNum.innerText = count.toString();
+        resultsHeader.style.display = 'flex';
+
+        if (count === 0 && itemCards.length > 0) {
+          emptyStateMsg.classList.remove('hidden');
+        } else {
+          emptyStateMsg.classList.add('hidden');
+        }
+      }
+
+      // Add event listeners
+      searchInput.addEventListener('input', updateItemVisibility);
+      applyBtn.addEventListener('click', updateItemVisibility);
+
+      // Handle "enter" key on input
+      searchInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          updateItemVisibility();
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>

@@ -133,6 +133,9 @@ def login():
             session["user"] = user.email
             session["user_id"] = user.id
             session["role"] = user.role
+            
+            # Set flag for first login welcome message
+            session["first_login"] = True
 
             if role == "student":
                 return redirect(url_for("student"))
@@ -158,7 +161,11 @@ def logout():
 def student():
     if "user" not in session or session.get("role") != "student":
         return redirect(url_for("login"))
-    return render_template("student.html")
+        
+    # Check if this is the first login and consume the flag
+    show_welcome = session.pop("first_login", False)
+    
+    return render_template("student.html", show_welcome=show_welcome)
 
 # Staff
 
@@ -184,19 +191,19 @@ def admin():
         total_items=total_items,
         active_items=active_items
     )
-# ---------------- REPORT ITEM ----------------
-@app.route("/report", methods=["GET", "POST"])
-def report():
+# ---------------- REPORT LOST ITEM ----------------
+@app.route("/report-lost", methods=["GET", "POST"])
+def report_lost():
 
     if "user" not in session:
         return redirect(url_for("login"))
 
     if request.method == "POST":
 
-        name = request.form.get("name")
+        name = request.form.get("item_name")
         category = request.form.get("category")
-        type_ = request.form.get("type")
-        date = request.form.get("date")
+        type_ = "lost"
+        date = request.form.get("date_lost")
         location = request.form.get("location")
         description = request.form.get("description")
 
@@ -215,7 +222,53 @@ def report():
 
         return redirect(url_for("items"))
 
-    return render_template("report.html")
+    return render_template("report_lost.html")
+
+
+# ---------------- REPORT FOUND ITEM ----------------
+@app.route("/report-found", methods=["GET", "POST"])
+def report_found():
+
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+
+        name = request.form.get("item_name")
+        category = request.form.get("category")
+        type_ = "found"
+        date = request.form.get("date_found")
+        time_found = request.form.get("time_found")
+        
+        # Combine date and time
+        date_combined = f"{date} {time_found}" if time_found else date
+        
+        location = request.form.get("location")
+        description = request.form.get("description")
+
+        item = Item(
+            name=name,
+            category=category,
+            type=type_,
+            date=date_combined[:20], # model allows 20 chars max
+            location=location,
+            description=description,
+            reported_by=session["user_id"]
+        )
+
+        db.session.add(item)
+        db.session.commit()
+
+        return redirect(url_for("items"))
+
+    return render_template("report_found.html")
+# ---------------- NOTIFICATIONS ----------------
+@app.route("/notifications")
+def notifications():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    return render_template("notifications.html")
+
 # ---------------- ITEMS ----------------
 @app.route("/items")
 def items():
