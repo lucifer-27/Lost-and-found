@@ -25,7 +25,6 @@
     }
   </style>
   <style data-purpose="typography">
-    /* Base typography enhancements */
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
@@ -37,23 +36,10 @@
   <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
-          <span class="text-white font-bold">C</span>
-        </div>
-        <span class="text-xl font-bold tracking-tight text-gray-900">CampusFind</span>
-      </div>
-
-      <div class="flex items-center gap-4">
-        {% if session.get('user') %}
-        <a href="/student" class="text-sm font-medium text-gray-700">Dashboard</a>
-        <a href="/logout"
-          class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition">Logout</a>
-        {% else %}
-        <a href="/login" class="text-sm font-medium text-gray-700">Login</a>
-        <a href="/register"
-          class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition">Sign
-          Up</a>
-        {% endif %}
+        <span class="text-2xl font-bold text-blue-600 flex items-center">
+          <span class="material-icons mr-2">search</span>
+          CampusFind
+        </span>
       </div>
     </div>
   </header>
@@ -61,7 +47,17 @@
   <main class="results-container mx-auto px-4 py-8">
     <!-- BEGIN: SearchSection -->
     <section class="mb-8" data-purpose="search-interface">
-      <h1 class="text-3xl font-extrabold text-gray-900 mb-6">Browse Campus Items</h1>
+      <div class="flex items-center">
+        <a href="/student"
+          class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+          title="Back to Dashboard">
+          <span class="material-icons">arrow_back</span>
+        </a>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Browse Lost Items</h1>
+        </div>
+      </div>
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-6"></h1>
       <div class="relative max-w-2xl">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <!-- Search Icon -->
@@ -252,7 +248,7 @@
   <!-- BEGIN: MainFooter -->
   <footer class="bg-white border-t border-gray-200 mt-20 py-8">
     <div class="max-w-7xl mx-auto px-4 text-center">
-      <p class="text-gray-500 text-sm">© 2023 CampusFind. All rights reserved.</p>
+      <p class="text-gray-500 text-sm">© 2026 CampusFind. All rights reserved.</p>
       <div class="mt-2 flex justify-center space-x-6">
         <a class="text-xs text-gray-400 hover:text-gray-600" href="#">Privacy Policy</a>
         <a class="text-xs text-gray-400 hover:text-gray-600" href="#">Terms of Service</a>

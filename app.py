@@ -175,7 +175,7 @@ def staff():
         return redirect(url_for("login"))
     return render_template("staff.html")
 
-# 🟣 ADMIN DASHBOARD
+# ADMIN DASHBOARD
 @app.route("/admin")
 def admin():
     if "user" not in session or session.get("role") != "admin":

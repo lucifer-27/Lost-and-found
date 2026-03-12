@@ -7,6 +7,7 @@
   <title>Report Lost Item - CampusFind</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
   <style>
     .focus-ring-blue:focus {
@@ -18,25 +19,37 @@
 
 <body class="bg-gray-50 min-h-screen flex flex-col font-sans">
 
-  <header class="bg-white shadow-sm py-4 px-6">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div class="text-2xl font-bold text-blue-600">
-        CampusFind
+  <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+
+        <div class="flex items-center">
+          <span class="text-2xl font-bold text-blue-600 flex items-center">
+            <span class="material-icons mr-2">search</span>
+            CampusFind
+          </span>
+        </div>
       </div>
-      <nav>
-        <a class="text-gray-600 hover:text-blue-600 font-medium transition" href="/">Back to Home</a>
-      </nav>
     </div>
-  </header>
+  </nav>
 
-  <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+  <main class="max-w-3xl mx-auto px-4 py-8 w-full">
 
-    <section class="bg-white shadow-lg rounded-xl w-full max-w-lg overflow-hidden border border-gray-100">
-
-      <div class="bg-blue-600 p-6 text-white text-center">
-        <h1 class="text-2xl md:text-3xl font-bold">Report a Lost Item</h1>
-        <p class="mt-2 text-blue-100">Provide as much detail as possible to help us find it.</p>
+    <section class="mb-8 flex items-center justify-between">
+      <div class="flex items-center">
+        <a href="/student"
+          class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+          title="Back to Dashboard">
+          <span class="material-icons">arrow_back</span>
+        </a>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">Report a Lost Item</h2>
+          <p class="text-sm text-gray-500">Provide as much detail as possible to help us find it.</p>
+        </div>
       </div>
+    </section>
+
+    <section class="bg-white shadow-lg rounded-xl w-full overflow-hidden border border-gray-100">
 
       <form action="/report-lost" method="POST" enctype="multipart/form-data" class="p-6 md:p-8 space-y-6">
 
@@ -105,7 +118,9 @@
   </main>
 
   <footer class="bg-gray-100 py-6 px-6 text-center text-gray-500 text-sm border-t border-gray-200">
-    <p>© 2025 CampusFind — PDEU</p>
+    <div class="text-center text-xs">
+      © 2026 CampusFind PDEU. All rights reserved.
+    </div>
   </footer>
 
 </body>
