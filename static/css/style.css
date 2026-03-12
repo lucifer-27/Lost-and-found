@@ -1,4 +1,6 @@
-
+/* =================================
+   CSS Variables & Reset
+   ================================= */
 :root {
     --primary: #0071e3;
     --primary-hover: #0077ed;
@@ -824,4 +826,3 @@ details[open] .faq-question {
     margin-bottom: 1.5rem;
     font-weight: 500;
 }
-

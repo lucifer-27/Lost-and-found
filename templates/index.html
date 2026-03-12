@@ -1,387 +1,375 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>CampusFind | PDEU Lost &amp; Found Portal</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CampusFind | PDEU Lost &amp; Found Portal</title>
 
 
-    <link href="https://fonts.googleapis.com" rel="preconnect" />
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
-        rel="stylesheet" />
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
 
 
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'brand-blue': '#0071e3',
-                        'brand-purple': '#7c3aed',
-                    },
-                    borderRadius: {
-                        'custom': '12px',
-                    }
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'brand-blue':   '#0071e3',
+                    'brand-purple': '#7c3aed',
+                },
+                borderRadius: {
+                    'custom': '12px',
                 }
             }
         }
-    </script>
+    }
+</script>
 
-    <style>
-        @keyframes float {
-            0% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            50% {
-                transform: translateY(-20px) rotate(5deg);
-            }
-
-            100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-        }
-
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .animate-float-delayed {
-            animation: float 8s ease-in-out infinite;
-            animation-delay: 2s;
-        }
-
-        .hero-gradient {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-    </style>
+<style>
+    @keyframes float {
+      0%   { transform: translateY(0px) rotate(0deg); }
+      50%  { transform: translateY(-20px) rotate(5deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
+    }
+    .animate-float          { animation: float 6s ease-in-out infinite; }
+    .animate-float-delayed  { animation: float 8s ease-in-out infinite; animation-delay: 2s; }
+    .hero-gradient          { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+    ::-webkit-scrollbar       { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>
 </head>
 
 <body class="bg-slate-50 text-slate-900 font-sans">
 
-    <!-- ===== NAVBAR ===== -->
-    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+<!-- ===== NAVBAR ===== -->
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
 
-                <!-- Logo -->
-                <div class="flex items-center gap-2">
-                    <span class="material-icons text-brand-blue text-3xl">search</span>
-                    <span class="text-2xl font-bold tracking-tight text-brand-blue">CampusFind</span>
-                </div>
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <span class="material-icons text-brand-blue text-3xl">search</span>
+                <span class="text-2xl font-bold tracking-tight text-brand-blue">CampusFind</span>
+            </div>
 
-                <!-- Nav Links -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors"
-                        href="#">Home</a>
-                    <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors"
-                        href="/items">Browse Items</a>
-                    <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">About
-                        Us</a>
-                    <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">Help
-                        Center</a>
-                </div>
+            <!-- Nav Links -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">Home</a>
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="/items">Browse Items</a>
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">About Us</a>
+                <a class="text-sm font-medium text-slate-600 hover:text-brand-blue transition-colors" href="#">Help Center</a>
+            </div>
 
-                <!-- Login button — goes to login.html -->
-                <div class="flex items-center">
-                    {% if session.get('user') %}
+            <!-- Login button — goes to login.html -->
+            <div class="flex items-center"> 
+                {% if session.get('role') %}
                     <a href="{{ url_for('logout') }}"
-                        class="bg-red-500 text-white px-6 py-2 rounded-custom font-semibold text-sm">
-                        Logout
+                    class="bg-red-500 text-white px-6 py-2 rounded-custom font-semibold text-sm">
+                    Logout
                     </a>
-                    {% else %}
-                    <a href="/login" class="bg-brand-blue text-white px-6 py-2 rounded-custom font-semibold text-sm">
-                        Login
-                    </a>
-                    {% endif %}
-                </div>
-
-            </div>
-        </nav>
-    </header>
-
-    <main>
-
-        <!-- ===== HERO ===== -->
-        <section class="hero-gradient relative overflow-hidden py-20 lg:py-32">
-            <!-- Floating shapes (pure CSS animation) -->
-            <div class="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full animate-float blur-sm"></div>
-            <div class="absolute bottom-10 right-20 w-32 h-32 bg-white/20 rounded-lg animate-float-delayed blur-sm">
-            </div>
-            <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full animate-float"></div>
-
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center text-white">
-                <h1 class="lg:text-7xl font-extrabold mb-6 drop-shadow-lg text-4xl">CampusFind</h1>
-                <p class="text-xl lg:text-2xl font-light mb-10 opacity-90 max-w-2xl mx-auto">
-                    Your Digital Lost &amp; Found Portal for PDEU. Helping you reconnect with your belongings swiftly
-                    and securely.
-                </p>
-
-                <!--  Both buttons go to login page -->
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    {% if session.get('user') %}
-
-                    <a href="/report-found"
-                        class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
-                        I Found Something
-                    </a>
-
-                    <a href="/report-lost"
-                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
-                        I Lost Something
-                    </a>
-
-                    {% else %}
-
+                {% else %}
                     <a href="/login"
-                        class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
-                        I Found Something
+                    class="bg-brand-blue text-white px-6 py-2 rounded-custom font-semibold text-sm">
+                    Login
                     </a>
-
-                    <a href="/login"
-                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
-                        I Lost Something
-                    </a>
-
-                    {% endif %}
-                </div>
-        </section>
-
-        <!-- ===== STATISTICS ===== -->
-        <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid lg:grid-cols-4 gap-8 grid-cols-1 sm:grid-cols-2">
-
-                    <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
-                        <div
-                            class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="material-icons">inventory_2</span>
-                        </div>
-                        <div class="text-3xl font-bold text-slate-800">1,240+</div>
-                        <div class="text-slate-500 text-sm">Items Found</div>
-                    </div>
-
-                    <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
-                        <div
-                            class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="material-icons">handshake</span>
-                        </div>
-                        <div class="text-3xl font-bold text-slate-800">850+</div>
-                        <div class="text-slate-500 text-sm">Items Returned</div>
-                    </div>
-
-                    <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
-                        <div
-                            class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="material-icons">groups</span>
-                        </div>
-                        <div class="text-3xl font-bold text-slate-800">5,000+</div>
-                        <div class="text-slate-500 text-sm">Active Users</div>
-                    </div>
-
-                    <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
-                        <div
-                            class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="material-icons">trending_up</span>
-                        </div>
-                        <div class="text-3xl font-bold text-slate-800">68%</div>
-                        <div class="text-slate-500 text-sm">Success Rate</div>
-                    </div>
-
-                </div>
+                {% endif %}
             </div>
-        </section>
 
-        <!-- ===== CATEGORIES ===== -->
-        <section class="py-16 bg-slate-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-3xl font-bold text-slate-800 mb-12 text-center">Browse by Category</h2>
-                <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-6 grid-cols-1 sm:grid-cols-2">
+        </div>
+    </nav>
+</header>
 
-                    <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
-                        <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">devices</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Electronics</span>
-                    </a>
+<main>
 
-                    <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
-                        <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">description</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Documents</span>
-                    </a>
+    <!-- ===== HERO ===== -->
+    <section class="hero-gradient relative overflow-hidden py-20 lg:py-32">
+        <!-- Floating shapes (pure CSS animation) -->
+        <div class="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full animate-float blur-sm"></div>
+        <div class="absolute bottom-10 right-20 w-32 h-32 bg-white/20 rounded-lg animate-float-delayed blur-sm"></div>
+        <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full animate-float"></div>
 
-                    <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
-                        <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">watch</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Accessories</span>
-                    </a>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center text-white">
+            <h1 class="lg:text-7xl font-extrabold mb-6 drop-shadow-lg text-4xl">CampusFind</h1>
+            <p class="text-xl lg:text-2xl font-light mb-10 opacity-90 max-w-2xl mx-auto">
+                Your Digital Lost &amp; Found Portal for PDEU. Helping you reconnect with your belongings swiftly and securely.
+            </p>
 
-                    <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
-                        <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">vpn_key</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Keys</span>
-                    </a>
+            <!--  Both buttons go to login page -->
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                {% if session.get('user') %}
 
-                    <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
-                        <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">badge</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">IDs &amp; Cards</span>
-                    </a>
+                <a href="/report_found"
+                    class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
+                    I Found Something
+                </a>
 
-                    <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
-                        <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">more_horiz</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Others</span>
-                    </a>
+                <a href="/report_lost"
+                    class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
+                    I Lost Something
+                </a>
 
-                </div>
+                {% else %}
+
+                <a href="/login"
+                    class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
+                    I Found Something
+                </a>
+
+                <a href="/login"
+                    class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
+                    I Lost Something
+                </a>
+
+                {% endif %}   
             </div>
-        </section>
+    </section>
 
-        <!-- ===== RECENT ITEMS ===== -->
-        <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- ===== STATISTICS ===== -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-4 gap-8 grid-cols-1 sm:grid-cols-2">
 
-                <div class="flex justify-between items-end mb-8">
-                    <div>
-                        <h2 class="text-3xl font-bold text-slate-800">Recent Found Items</h2>
-                        <p class="text-slate-500 mt-2">Latest items reported by our community members</p>
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">inventory_2</span>
                     </div>
-                    <a class="text-brand-blue font-semibold flex items-center hover:underline" href="/items">
-                        View All <span class="material-icons text-sm ml-1">arrow_forward</span>
-                    </a>
+                    <div class="text-3xl font-bold text-slate-800">1,240+</div>
+                    <div class="text-slate-500 text-sm">Items Found</div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">handshake</span>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800">850+</div>
+                    <div class="text-slate-500 text-sm">Items Returned</div>
+                </div>
 
-                    {% for item in recent_items %}
-                    <div
-                        class="group bg-white rounded-custom border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
-                        <div class="relative h-48 bg-slate-100">
-                            {% if item.image_filename %}
-                            <img alt="{{ item.name }}" class="w-full h-full object-cover"
-                                src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" />
-                            {% else %}
-                            <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                <span class="material-icons text-gray-400 text-4xl">image_not_supported</span>
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">groups</span>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800">5,000+</div>
+                    <div class="text-slate-500 text-sm">Active Users</div>
+                </div>
+
+                <div class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons">trending_up</span>
+                    </div>
+                    <div class="text-3xl font-bold text-slate-800">68%</div>
+                    <div class="text-slate-500 text-sm">Success Rate</div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CATEGORIES ===== -->
+    <section class="py-16 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-slate-800 mb-12 text-center">Browse by Category</h2>
+            <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-6 grid-cols-1 sm:grid-cols-2">
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">devices</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Electronics</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">description</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Documents</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">watch</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Accessories</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">vpn_key</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Keys</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">badge</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">IDs &amp; Cards</span>
+                </a>
+
+                <a href="/items" class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                    <span class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">more_horiz</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Others</span>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RECENT ITEMS ===== -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800">Recent Found Items</h2>
+                    <p class="text-slate-500 mt-2">Latest items reported by our community members</p>
+                </div>
+                <a class="text-brand-blue font-semibold flex items-center hover:underline" href="/items">
+                    View All <span class="material-icons text-sm ml-1">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Item 1 -->
+                <div class="group bg-white rounded-custom border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
+                    <div class="relative h-48 bg-slate-100">
+                        <img alt="Apple AirPods" class="w-full h-full object-cover" src="https://picsum.photos/400/300?random=1"/>
+                        <span class="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">Found</span>
+                    </div>
+                    <div class="p-5">
+                        <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Electronics</span>
+                        <h3 class="font-bold text-slate-800 text-lg mt-2 mb-2 group-hover:text-brand-blue transition-colors">Apple AirPods Pro</h3>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">location_on</span>Cafeteria (Block C)
                             </div>
-                            {% endif %}
-                            <span
-                                class="absolute top-3 right-3 {% if item.type == 'found' %}bg-green-500{% else %}bg-red-500{% endif %} text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">{{
-                                item.type }}</span>
-                        </div>
-                        <div class="p-5">
-                            <span
-                                class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{{
-                                item.category }}</span>
-                            <h3
-                                class="font-bold text-slate-800 text-lg mt-2 mb-2 group-hover:text-brand-blue transition-colors">
-                                {{ item.name }}</h3>
-                            <div class="space-y-1.5">
-                                <div class="flex items-center text-slate-500 text-sm">
-                                    <span class="material-icons text-sm mr-1.5 text-slate-400">location_on</span>{{
-                                    item.location }}
-                                </div>
-                                <div class="flex items-center text-slate-500 text-sm">
-                                    <span class="material-icons text-sm mr-1.5 text-slate-400">calendar_today</span>{{
-                                    item.date }}
-                                </div>
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">calendar_today</span>Jan 24, 2025
                             </div>
-                            <a class="w-full mt-5 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-custom hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all inline-block text-center"
-                                href="/items">View Details</a>
                         </div>
+                        <a class="w-full mt-5 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-custom hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all inline-block text-center" href="/claim">Claim Item</a>
                     </div>
-                    {% else %}
-                    <div class="col-span-full text-center py-10 text-gray-500">
-                        No items reported recently.
-                    </div>
-                    {% endfor %}
-
                 </div>
+
+                <!-- Item 2 -->
+                <div class="group bg-white rounded-custom border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
+                    <div class="relative h-48 bg-slate-100">
+                        <img alt="Leather Wallet" class="w-full h-full object-cover" src="https://picsum.photos/400/300?random=2"/>
+                        <span class="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">Found</span>
+                    </div>
+                    <div class="p-5">
+                        <span class="bg-purple-50 text-purple-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Accessories</span>
+                        <h3 class="font-bold text-slate-800 text-lg mt-2 mb-2 group-hover:text-brand-blue transition-colors">Brown Leather Wallet</h3>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">location_on</span>Auditorium
+                            </div>
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">calendar_today</span>Jan 23, 2025
+                            </div>
+                        </div>
+                        <a class="w-full mt-5 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-custom hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all inline-block text-center" href="/claim">Claim Item</a>
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="group bg-white rounded-custom border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
+                    <div class="relative h-48 bg-slate-100">
+                        <img alt="Student ID" class="w-full h-full object-cover" src="https://picsum.photos/400/300?random=3"/>
+                        <span class="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">Found</span>
+                    </div>
+                    <div class="p-5">
+                        <span class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">IDs &amp; Cards</span>
+                        <h3 class="font-bold text-slate-800 text-lg mt-2 mb-2 group-hover:text-brand-blue transition-colors">PDEU Student ID</h3>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">location_on</span>Library Basement
+                            </div>
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">calendar_today</span>Jan 22, 2025
+                            </div>
+                        </div>
+                        <a class="w-full mt-5 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-custom hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all inline-block text-center" href="/claim">Claim Item</a>
+                    </div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="group bg-white rounded-custom border border-slate-200 overflow-hidden hover:shadow-xl transition-all">
+                    <div class="relative h-48 bg-slate-100">
+                        <img alt="Keys" class="w-full h-full object-cover" src="https://picsum.photos/400/300?random=4"/>
+                        <span class="absolute top-3 right-3 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">Found</span>
+                    </div>
+                    <div class="p-5">
+                        <span class="bg-yellow-50 text-yellow-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Keys</span>
+                        <h3 class="font-bold text-slate-800 text-lg mt-2 mb-2 group-hover:text-brand-blue transition-colors">Bunch of 3 Keys</h3>
+                        <div class="space-y-1.5">
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">location_on</span>Parking Lot A
+                            </div>
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <span class="material-icons text-sm mr-1.5 text-slate-400">calendar_today</span>Jan 21, 2025
+                            </div>
+                        </div>
+                        <a class="w-full mt-5 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-custom hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all inline-block text-center" href="/claim">Claim Item</a>
+                    </div>
+                </div>
+
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- ===== FOOTER ===== -->
-        <footer class="bg-slate-900 text-slate-400 py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+    <!-- ===== FOOTER ===== -->
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
 
-                    <div class="col-span-1 md:col-span-2">
-                        <div class="flex items-center gap-2 mb-6">
-                            <span class="material-icons text-white text-3xl">search</span>
-                            <span class="text-2xl font-bold tracking-tight text-white">CampusFind</span>
-                        </div>
-                        <p class="max-w-md mb-6 leading-relaxed">
-                            Dedicated to helping the PDEU community recover lost items. Our platform connects finders
-                            with owners through a secure and verified process.
-                        </p>
-                        <div class="flex gap-4">
-
-                        </div>
-
-                        <div>
-                            <h4 class="text-white font-bold mb-6">Quick Links</h4>
-                            <ul class="space-y-4 text-sm">
-                                <li><a class="hover:text-white transition-colors" href="#">Home</a></li>
-                                <li><a class="hover:text-white transition-colors" href="/items">Browse Items</a></li>
-                                <li><a class="hover:text-white transition-colors" href="#">Reporting Guidelines</a></li>
-                                <li><a class="hover:text-white transition-colors" href="#">Privacy Policy</a></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 class="text-white font-bold mb-6">Contact Us</h4>
-                            <ul class="space-y-4 text-sm">
-                                <li class="flex items-start gap-3">
-                                    <span class="material-icons text-slate-500 text-sm mt-0.5">place</span>
-                                    PDEU Campus, Knowledge Corridor, Gandhinagar
-                                </li>
-                                <li class="flex items-start gap-3">
-                                    <span class="material-icons text-slate-500 text-sm mt-0.5">email</span>
-                                    support@campusfind.pdeu.ac.in
-                                </li>
-                            </ul>
-                        </div>
-
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-icons text-white text-3xl">search</span>
+                        <span class="text-2xl font-bold tracking-tight text-white">CampusFind</span>
                     </div>
-                    <div class="pt-12 border-t border-slate-800 text-center text-xs">
-                        © 2025 CampusFind PDEU. All rights reserved. Developed for students, by students.
+                    <p class="max-w-md mb-6 leading-relaxed">
+                        Dedicated to helping the PDEU community recover lost items. Our platform connects finders with owners through a secure and verified process.
+                    </p>
+                    <div class="flex gap-4">
+                        <a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all" href="#">
+                            <span class="material-icons text-xl">facebook</span>
+                        </a>
+                        <a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all" href="#">
+                            <span class="material-icons text-xl">alternate_email</span>
+                        </a>
                     </div>
                 </div>
-        </footer>
 
-    </main>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Quick Links</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li><a class="hover:text-white transition-colors" href="/">Home</a></li>
+                        <li><a class="hover:text-white transition-colors" href="/items">Browse Items</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-6">Contact Us</h4>
+                    <ul class="space-y-4 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="material-icons text-slate-500 text-sm mt-0.5">place</span>
+                            PDEU Campus, Knowledge Corridor, Gandhinagar
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="material-icons text-slate-500 text-sm mt-0.5">email</span>
+                            support@campusfind.pdeu.ac.in
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="pt-12 border-t border-slate-800 text-center text-xs">
+                © 2025 CampusFind PDEU. All rights reserved. Developed for students, by students.
+            </div>
+        </div>
+    </footer>
+
+</main>
 </body>
-
 </html>
