@@ -51,6 +51,18 @@ class Item(db.Model):
     reported_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Claim(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
+    student_name = db.Column(db.String(100), nullable=False)
+    roll_no = db.Column(db.String(50), nullable=False)
+    student_email = db.Column(db.String(120), nullable=False)
+    proof = db.Column(db.Text, nullable=False)
+    return_date = db.Column(db.String(50), nullable=False)
+    return_time = db.Column(db.String(50), nullable=False)
+    processed_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 # create database
 with app.app_context():
     db.create_all()
@@ -262,6 +274,58 @@ def report_found():
         return redirect(url_for("items"))
 
     return render_template("report_found.html")
+
+# ---------------- CLAIM ----------------
+@app.route("/claim", methods=["GET", "POST"])
+def claim():
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        item_id = request.form.get("item_id")
+        item_name = request.form.get("item_name")
+        student_name = request.form.get("student_name")
+        roll_no = request.form.get("roll_no")
+        student_email = request.form.get("student_email")
+        proof = request.form.get("proof")
+        return_date = request.form.get("return_date")
+        return_time = request.form.get("return_time")
+
+        item = None
+        if item_id:
+            item = Item.query.get(item_id)
+        
+        # If no item found by ID or if ID was not provided, try to find by name
+        if not item and item_name:
+            item = Item.query.filter_by(name=item_name, status="active", type="found").first()
+
+        if item:
+            item.status = "returned"
+            claim_record = Claim(
+                item_id=item.id,
+                student_name=student_name,
+                roll_no=roll_no,
+                student_email=student_email,
+                proof=proof,
+                return_date=return_date,
+                return_time=return_time,
+                processed_by=session["user_id"]
+            )
+            db.session.add(claim_record)
+            db.session.commit()
+
+        return redirect(url_for("items"))
+
+    selected_item_id = request.args.get("item_id")
+    selected_item_name = ""
+    if selected_item_id:
+        selected_item = Item.query.get(selected_item_id)
+        if selected_item:
+            selected_item_name = selected_item.name
+
+    items = Item.query.filter_by(status="active", type="found").all()
+    return render_template("claim.html", items=items, selected_item_id=selected_item_id, selected_item_name=selected_item_name)
+
 # ---------------- NOTIFICATIONS ----------------
 @app.route("/notifications")
 def notifications():
@@ -279,13 +343,13 @@ def notifications():
 def items():
     if "user" not in session:
         return redirect(url_for("login"))
-
-    items = Item.query.order_by(Item.created_at.desc()).limit(50).all()
     
     role = session.get("role")
     if role == "staff":
+        items = Item.query.order_by(Item.created_at.desc()).limit(50).all()
         return render_template("items_staff.html", items=items)
     else:
+        items = Item.query.filter(Item.status != 'returned').order_by(Item.created_at.desc()).limit(50).all()
         return render_template("items_student.html", items=items)
 # --------------- Camera ----------------
 @app.route("/camera")
