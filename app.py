@@ -87,6 +87,7 @@ def register():
         password = request.form.get("password")
         confirm = request.form.get("confirm_password")
         admin_code = request.form.get("admin_code")
+        staff_code = request.form.get("staff_code")
 
         # password match
         if password != confirm:
@@ -98,8 +99,13 @@ def register():
 
         # protect admin creation
         if role == "admin":
-            if not admin_code or admin_code != "campusadmin123":
+            if not admin_code or admin_code != "campusadmin@123":
                 return render_template("register.html", error="Invalid admin code")
+
+        # protect staff creation
+        if role == "staff":
+            if not staff_code or staff_code != "campusstaff@123":
+                return render_template("register.html", error="Invalid staff code")
 
         # check duplicate
         existing = User.query.filter_by(email=email).first()
@@ -193,15 +199,22 @@ def admin():
     if "user" not in session or session.get("role") != "admin":
         return redirect(url_for("login"))
 
-    total_users = User.query.count()
-    total_items = Item.query.count()
-    active_items = Item.query.filter_by(status="active").count()
+    total_reports = Item.query.count()
+    pending_items = Item.query.filter_by(status="active").count()
+    users_count = User.query.filter_by().count()
+    claims = Claim.query.count()
+
+    pending_reports = Item.query.filter_by(status="active").order_by(Item.created_at.desc()).limit(10).all()
+    users = User.query.order_by(User.id.desc()).all()
 
     return render_template(
         "admin.html",
-        total_users=total_users,
-        total_items=total_items,
-        active_items=active_items
+        total_reports=total_reports,
+        pending_items=pending_items,
+        users_count=users_count,
+        claims=claims,
+        pending_reports=pending_reports,
+        users=users
     )
 # ---------------- REPORT LOST ITEM ----------------
 @app.route("/report-lost", methods=["GET", "POST"])

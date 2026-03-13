@@ -122,14 +122,16 @@
                     <!-- Staff Code for Staff -->
                     <div id="staff-fields" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="staff_code">Staff Code</label>
-                        <input id="staff_code" name="staff_code" type="text" placeholder="Enter alphanumeric staff code"
+                        <input id="staff_code" name="staff_code" type="text" placeholder="e.g. staff@123" 
+                            pattern="^(?=.*[a-zA-Z0-9])(?=.*[@#$%^&+=_!-]).+$" title="Must include alphanumeric characters and at least one special character like @"
                             class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                     </div>
 
                     <!-- Admin Code for Admin -->
                     <div id="admin-fields" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="admin_code">Admin Code</label>
-                        <input id="admin_code" name="admin_code" type="text" placeholder="Enter alphanumeric admin code"
+                        <input id="admin_code" name="admin_code" type="text" placeholder="e.g. admin@123" 
+                            pattern="^(?=.*[a-zA-Z0-9])(?=.*[@#$%^&+=_!-]).+$" title="Must include alphanumeric characters and at least one special character like @"
                             class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                     </div>
 
