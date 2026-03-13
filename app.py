@@ -2,7 +2,7 @@ import os
 import re
 import base64
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -286,7 +286,9 @@ def report_found():
 
         return redirect(url_for("items"))
 
-    return render_template("report_found.html")
+    # If an image was captured via the camera flow, show it in the report form.
+    uploaded_image = session.pop("uploaded_image", None)
+    return render_template("report_found.html", uploaded_image=uploaded_image)
 
 # ---------------- CLAIM ----------------
 @app.route("/claim", methods=["GET", "POST"])
@@ -367,7 +369,15 @@ def items():
 # --------------- Camera ----------------
 @app.route("/camera")
 def camera():
-    return render_template("camera.html")
+    # Allow returning to a specific page after capturing the image
+    return_url = request.args.get("next", url_for("report_found"))
+    return render_template("camera.html", return_url=return_url)
+
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    # Serve uploaded images so they can be previewed in templates.
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 #--------------- Upload Image-----------
 @app.route("/upload", methods=["GET","POST"])
@@ -387,16 +397,22 @@ def upload():
 
         os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-        filename = f"camera_{datetime.now().timestamp()}.png"
+        # Ensure filename is safe to use
+        filename = secure_filename(f"camera_{datetime.now().timestamp()}.png")
 
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
         with open(filepath, "wb") as f:
             f.write(image_bytes)
 
-        return "Image saved successfully"
+        # Keep uploaded image in session so we can show it on the report form
+        session["uploaded_image"] = filename
 
-    return render_template("camera.html")
+        # Redirect back to the report page (default) or any provided return target
+        next_url = request.args.get("next") or url_for("report_found")
+        return redirect(next_url)
+
+    return render_template("camera.html", return_url=url_for("report_found"))
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)

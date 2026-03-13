@@ -14,6 +14,7 @@
 
 <body>
 
+    
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
@@ -27,50 +28,6 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-
-            <ul class="navbar-nav ms-auto">
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home') }}">Home</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('items') }}">Items</a>
-                </li>
-
-                {% if session.get('user') %}
-
-                    {% if session.get('role') == 'student' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('student') }}">Dashboard</a>
-                        </li>
-                    {% elif session.get('role') == 'staff' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('staff') }}">Dashboard</a>
-                        </li>
-                    {% elif session.get('role') == 'admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
-                        </li>
-                    {% endif %}
-
-                    <li class="nav-item">
-                        <a class="nav-link text-warning" href="{{ url_for('logout') }}">Logout</a>
-                    </li>
-
-                {% else %}
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-                    </li>
-
-                {% endif %}
-
-            </ul>
 
         </div>
     </div>
@@ -87,8 +44,14 @@
 
 
 <!-- FOOTER -->
-<footer class="bg-dark text-white text-center mt-5 p-3">
-    <p>CampusFind © 2026 | Lost & Found System</p>
+<footer class="bg-white text-dark text-center mt-5 p-3">
+    <footer class="mt-12 py-8 bg-white border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="text-center text-xs text-gray-500">
+                © 2026 CampusFind PDEU. All rights reserved.
+            </div>
+        </div>
+    </footer>
 </footer>
 
 

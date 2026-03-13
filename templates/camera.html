@@ -2,24 +2,45 @@
 
 {% block content %}
 
-<h2>Take Photo of Item</h2>
+<div class="container d-flex justify-content-center">
+    <div class="card shadow-sm p-4 text-center" style="max-width:500px; width:100%; border-radius:12px;">
 
-<video id="video" width="320" height="240" autoplay></video>
+        <h3 class="mb-3">Capture Item Photo</h3>
+        <p class="text-muted mb-4">Use your camera to take a clear picture of the item.</p>
 
-<br><br>
+        <!-- Camera -->
+        <div class="d-flex justify-content-center">
+            <video id="video" autoplay class="border rounded" width="400" height="300"></video>
+        </div>
 
-<button type="button" onclick="capture()">Capture Photo</button>
+        <!-- Buttons -->
+        <div class="mt-4 d-flex justify-content-center gap-3">
 
-<br><br>
+            <button 
+                type="button" 
+                class="btn btn-primary px-4"
+                onclick="capture()">
+                📸 Capture
+            </button>
 
-<canvas id="canvas" width="320" height="240"></canvas>
+        </div>
 
-<br><br>
+        <!-- Canvas Preview -->
+        <div class="mt-4">
+            <canvas id="canvas" width="400" height="300" class="border rounded"></canvas>
+        </div>
 
-<form method="POST" action="/upload">
-    <input type="hidden" name="image" id="image_data">
-    <button type="submit">Upload Image</button>
-</form>
+        <!-- Upload -->
+        <form method="POST" action="{{ url_for('upload', next=return_url) }}" class="mt-4">
+            <input type="hidden" name="image" id="image_data">
+
+            <button type="submit" class="btn btn-success px-4">
+                Upload Image
+            </button>
+        </form>
+
+    </div>
+</div>
 
 <script>
 
@@ -38,7 +59,7 @@ function capture(){
     const canvas = document.getElementById("canvas")
     const context = canvas.getContext("2d")
 
-    context.drawImage(video,0,0,320,240)
+    context.drawImage(video,0,0,400,300)
 
     const image = canvas.toDataURL("image/png")
 
