@@ -178,6 +178,51 @@ def notifications():
         return redirect(url_for("login"))
     return render_template("notification_staff.html")
 
+@app.route("/claim", methods=["GET", "POST"])
+def claim():
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+    
+    if request.method == "POST":
+        # Handle claim processing
+        item_id = request.form.get("item_id")
+        item_name = request.form.get("item_name")
+        student_name = request.form.get("student_name")
+        roll_no = request.form.get("roll_no")
+        student_email = request.form.get("student_email")
+        proof = request.form.get("proof")
+        return_date = request.form.get("return_date")
+        return_time = request.form.get("return_time")
+        
+        # Update item status to returned
+        items_collection.update_one(
+            {"_id": ObjectId(item_id)},
+            {"$set": {"status": "returned"}}
+        )
+        
+        # Record the claim
+        claims_collection.insert_one({
+            "item_id": ObjectId(item_id),
+            "item_name": item_name,
+            "student_name": student_name,
+            "roll_no": roll_no,
+            "student_email": student_email,
+            "proof": proof,
+            "return_date": f"{return_date} {return_time}",
+            "processed_by": session["user_id"],
+            "processed_at": datetime.utcnow()
+        })
+        
+        return redirect(url_for("items"))
+    
+    # GET request - show claim form
+    item_id = request.args.get("item_id")
+    if item_id:
+        item = items_collection.find_one({"_id": ObjectId(item_id)})
+        return render_template("claim.html", selected_item_name=item["name"], selected_item_id=item_id)
+    else:
+        return render_template("claim.html")
+
 # ---------------- REPORT LOST ITEM ----------------
 @app.route("/report-lost", methods=["GET", "POST"])
 def report_lost():
