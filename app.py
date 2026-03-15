@@ -165,6 +165,19 @@ def admin():
         users=users
     )
 
+# ---------------- NOTIFICATIONS ----------------
+@app.route("/notification_student")
+def notification_student():
+    if "user" not in session or session.get("role") != "student":
+        return redirect(url_for("login"))
+    return render_template("notification_student.html")
+
+@app.route("/notifications")
+def notifications():
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+    return render_template("notification_staff.html")
+
 # ---------------- REPORT LOST ITEM ----------------
 @app.route("/report-lost", methods=["GET", "POST"])
 def report_lost():
