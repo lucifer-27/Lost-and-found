@@ -134,7 +134,8 @@ def student():
         return redirect(url_for("login"))
 
     show_welcome = session.pop("first_login", False)
-    return render_template("student.html", show_welcome=show_welcome)
+    report_success = session.pop("report_success", False)
+    return render_template("student.html", show_welcome=show_welcome, report_success=report_success)
 
 @app.route("/staff")
 def staff():
@@ -250,7 +251,8 @@ def report_lost():
             "created_at": datetime.utcnow()
         })
 
-        return redirect(url_for("items"))
+        session["report_success"] = True
+        return redirect(url_for("student"))
 
     return render_template("report_lost.html")
 
@@ -284,7 +286,8 @@ def report_found():
             "created_at": datetime.utcnow()
         })
 
-        return redirect(url_for("items"))
+        session["report_success"] = True
+        return redirect(url_for("student"))
 
     uploaded_image = session.pop("uploaded_image", None)
     return render_template("report_found.html", uploaded_image=uploaded_image)
