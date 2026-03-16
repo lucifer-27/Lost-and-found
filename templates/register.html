@@ -84,7 +84,7 @@
                 <!-- Full Name -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="full_name">Full Name</label>
-                    <input id="full_name" name="full_name" type="text" placeholder="e.g. anything" required
+                    <input id="full_name" name="full_name" type="text" placeholder="Enter your full name" required
                         class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                 </div>
 
@@ -92,9 +92,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="email">College Email</label>
                     <input id="email" name="email" type="email" placeholder="rollno@dept.pdpu.ac.in"
-                        pattern=".+@.+\.pdpu\.ac\.in" title="Use your college email — rollno@dept.pdpu.ac.in" required
+                        pattern="[a-zA-Z0-9]+@[a-zA-Z0-9]+\.pdpu\.ac\.in"
+                        title="Use your college email — e.g. 24bcp001@sot.pdpu.ac.in" required
                         class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
-                    <p class="text-xs text-gray-400 mt-1">Format: rollno@dept.pdpu.ac.in</p>
                 </div>
 
                 <!-- Role -->
@@ -111,7 +111,7 @@
 
                 <!-- Dynamic Role-Specific Fields (Hidden until role selected) -->
                 <div id="dynamic-fields" class="space-y-5 hidden pt-1">
-                    
+
                     <!-- Roll No for Student -->
                     <div id="student-fields" class="hidden focus-within:ring-0">
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="roll_no">Roll Number</label>
@@ -122,16 +122,18 @@
                     <!-- Staff Code for Staff -->
                     <div id="staff-fields" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="staff_code">Staff Code</label>
-                        <input id="staff_code" name="staff_code" type="text" placeholder="e.g. staff@123" 
-                            pattern="^(?=.*[a-zA-Z0-9])(?=.*[@#$%^&+=_!-]).+$" title="Must include alphanumeric characters and at least one special character like @"
+                        <input id="staff_code" name="staff_code" type="text" placeholder="e.g. staff@123"
+                            pattern="^(?=.*[a-zA-Z0-9])(?=.*[@#$%^&+=_!-]).+$"
+                            title="Must include alphanumeric characters and at least one special character like @"
                             class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                     </div>
 
                     <!-- Admin Code for Admin -->
                     <div id="admin-fields" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="admin_code">Admin Code</label>
-                        <input id="admin_code" name="admin_code" type="text" placeholder="e.g. admin@123" 
-                            pattern="^(?=.*[a-zA-Z0-9])(?=.*[@#$%^&+=_!-]).+$" title="Must include alphanumeric characters and at least one special character like @"
+                        <input id="admin_code" name="admin_code" type="text" placeholder="e.g. admin@123"
+                            pattern="^(?=.*[a-zA-Z0-9])(?=.*[@#$%^&+=_!-]).+$"
+                            title="Must include alphanumeric characters and at least one special character like @"
                             class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                     </div>
 
@@ -140,9 +142,13 @@
                 <!-- Password -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Password</label>
-                    <input id="password" name="password" type="password" placeholder="Min. 8 characters" minlength="8"
+                    <input id="password" name="password" type="password" placeholder="e.g. Pass@123" minlength="8"
+                        pattern="(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@#$%^&+=_!\-]).{8,}"
+                        title="Must be 8+ characters with letters, numbers, and a special character (@, #, $, etc.)"
                         required
                         class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                    <p class="text-xs text-gray-400 mt-1">Must include letters, numbers & a special character (@, #, $
+                        etc.)</p>
                 </div>
 
                 <!-- Confirm Password -->
@@ -200,18 +206,18 @@
         document.addEventListener("DOMContentLoaded", function () {
             const roleSelect = document.getElementById("role");
             const dynamicContainer = document.getElementById("dynamic-fields");
-            
+
             const studentSection = document.getElementById("student-fields");
             const staffSection = document.getElementById("staff-fields");
             const adminSection = document.getElementById("admin-fields");
-            
+
             const rollInput = document.getElementById("roll_no");
             const staffInput = document.getElementById("staff_code");
             const adminInput = document.getElementById("admin_code");
 
             function updateDynamicFields() {
                 const role = roleSelect.value;
-                
+
                 // Hide entire dynamic block if nothing is chosen to collapse spacing
                 if (!role) {
                     dynamicContainer.classList.add("hidden");
@@ -223,7 +229,7 @@
                 studentSection.classList.add("hidden");
                 staffSection.classList.add("hidden");
                 adminSection.classList.add("hidden");
-                
+
                 rollInput.removeAttribute("required");
                 staffInput.removeAttribute("required");
                 adminInput.removeAttribute("required");

@@ -57,8 +57,11 @@ def register():
         if password != confirm:
             return render_template("register.html", error="Passwords do not match")
 
-        if not re.match(r".+@.+\.pdpu\.ac\.in$", email.lower()):
-            return render_template("register.html", error="Use college email: rollno@dept.pdpu.ac.in")
+        if not re.match(r"^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.pdpu\.ac\.in$", email.lower()):
+            return render_template("register.html", error="Use college email: 24bcp001@sot.pdpu.ac.in")
+
+        if len(password) < 8 or not re.search(r"[a-zA-Z]", password) or not re.search(r"[0-9]", password) or not re.search(r"[@#$%^&+=_!\-]", password):
+            return render_template("register.html", error="Password must be 8+ chars with letters, numbers, and a special character (@, #, etc.)")
 
         if role == "admin":
             if not admin_code or admin_code != "campusadmin@123":
