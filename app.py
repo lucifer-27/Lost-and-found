@@ -308,6 +308,8 @@ def report_found():
             "created_at": datetime.utcnow()
         }
 
+        items_collection.insert_one(item)
+
         session["report_success"] = True
         return redirect(url_for("staff"))
 
