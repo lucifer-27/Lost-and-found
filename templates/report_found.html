@@ -1,3 +1,9 @@
+</div>
+</footer>
+
+</body>
+
+</html>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,9 +37,11 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: #f8fafc;
         }
+
         .material-icons {
             vertical-align: middle;
         }
+
         .form-container {
             max-width: 800px;
         }
@@ -43,26 +51,31 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-                        opacity 0.25s ease,
-                        transform 0.25s ease;
+                opacity 0.25s ease,
+                transform 0.25s ease;
             opacity: 0;
             transform: translateY(-6px);
         }
+
         .custom-dropdown-options.open {
             max-height: 400px;
             opacity: 1;
             transform: translateY(0);
         }
+
         .dropdown-chevron {
             transition: transform 0.3s ease;
         }
+
         .dropdown-chevron.open {
             transform: rotate(180deg);
         }
+
         .dropdown-option:hover {
             background-color: #eff6ff;
             color: #2563eb;
         }
+
         .dropdown-option.selected {
             background-color: #dbeafe;
             color: #1d4ed8;
@@ -107,19 +120,22 @@
                 </div>
             </div>
 
-            <form action="/report-found" method="POST" enctype="multipart/form-data" class="p-6 space-y-6" id="report-found-form">
+            <form action="/report-found" method="POST" enctype="multipart/form-data" class="p-6 space-y-6"
+                id="report-found-form">
 
                 {% if uploaded_image %}
                 <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-semibold text-blue-800">Image captured</p>
-                            <p class="text-xs text-blue-600">Your photo has been saved and will be attached to this report.</p>
+                            <p class="text-xs text-blue-600">Your photo has been saved and will be attached to this
+                                report.</p>
                         </div>
                         <a href="/report-found" class="text-sm text-blue-700 hover:underline">Change</a>
                     </div>
                     <div class="mt-4">
-                        <img src="{{ url_for('uploaded_file', filename=uploaded_image) }}" alt="Captured photo" class="max-w-xs rounded-md border" />
+                        <img src="{{ url_for('uploaded_file', filename=uploaded_image) }}" alt="Captured photo"
+                            class="max-w-xs rounded-md border" />
                     </div>
                     <input type="hidden" name="uploaded_image" value="{{ uploaded_image }}" />
                 </div>
@@ -142,12 +158,14 @@
 
                             <!-- Custom dropdown trigger -->
                             <div class="relative" id="category-dropdown">
-                                <button type="button" id="category-btn"
-                                    onclick="toggleDropdown()"
+                                <button type="button" id="category-btn" onclick="toggleDropdown()"
                                     class="w-full flex items-center justify-between rounded-md border border-gray-300 shadow-sm bg-white py-2 px-3 text-left text-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors">
                                     <span id="category-label">Select a category</span>
-                                    <svg class="dropdown-chevron w-4 h-4 text-gray-400" id="chevron" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    <svg class="dropdown-chevron w-4 h-4 text-gray-400" id="chevron"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
 
@@ -155,25 +173,32 @@
                                 <div id="category-options"
                                     class="custom-dropdown-options absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
                                     <ul class="py-1">
-                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors" onclick="selectOption('electronics', 'Electronics')">
+                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                                            onclick="selectOption('electronics', 'Electronics')">
                                             📱 Electronics
                                         </li>
-                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors" onclick="selectOption('clothing', 'Clothing')">
+                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                                            onclick="selectOption('clothing', 'Clothing')">
                                             👕 Clothing
                                         </li>
-                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors" onclick="selectOption('documents', 'ID Cards & Documents')">
+                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                                            onclick="selectOption('documents', 'ID Cards & Documents')">
                                             📄 ID Cards & Documents
                                         </li>
-                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors" onclick="selectOption('keys', 'Keys')">
+                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                                            onclick="selectOption('keys', 'Keys')">
                                             🔑 Keys
                                         </li>
-                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors" onclick="selectOption('wallets', 'Wallets & Purses')">
+                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                                            onclick="selectOption('wallets', 'Wallets & Purses')">
                                             👛 Wallets & Purses
                                         </li>
-                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors" onclick="selectOption('books', 'Books & Stationery')">
+                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                                            onclick="selectOption('books', 'Books & Stationery')">
                                             📚 Books & Stationery
                                         </li>
-                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors" onclick="selectOption('other', 'Other')">
+                                        <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                                            onclick="selectOption('other', 'Other')">
                                             📦 Other
                                         </li>
                                     </ul>
@@ -239,10 +264,12 @@
                         </div>
 
                         <!-- File selected preview -->
-                        <div id="file-preview" class="hidden mt-3 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5">
+                        <div id="file-preview"
+                            class="hidden mt-3 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5">
                             <span class="material-icons text-blue-500 text-sm">image</span>
                             <span id="file-name-label" class="text-sm text-blue-700 font-medium truncate"></span>
-                            <button type="button" onclick="clearFile()" class="ml-auto text-blue-400 hover:text-red-500 transition-colors">
+                            <button type="button" onclick="clearFile()"
+                                class="ml-auto text-blue-400 hover:text-red-500 transition-colors">
                                 <span class="material-icons text-sm">close</span>
                             </button>
                         </div>
@@ -286,8 +313,8 @@
 <script>
     const optionsEl = document.getElementById('category-options');
     const chevronEl = document.getElementById('chevron');
-    const inputEl   = document.getElementById('category-input');
-    const labelEl   = document.getElementById('category-label');
+    const inputEl = document.getElementById('category-input');
+    const labelEl = document.getElementById('category-label');
 
     function toggleDropdown() {
         const isOpen = optionsEl.classList.toggle('open');
@@ -310,7 +337,7 @@
     }
 
     // Close if clicking outside
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const dropdown = document.getElementById('category-dropdown');
         if (!dropdown.contains(e.target)) {
             optionsEl.classList.remove('open');
@@ -321,7 +348,7 @@
     // File picker preview
     function showFileName(input) {
         const preview = document.getElementById('file-preview');
-        const label   = document.getElementById('file-name-label');
+        const label = document.getElementById('file-name-label');
         if (input.files && input.files[0]) {
             label.textContent = input.files[0].name;
             preview.classList.remove('hidden');
@@ -329,9 +356,9 @@
     }
 
     function clearFile() {
-        const input   = document.getElementById('upload_image_input');
+        const input = document.getElementById('upload_image_input');
         const preview = document.getElementById('file-preview');
-        input.value   = '';
+        input.value = '';
         preview.classList.add('hidden');
     }
 
@@ -340,7 +367,7 @@
 
     function validateAndSubmit() {
         const fileInput = document.getElementById('upload_image_input');
-        const errorEl  = document.getElementById('image-error');
+        const errorEl = document.getElementById('image-error');
 
         // Pass if camera was used OR a file is selected
         if (!cameraImageAttached && (!fileInput.files || fileInput.files.length === 0)) {
@@ -356,7 +383,7 @@
     }
 
     // Hide error as soon as user picks a file
-    document.getElementById('upload_image_input').addEventListener('change', function() {
+    document.getElementById('upload_image_input').addEventListener('change', function () {
         document.getElementById('image-error').classList.add('hidden');
     });
 </script>

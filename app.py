@@ -261,7 +261,7 @@ def report_lost():
     return render_template("report_lost.html")
 
 # ---------------- REPORT FOUND ITEM ----------------
-@app.route("/report-found", methods=["GET", "POST"])
+@app.route("/report-found", methods=["GET","POST"])
 def report_found():
 
     if "user" not in session:
@@ -273,29 +273,47 @@ def report_found():
         category = request.form.get("category")
         date = request.form.get("date_found")
         time_found = request.form.get("time_found")
-        date_combined = f"{date} {time_found}" if time_found else date
-
         location = request.form.get("location")
         description = request.form.get("description")
 
-        items_collection.insert_one({
+        type_ = "found"
+
+        # combine date + time
+        date_combined = f"{date} {time_found}" if time_found else date
+
+        # camera image (if captured)
+        filename = request.form.get("uploaded_image")
+
+        # file upload image
+        image = request.files.get("image")
+
+        if image and image.filename != "":
+            filename = secure_filename(image.filename)
+
+            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+        # MongoDB item document
+        item = {
             "name": name,
             "category": category,
-            "type": "found",
+            "type": type_,
             "date": date_combined,
             "location": location,
             "description": description,
+            "image": filename,
             "status": "active",
             "reported_by": session["user_id"],
             "created_at": datetime.utcnow()
-        })
+        }
 
         session["report_success"] = True
         return redirect(url_for("staff"))
 
-    uploaded_image = session.pop("uploaded_image", None)
-    return render_template("report_found.html", uploaded_image=uploaded_image)
+    uploaded_image = session.get("uploaded_image")
 
+    return render_template("report_found.html", uploaded_image=uploaded_image)
 # ---------------- ITEMS ----------------
 @app.route("/items")
 def items():

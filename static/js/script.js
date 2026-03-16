@@ -116,6 +116,6 @@ function searchItems() {
             item.style.display = "none";
         }
 
-    });
+    }); 
 
 }
