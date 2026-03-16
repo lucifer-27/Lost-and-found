@@ -144,7 +144,8 @@ def student():
 def staff():
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
-    return render_template("staff.html")
+    report_success = session.pop("report_success", False)
+    return render_template("staff.html", report_success=report_success)
 
 @app.route("/admin")
 def admin():
@@ -290,7 +291,7 @@ def report_found():
         })
 
         session["report_success"] = True
-        return redirect(url_for("student"))
+        return redirect(url_for("staff"))
 
     uploaded_image = session.pop("uploaded_image", None)
     return render_template("report_found.html", uploaded_image=uploaded_image)

@@ -16,10 +16,7 @@
         <!-- Buttons -->
         <div class="mt-4 d-flex justify-content-center gap-3">
 
-            <button 
-                type="button" 
-                class="btn btn-primary px-4"
-                onclick="capture()">
+            <button type="button" class="btn btn-primary px-4" onclick="capture()">
                 📸 Capture
             </button>
 
@@ -44,27 +41,27 @@
 
 <script>
 
-const video = document.getElementById("video")
+    const video = document.getElementById("video")
 
-navigator.mediaDevices.getUserMedia({ video: true })
-.then(stream => {
-    video.srcObject = stream
-})
-.catch(err => {
-    alert("Camera access denied")
-})
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream
+        })
+        .catch(err => {
+            alert("Camera access denied")
+        })
 
-function capture(){
+    function capture() {
 
-    const canvas = document.getElementById("canvas")
-    const context = canvas.getContext("2d")
+        const canvas = document.getElementById("canvas")
+        const context = canvas.getContext("2d")
 
-    context.drawImage(video,0,0,400,300)
+        context.drawImage(video, 0, 0, 400, 300)
 
-    const image = canvas.toDataURL("image/png")
+        const image = canvas.toDataURL("image/png")
 
-    document.getElementById("image_data").value = image
-}
+        document.getElementById("image_data").value = image
+    }
 
 </script>
 

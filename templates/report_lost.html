@@ -14,6 +14,42 @@
       --tw-ring-color: #2563eb;
       border-color: #2563eb;
     }
+
+    /* Custom animated dropdown */
+    .custom-dropdown-options {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.25s ease,
+        transform 0.25s ease;
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+
+    .custom-dropdown-options.open {
+      max-height: 400px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .dropdown-chevron {
+      transition: transform 0.3s ease;
+    }
+
+    .dropdown-chevron.open {
+      transform: rotate(180deg);
+    }
+
+    .dropdown-option:hover {
+      background-color: #eff6ff;
+      color: #2563eb;
+    }
+
+    .dropdown-option.selected {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
   </style>
 </head>
 
@@ -61,15 +97,47 @@
 
         <div class="space-y-1">
           <label class="block text-sm font-semibold text-gray-700">Category</label>
-          <select
-            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
-            name="category" required>
-            <option disabled selected value="">Select a category</option>
-            <option value="electronics">Electronics</option>
-            <option value="documents">Documents</option>
-            <option value="accessories">Accessories</option>
-            <option value="others">Others</option>
-          </select>
+          <!-- Hidden input that actually submits the value -->
+          <input type="hidden" name="category" id="category-input" required />
+
+          <!-- Custom dropdown trigger -->
+          <div class="relative" id="category-dropdown">
+            <button type="button" id="category-btn" onclick="toggleDropdown()"
+              class="w-full flex items-center justify-between rounded-md border border-gray-300 shadow-sm bg-white py-2 px-3 text-left text-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors">
+              <span id="category-label">Select a category</span>
+              <svg class="dropdown-chevron w-4 h-4 text-gray-400" id="chevron" xmlns="http://www.w3.org/2000/svg"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Animated options panel -->
+            <div id="category-options"
+              class="custom-dropdown-options absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+              <ul class="py-1">
+                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                  onclick="selectOption('electronics', 'Electronics')">
+                  Electronics
+                </li>
+                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                  onclick="selectOption('documents', 'Documents')">
+                  Documents
+                </li>
+                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                  onclick="selectOption('accessories', 'Accessories')">
+                  Accessories
+                </li>
+                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                  onclick="selectOption('keys', 'Keys')">
+                  Keys
+                </li>
+                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
+                  onclick="selectOption('others', 'Others')">
+                  Others
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -116,6 +184,42 @@
 
     </section>
   </main>
+
+  <script>
+    const optionsEl = document.getElementById('category-options');
+    const chevronEl = document.getElementById('chevron');
+    const inputEl = document.getElementById('category-input');
+    const labelEl = document.getElementById('category-label');
+
+    function toggleDropdown() {
+      const isOpen = optionsEl.classList.toggle('open');
+      chevronEl.classList.toggle('open', isOpen);
+    }
+
+    function selectOption(value, text) {
+      inputEl.value = value;
+      labelEl.textContent = text;
+      labelEl.classList.remove('text-gray-500');
+      labelEl.classList.add('text-gray-900');
+
+      // Mark selected visually
+      document.querySelectorAll('.dropdown-option').forEach(el => el.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+
+      // Close dropdown
+      optionsEl.classList.remove('open');
+      chevronEl.classList.remove('open');
+    }
+
+    // Close if clicking outside
+    document.addEventListener('click', function (e) {
+      const dropdown = document.getElementById('category-dropdown');
+      if (!dropdown.contains(e.target)) {
+        optionsEl.classList.remove('open');
+        chevronEl.classList.remove('open');
+      }
+    });
+  </script>
 
   <footer class="bg-gray-100 py-6 px-6 text-center text-gray-500 text-sm border-t border-gray-200">
     <div class="text-center text-xs">
