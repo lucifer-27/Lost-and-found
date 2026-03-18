@@ -25,7 +25,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ---------------- MONGODB ----------------
 from pymongo import MongoClient
-client = MongoClient("mongodb+srv://vivanpandya15_db_user:Vivan123@cluster0.lg5y6u3.mongodb.net/?appName=Cluster0")
+client = MongoClient("mongodb+srv://group_user:CampusFind123@cluster0.lg5y6u3.mongodb.net/?retryWrites=true&w=majority")
 db = client["lost_found_db"]
 
 users_collection = db["users"]

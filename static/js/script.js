@@ -1,3 +1,4 @@
+
 // =============================
 // CampusFind Main JavaScript
 // =============================
@@ -18,10 +19,10 @@ function startCamera() {
     }
 
     navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
+        .then(function (stream) {
             video.srcObject = stream;
         })
-        .catch(function(error) {
+        .catch(function (error) {
             console.error("Camera error:", error);
             alert("Unable to access camera");
         });
@@ -106,7 +107,7 @@ function searchItems() {
     const filter = input.value.toLowerCase();
     const items = document.querySelectorAll(".item-card");
 
-    items.forEach(function(item){
+    items.forEach(function (item) {
 
         const text = item.textContent.toLowerCase();
 
@@ -116,6 +117,6 @@ function searchItems() {
             item.style.display = "none";
         }
 
-    }); 
+    });
 
 }

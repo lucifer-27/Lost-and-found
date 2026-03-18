@@ -145,8 +145,10 @@
             {% for item in items %}
             <article
                 class="item-card hidden bg-white border border-gray-200 rounded-xl flex-col md:flex-row overflow-hidden shadow-sm hover:shadow-md transition"
-                data-purpose="item-card" data-name="{{ item.name | default('') | lower }}" data-category="{{ item.category | default('') | lower }}"
-                data-type="{% if item.status == 'returned' %}returned{% else %}{{ item.type | default('') | lower }}{% endif %}" data-status="{{ item.status | default('') | lower }}"
+                data-purpose="item-card" data-name="{{ item.name | default('') | lower }}"
+                data-category="{{ item.category | default('') | lower }}"
+                data-type="{% if item.status == 'returned' %}returned{% else %}{{ item.type | default('') | lower }}{% endif %}"
+                data-status="{{ item.status | default('') | lower }}"
                 data-description="{{ item.description | default('') | lower }}">
                 <div class="flex-shrink-0">
                     {% if item.image_filename %}
@@ -163,8 +165,7 @@
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="text-xl font-bold text-gray-900">{{ item.name }}</h3>
                             <div class="flex gap-2">
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium 
                                     {% if item.status == 'returned' %}bg-green-100 text-green-800
                                     {% elif item.type == 'found' %}bg-orange-100 text-orange-800
                                     {% else %}bg-red-100 text-red-800{% endif %} capitalize">
@@ -197,8 +198,8 @@
                                 </svg>
                                 {{ item.date }} {% if item.time %}{{ item.time }}{% endif %}
                             </div>
-                            </div>
                         </div>
+                    </div>
                     <div class="mt-auto pt-4 flex justify-end items-end w-full">
                         {% if item.status != 'returned' %}
                         <a href="{{ url_for('claim', item_id=item.id) }}"
