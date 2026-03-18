@@ -2,7 +2,7 @@ import os
 import re
 import base64
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
@@ -25,7 +25,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ---------------- MONGODB ----------------
 from pymongo import MongoClient
-client = MongoClient("mongodb+srv://group_user:CampusFind123@cluster0.lg5y6u3.mongodb.net/?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://vivanpandya15_db_user:Vivan123@cluster0.lg5y6u3.mongodb.net/?appName=Cluster0")
 db = client["lost_found_db"]
 
 users_collection = db["users"]
@@ -371,6 +371,95 @@ def upload():
         return redirect(next_url)
 
     return render_template("camera.html", return_url=url_for("report_found"))
+
+# ---------------- CHATBOT API ----------------
+
+# Built-in FAQ knowledge base for CampusFind
+CHATBOT_FAQ = {
+    "report lost": "To report a lost item:\n1. Log in with your student account\n2. Go to your Student Dashboard\n3. Click 'Report Lost Item'\n4. Fill in the item name, category, date lost, location, and description\n5. Submit the form — your report will be visible to security staff!",
+    "report found": "To report a found item (security staff only):\n1. Log in with your staff account\n2. Go to your Security Dashboard\n3. Click 'Report Found Item'\n4. Fill in item details, take a photo (camera or upload), and submit\n5. The item will appear in the system for students to browse.",
+    "claim": "To claim a found item:\n1. A security staff member processes claims\n2. The student must provide proof of ownership\n3. Staff verifies the claim and logs the return\n4. The item status changes to 'Returned'.",
+    "browse items": "To browse found items:\n1. Log in to your account\n2. Click 'Browse Found Items' from your dashboard\n3. You'll see all active found items with details and images\n4. If you spot your item, contact security staff to initiate a claim.",
+    "register": "To register on CampusFind:\n1. Go to the Register page\n2. Enter your PDPU college email (e.g., 24bcp001@sot.pdpu.ac.in)\n3. Select your role (Student, Staff, or Admin)\n4. Create a secure password (8+ chars with letters, numbers, and special characters)\n5. Submit and then log in!",
+    "login": "To log in:\n1. Go to the Login page\n2. Enter your registered college email\n3. Select your role (Student / Staff / Admin)\n4. Enter your password\n5. You'll be redirected to your dashboard.",
+    "what is campusfind": "CampusFind is the official Lost & Found portal for PDEU (Pandit Deendayal Energy University). It helps students report lost items and security staff log found items, making it easy to reunite people with their belongings.",
+    "notifications": "Notifications keep you updated about your reports. You can view them by clicking the bell icon in your dashboard navbar. Use 'Mark all as read' to clear them.",
+    "roles": "CampusFind has three roles:\n• **Student** — Report lost items, browse found items\n• **Security Staff** — Report found items, process claims, verify ownership\n• **Admin** — View all reports, manage users, see analytics",
+    "contact": "For support, contact CampusFind at support@campusfind.pdeu.ac.in or visit the security office at PDEU Campus, Knowledge Corridor, Gandhinagar.",
+    "how does it work": "Here's how CampusFind works:\n1. **Student loses an item** → Reports it on the portal\n2. **Security finds an item** → Logs it with photo and details\n3. **Student browses found items** → Spots their item\n4. **Staff processes the claim** → Verifies ownership and returns the item\nIt's that simple!",
+    "hello": "Hello! I'm the CampusFind Assistant. I can help you with:\n• How to report lost/found items\n• How claiming works\n• How to register and log in\n• General questions about CampusFind\nJust ask me anything!",
+    "hi": "Hi there! I'm the CampusFind Assistant. Ask me anything about the Lost & Found portal — reporting items, claims, registration, and more!",
+    "help": "I can help you with:\n• Reporting lost items\n• Reporting found items (staff)\n• Browsing found items\n• Claiming items\n• Registration & Login\n• Understanding roles\n• How the system works\nJust type your question!"
+}
+
+def find_faq_answer(user_message):
+    """Check if the user message matches any FAQ keyword as a whole word."""
+    msg = user_message.lower().strip()
+    
+    for keyword, answer in CHATBOT_FAQ.items():
+        if re.search(rf"\b{re.escape(keyword)}\b", msg):
+            return answer
+    return None
+
+def ask_gemini(user_message):
+    """Send the question to Gemini AI with CampusFind context."""
+    if not GEMINI_AVAILABLE:
+        return "AI-powered answers require the google-generativeai package. Please install it with: pip install google-generativeai"
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return "I'm sorry, AI-powered answers are currently unavailable. Please try asking about reporting items, claiming, registration, or how CampusFind works!"
+
+    try:
+        genai.configure(api_key=api_key)
+        
+        system_context = (
+            "You are the CampusFind Assistant, a helpful chatbot for the PDEU..."
+            # ... rest of your instructions ...
+        )
+        
+        # Pass the instructions directly to the model configuration
+        model = genai.GenerativeModel(
+            "gemini-2.0-flash",
+            system_instruction=system_context
+        )
+
+        # Now just pass the user's raw message
+        response = model.generate_content(user_message)
+        return response.text
+
+        system_context = (
+            "You are the CampusFind Assistant, a helpful chatbot for the PDEU (Pandit Deendayal Energy University) "
+            "Lost & Found portal called CampusFind. The portal allows students to report lost items, security staff "
+            "to log found items with photos, and staff to process claims by verifying ownership. "
+            "Users register with their PDPU college email. There are three roles: Student, Security Staff, and Admin. "
+            "Keep your answers concise, friendly, and helpful. If the question is unrelated to lost-and-found or campus, "
+            "still answer politely but briefly. Use emojis sparingly."
+        )
+
+        response = model.generate_content(f"{system_context}\n\nUser question: {user_message}")
+        return response.text
+    except Exception as e:
+        return "I'm having trouble connecting to AI services right now. Please try again in a moment, or ask me about CampusFind features like reporting items, claims, or registration!"
+
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    data = request.get_json()
+    if not data or "message" not in data:
+        return jsonify({"reply": "Please send a message."}), 400
+
+    user_message = data["message"].strip()
+    if not user_message:
+        return jsonify({"reply": "Please type a question and I'll help!"}), 400
+
+    # Try FAQ first
+    faq_answer = find_faq_answer(user_message)
+    if faq_answer:
+        return jsonify({"reply": faq_answer, "source": "faq"})
+
+    # Fallback to Gemini AI
+    ai_answer = ask_gemini(user_message)
+    return jsonify({"reply": ai_answer, "source": "gemini"})
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
