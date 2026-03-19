@@ -309,7 +309,7 @@ def report_lost():
         category = request.form.get("category")
         date = request.form.get("date_lost")
         location = request.form.get("location")
-        description = request.form.get("description")
+        description = request.form.get("description","")
 
         items_collection.insert_one({
             "name": name,
