@@ -34,6 +34,18 @@ archived_items_collection = db["archived_items"]
 claims_collection = db["claims"]
 notifications_collection = db["notifications"]   
 
+# ---------------- NOTIFICATION FUNCTION ----------------
+def create_notification(user_id, role, message, notif_type="general"):
+
+    notifications_collection.insert_one({
+        "user_id": str(user_id),   # ALWAYS string
+        "role": role,
+        "message": message,
+        "type": notif_type,
+        "read": False,
+        "created_at": datetime.utcnow()
+    })
+
 # ---------------- HOME ----------------
 @app.route("/")
 def home():
@@ -185,17 +197,36 @@ def admin():
     )
 
 # ---------------- NOTIFICATIONS ----------------
+#Student notifications
 @app.route("/notification_student")
 def notification_student():
+
     if "user" not in session or session.get("role") != "student":
         return redirect(url_for("login"))
-    return render_template("notification_student.html")
 
+    user_id = str(session["user_id"])
+
+    notifications = list(
+        notifications_collection.find({"user_id": user_id})
+        .sort("created_at", -1)
+    )
+
+    return render_template("notification_student.html", notifications=notifications)
+#Staff notifications
 @app.route("/notifications")
 def notifications():
+
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
-    return render_template("notification_staff.html")
+
+    user_id = str(session["user_id"])
+
+    notifications = list(
+        notifications_collection.find({"user_id": user_id})
+        .sort("created_at", -1)
+    )
+
+    return render_template("notification_staff.html", notifications=notifications)
 
 @app.route("/claim", methods=["GET", "POST"])
 def claim():
@@ -231,7 +262,27 @@ def claim():
             "processed_by": session["user_id"],
             "processed_at": datetime.utcnow()
         })
-        
+
+        # ---------------- NOTIFICATIONS ----------------
+
+        # 1. Notify student
+        create_notification(
+            student_email,   # TEMP (we will fix later)
+            "student",
+            f"Your item '{item_name}' has been returned successfully.",
+            "claim_completed"
+        )
+
+        # 2. Notify staff (optional)
+        create_notification(
+            session["user_id"],
+            "staff",
+            f"You processed claim for '{item_name}'.",
+            "claim_done"
+        )
+
+        # ------------------------------------------------
+
         return redirect(url_for("items"))
     
     # GET request - show claim form
