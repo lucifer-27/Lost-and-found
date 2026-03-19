@@ -363,7 +363,7 @@
     }
 
     // Whether a camera image was already captured (Jinja passes this)
-    const cameraImageAttached = {{ 'true' if uploaded_image else 'false' }};
+    const cameraImageAttached = "{{ 'true' if uploaded_image else 'false' }}" === 'true';
 
     function validateAndSubmit() {
         const fileInput = document.getElementById('upload_image_input');
