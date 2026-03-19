@@ -294,7 +294,73 @@ def claim():
         return render_template("claim.html")
     
     #Notification
-    
+
+# -------- REQUEST CLAIM (STUDENT) --------
+@app.route("/request-claim", methods=["POST"])
+def request_claim():
+
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        data = request.get_json()
+
+        item_id = data.get("item_id")
+        student_name = data.get("student_name")
+        description_lost = data.get("description_lost")
+
+        if not item_id:
+            return jsonify({"error": "Item ID missing"}), 400
+
+        # Get student email
+        user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+        student_email = user["email"]
+
+        # Extract roll number
+        roll_no = student_email.split("@")[0]
+
+        # Get item info
+        item = items_collection.find_one({"_id": ObjectId(item_id)})
+
+        if not item:
+            return jsonify({"error": "Item not found"}), 404
+
+        # Prevent duplicate claim
+        existing = claims_collection.find_one({
+            "item_id": ObjectId(item_id),
+            "requested_by": session["user_id"],
+            "status": "pending"
+        })
+
+        if existing:
+            return jsonify({"error": "You already submitted a claim for this item."}), 400
+
+        # Create claim record
+        claim_record = {
+            "item_id": ObjectId(item_id),
+            "item_name": item["name"],
+            "item_description": item.get("description", ""),
+            "category": item.get("category", ""),
+            "location": item.get("location", ""),
+            "student_name": student_name,
+            "student_email": student_email,
+            "roll_no": roll_no,
+            "description_lost": description_lost,
+            "status": "pending",
+            "requested_at": datetime.utcnow(),
+            "requested_by": session["user_id"]
+        }
+
+        result = claims_collection.insert_one(claim_record)
+
+        return jsonify({
+            "success": True,
+            "claim_id": str(result.inserted_id)
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 
 # ---------------- REPORT LOST ITEM ----------------
 @app.route("/report-lost", methods=["GET", "POST"])
@@ -309,7 +375,7 @@ def report_lost():
         category = request.form.get("category")
         date = request.form.get("date_lost")
         location = request.form.get("location")
-        description = request.form.get("description")
+        description = request.form.get("description","")
 
         items_collection.insert_one({
             "name": name,
