@@ -10,23 +10,6 @@
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          borderRadius: { 'card': '12px' },
-          colors: {
-            campus: {
-              primary: '#2563eb',
-              secondary: '#64748b',
-              accent: '#f8fafc'
-            }
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -37,35 +20,18 @@
       vertical-align: middle;
     }
 
-
-    #mark-all-read-toggle:checked~section .mark-all-read-btn {
-      display: none;
+    .notification-card {
+      transition: all 0.3s ease;
     }
 
-    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] {
-      background-color: #ffffff !important;
-      border-color: #e5e7eb !important;
-      border-left-width: 1px !important;
+    .notification-card .read-indicator {
+      width: 3px;
+      background-color: #3b82f6;
+      border-radius: 0 4px 4px 0;
     }
 
-    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] .bg-blue-100 {
-      background-color: #f3f4f6 !important;
-    }
-
-    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] .material-icons.text-blue-600 {
-      color: #9ca3af !important;
-    }
-
-    #mark-all-read-toggle:checked~#notifications-container div[data-purpose="unread-notification"] .bg-blue-600.rounded-full.mt-2 {
-      display: none !important;
-    }
-
-    #view-past-toggle:checked~div .view-past-btn {
-      display: none;
-    }
-
-    #view-past-toggle:checked~#notifications-container .past-notification {
-      display: flex !important;
+    .notification-card.read .read-indicator {
+      background-color: #e5e7eb;
     }
   </style>
 </head>
@@ -75,24 +41,24 @@
   <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
-
         <div class="flex items-center">
           <span class="text-2xl font-bold text-blue-600 flex items-center">
             <span class="material-icons mr-2">search</span>
             CampusFind
           </span>
         </div>
-
+        <div class="flex items-center gap-4">
+          <a href="/pending-claims" class="bg-orange-100 text-orange-600 hover:bg-orange-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
+            <span class="material-icons text-sm">description</span> Pending Claims
+          </a>
+        </div>
       </div>
     </div>
   </nav>
   <!-- END: MainHeader -->
+
   <!-- BEGIN: NotificationsContent -->
   <main class="max-w-3xl mx-auto px-4 py-8">
-    <!-- Hidden CSS-only checkboxes -->
-    <input type="checkbox" id="mark-all-read-toggle" class="hidden" />
-    <input type="checkbox" id="view-past-toggle" class="hidden" />
-
     <!-- BEGIN: SectionTitle -->
     <section class="mb-8 flex items-center justify-between" data-purpose="page-heading">
       <div class="flex items-center">
@@ -102,42 +68,176 @@
           <span class="material-icons">arrow_back</span>
         </a>
         <div>
-          <h2 class="text-2xl font-bold text-gray-800">Your Notifications</h2>
-          <p class="text-sm text-gray-500">Stay updated on your lost and found items</p>
+          <h2 class="text-2xl font-bold text-gray-800">Staff Notifications</h2>
+          <p class="text-sm text-gray-500">Updates about items and processed claims</p>
         </div>
       </div>
-      <label for="mark-all-read-toggle"
-        class="mark-all-read-btn flex items-center space-x-1 text-sm font-medium text-blue-600 bg-white border border-gray-200 shadow-sm px-4 py-2 rounded-full hover:bg-gray-50 hover:text-blue-700 transition-colors cursor-pointer">
-        <span class="material-icons text-sm">done_all</span>
-        <span class="hidden sm:inline">Mark all as read</span>
-      </label>
+      <div class="text-sm font-medium bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
+        <span id="unread-count">0</span> unread
+      </div>
     </section>
     <!-- END: SectionTitle -->
-    <div id="notifications-container" class="space-y-4" data-purpose="notification-feed">
-      <div class="bg-white rounded-card shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+
+    <!-- BEGIN: NotificationsList -->
+    <div id="notifications-container" class="space-y-3" data-purpose="notification-feed">
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
         <span class="material-icons text-5xl mb-4 text-gray-300 block">notifications_none</span>
-        <h3 class="text-lg font-medium text-gray-900 mb-1">No notifications yet</h3>
-        <p class="text-sm text-gray-500">When you receive updates about your items, they'll appear here.</p>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">No notifications</h3>
+        <p class="text-sm text-gray-500">You'll receive notifications about processed claims and item updates here.</p>
       </div>
     </div>
     <!-- END: NotificationsList -->
-    <!-- BEGIN: LoadMore -->
-    <div class="mt-8 text-center" data-purpose="pagination-ui">
-      <label for="view-past-toggle"
-        class="view-past-btn inline-flex items-center justify-center mx-auto space-x-2 px-6 py-2.5 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm cursor-pointer">
-        <span class="material-icons text-sm text-gray-500">history</span>
-        <span>View Past Notifications</span>
-      </label>
-    </div>
-    <!-- END: LoadMore -->
   </main>
   <!-- END: NotificationsContent -->
+
   <!-- BEGIN: Footer -->
   <footer class="mt-12 py-8 border-t border-gray-200 text-center text-gray-400 text-xs">
     <p>© 2026 CampusFind PDEU. All Rights Reserved.</p>
   </footer>
   <!-- END: Footer -->
 
+  <script>
+    // Auto-refresh notifications every 2 seconds
+    const AUTO_REFRESH_INTERVAL = 2000;
+
+    async function fetchNotifications() {
+      try {
+        const response = await fetch('/api/notifications/staff');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const notifications = await response.json();
+        renderNotifications(notifications);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    }
+
+    function renderNotifications(notifications) {
+      const container = document.getElementById('notifications-container');
+      const unreadCountBadge = document.getElementById('unread-count');
+
+      // Calculate unread count
+      const unreadCount = notifications.filter(n => !n.read).length;
+      unreadCountBadge.textContent = unreadCount;
+
+      // Show empty state if no notifications
+      if (notifications.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+            <span class="material-icons text-5xl mb-4 text-gray-300 block">notifications_none</span>
+            <h3 class="text-lg font-medium text-gray-900 mb-1">No notifications</h3>
+            <p class="text-sm text-gray-500">You'll receive notifications about processed claims and item updates here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Render notifications - sort by date (newest first)
+      const sortedNotifications = [...notifications].sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      container.innerHTML = sortedNotifications.map(notif => {
+        const createdDate = new Date(notif.created_at).toLocaleString();
+        const isRead = notif.read;
+        
+        // Determine icon and color based on notification type
+        let iconName, bgColor, borderColor, typeLabel;
+        
+        if (notif.type === 'claim_submitted') {
+          iconName = 'assignment';
+          bgColor = 'bg-orange-50';
+          borderColor = 'border-orange-200';
+          typeLabel = '📋 New Claim';
+        } else if (notif.type === 'item_returned') {
+          iconName = 'done_all';
+          bgColor = 'bg-green-50';
+          borderColor = 'border-green-200';
+          typeLabel = '✓ Item Returned';
+        } else if (notif.type === 'item_updated') {
+          iconName = 'info';
+          bgColor = 'bg-blue-50';
+          borderColor = 'border-blue-200';
+          typeLabel = 'ℹ Item Update';
+        } else {
+          iconName = 'notifications';
+          bgColor = 'bg-gray-50';
+          borderColor = 'border-gray-200';
+          typeLabel = '📌 Update';
+        }
+
+        return `
+          <div class="notification-card ${isRead ? 'read' : ''} bg-white rounded-lg shadow-sm border ${borderColor} p-4 cursor-pointer hover:shadow-md transition flex items-start" data-notification-id="${notif._id}">
+            <div class="read-indicator mr-4"></div>
+            <div class="flex-grow">
+              <div class="flex items-start justify-between mb-2">
+                <h3 class="font-semibold text-gray-900">${notif.title || typeLabel}</h3>
+                <span class="text-xs text-gray-500 ml-2">${createdDate}</span>
+              </div>
+              <p class="text-sm text-gray-700 mb-2">${notif.message}</p>
+              ${notif.item_name ? `<p class="text-sm font-medium text-gray-600">📦 Item: <span class="text-gray-900">${notif.item_name}</span></p>` : ''}
+              ${notif.student_name ? `<p class="text-sm font-medium text-gray-600">👤 Student: <span class="text-gray-900">${notif.student_name} (${notif.roll_no})</span></p>` : ''}
+            </div>
+            <button class="dismiss-btn ml-2 text-gray-400 hover:text-gray-600 transition" title="Dismiss">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      // Attach event listeners
+      document.querySelectorAll('.notification-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('.dismiss-btn')) {
+            markAsRead(card.dataset.notificationId);
+          }
+        });
+      });
+
+      document.querySelectorAll('.dismiss-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dismissNotification(btn.closest('.notification-card').dataset.notificationId);
+        });
+      });
+    }
+
+    async function markAsRead(notificationId) {
+      try {
+        const response = await fetch(`/api/notifications/staff/${notificationId}/read`, {
+          method: 'POST'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        // Refresh notifications
+        await fetchNotifications();
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    }
+
+    async function dismissNotification(notificationId) {
+      try {
+        const response = await fetch(`/api/notifications/staff/${notificationId}/dismiss`, {
+          method: 'POST'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        // Refresh notifications
+        await fetchNotifications();
+      } catch (error) {
+        console.error('Error dismissing notification:', error);
+      }
+    }
+
+    // Initial load and auto-refresh
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchNotifications();
+      setInterval(fetchNotifications, AUTO_REFRESH_INTERVAL);
+    });
+  </script>
 </body>
 
 </html>

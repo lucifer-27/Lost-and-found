@@ -5,24 +5,11 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Browse Items | CampusFind</title>
+    <title>Found Items | CampusFind</title>
     <!-- Tailwind CSS v3 with Plugins -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-    <style data-purpose="custom-layout">
-        .item-card-image {
-            width: 300px;
-            min-width: 300px;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        /* Ensure the main container feels spacious on desktop */
-        .results-container {
-            max-width: 1200px;
-        }
-    </style>
     <style data-purpose="typography">
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -43,175 +30,225 @@
         </div>
     </header>
     <!-- END: MainHeader -->
-    <main class="results-container mx-auto px-4 py-8">
-        <!-- BEGIN: SearchSection -->
-        <section class="mb-8" data-purpose="search-interface">
-            <div class="flex items-center">
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- BEGIN: Header Section -->
+        <section class="mb-8">
+            <div class="flex items-center mb-6">
                 <a href="/student"
                     class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
                     title="Back to Dashboard">
                     <span class="material-icons">arrow_back</span>
                 </a>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Browse Lost Items</h1>
+                    <h1 class="text-3xl font-bold text-gray-800">Found Items</h1>
+                    <p class="text-gray-600 mt-1">Browse found items and request a claim if you recognize your lost item</p>
                 </div>
-            </div>
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-6"></h1>
-            <div class="relative max-w-2xl">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <!-- Search Icon -->
-                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round"
-                            stroke-linejoin="round" stroke-width="2"></path>
-                    </svg>
-                </div>
-                <input
-                    class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm shadow-sm"
-                    id="main-search" placeholder="Search for lost keys, water bottles, electronics..." type="text" />
             </div>
         </section>
-        <!-- END: SearchSection -->
-        <!-- BEGIN: FilterRow -->
-        <section class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-8" data-purpose="filter-controls">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <!-- END: Header Section -->
+
+        <!-- BEGIN: Filter Controls -->
+        <section class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Filters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Category Filter -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
-                        for="filter-type">Type</label>
-                    <select
-                        class="block w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        id="filter-type">
-                        <option>All Types</option>
-                        <option>Lost</option>
-                        <option>Found</option>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-category">
+                        Category
+                    </label>
+                    <select id="filter-category"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Categories</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="accessories">Accessories</option>
+                        <option value="books/documents">Books/Documents</option>
                     </select>
                 </div>
+
+                <!-- Item Name Filter -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
-                        for="filter-category">Category</label>
-                    <select
-                        class="block w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        id="filter-category">
-                        <option>All Categories</option>
-                        <option>Electronics</option>
-                        <option>Clothing</option>
-                        <option>Accessories</option>
-                        <option>Books/Documents</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-name">
+                        Item Name
+                    </label>
+                    <input id="filter-name" type="text" placeholder="Search item name..."
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
+
+                <!-- Month Filter -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
-                        for="filter-status">Status</label>
-                    <select
-                        class="block w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        id="filter-status">
-                        <option>Active</option>
-                        <option>Resolved</option>
-                        <option>Pending Claim</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-month">
+                        Month Found
+                    </label>
+                    <input id="filter-month" type="month"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
-                        for="filter-date">Date</label>
-                    <input
-                        class="block w-full rounded-md border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        id="filter-date" type="date" />
-                </div>
-                <div>
-                    <button id="apply-filters-btn"
-                        class="w-full bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-gray-800 transition">
-                        Apply Filters
+
+                <!-- Clear Filters Button -->
+                <div class="flex items-end">
+                    <button id="clear-filters-btn"
+                        class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        Clear Filters
                     </button>
                 </div>
             </div>
         </section>
-        <!-- END: FilterRow -->
-        <!-- BEGIN: ResultsHeader -->
-        <div class="flex justify-between items-center mb-6" id="results-count-header" style="display: none;">
-            <h2 class="text-lg font-medium text-gray-700">Showing <span class="font-bold whitespace-pre"
-                    id="results-count-num">0</span> results</h2>
-            <div class="flex items-center text-sm text-gray-500">
-                <span>Sort by:</span>
-                <select class="ml-2 border-none bg-transparent font-semibold text-gray-900 focus:ring-0 cursor-pointer">
-                    <option>Newest First</option>
-                    <option>Oldest First</option>
-                </select>
-            </div>
-        </div>
-        <!-- END: ResultsHeader -->
-        <!-- BEGIN: ItemList -->
-        <section class="space-y-6" data-purpose="item-results-list">
-            {% for item in items %}
-            <article
-                class="item-card hidden bg-white border border-gray-200 rounded-xl flex-col md:flex-row overflow-hidden shadow-sm hover:shadow-md transition"
-                data-purpose="item-card" data-name="{{ item.name | default('') | lower }}"
-                data-category="{{ item.category | default('') | lower }}"
-                data-type="{% if item.status == 'returned' %}returned{% else %}{{ item.type | default('') | lower }}{% endif %}"
-                data-status="{{ item.status | default('') | lower }}"
-                data-description="{{ item.description | default('') | lower }}">
-                <div class="flex-shrink-0">
-                    {% if item.image_filename %}
-                    <img alt="{{ item.name }}" class="item-card-image"
-                        src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" />
-                    {% else %}
-                    <div class="item-card-image flex items-center justify-center bg-gray-200">
-                        <span class="material-icons text-gray-400 text-6xl">image_not_supported</span>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="p-6 flex flex-col justify-between flex-grow">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-bold text-gray-900">{{ item.name }}</h3>
-                            <div class="flex gap-2">
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                    {% if item.status == 'returned' %}bg-green-100 text-green-800
-                                    {% elif item.type == 'found' %}bg-orange-100 text-orange-800
-                                    {% else %}bg-red-100 text-red-800{% endif %} capitalize">
-                                    {% if item.status == 'returned' %}Returned{% else %}{{ item.type }}{% endif %}
-                                </span>
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">{{
-                                    item.category }}</span>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm line-clamp-2 mb-4">
-                            {{ item.description }}
-                        </p>
-                        <div class="space-y-1">
-                            <div class="flex items-center text-sm text-gray-500">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                    <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round"
-                                        stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                                {{ item.location }}
-                            </div>
-                            <div class="flex items-center text-sm text-gray-500">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                                {{ item.date }} {% if item.time %}{{ item.time }}{% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end">
-                    <!-- Action buttons removed per request -->
-                </div>
-                </div>
-            </article>
-            {% else %}
-            <div class="text-center py-10 text-gray-500 text-lg">No items found in the database.</div>
-            {% endfor %}
-        </section>
-        <!-- END: ItemList -->
+        <!-- END: Filter Controls -->
 
+        <!-- BEGIN: Items Table -->
+        <section class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Item Name
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Description
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Category
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Found Date
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Location
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-tbody" class="divide-y divide-gray-200">
+                        {% for item in items %}
+                        <tr class="hover:bg-blue-50 transition item-row"
+                            data-name="{{ item.name | default('') | lower }}"
+                            data-category="{{ item.category | default('') | lower }}"
+                            data-date="{{ item.date | default('') }}"
+                            data-item-id="{{ item._id }}"
+                            data-item-description="{{ item.description | default('') }}">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                {{ item.name }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                                {{ item.description | default('No description') }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ item.category | default('N/A') }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                {{ item.date | default('Not specified') }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                {{ item.location | default('Not specified') }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <button class="request-claim-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition"
+                                    data-item-id="{{ item._id }}" data-item-name="{{ item.name }}">
+                                    Request Claim
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not items %}
+                <div class="text-center py-10 text-gray-500">
+                    <p class="text-lg">No found items available at the moment.</p>
+                </div>
+                {% endif %}
+            </div>
+            <div id="no-results-msg" class="text-center py-10 text-gray-500 hidden">
+                <p class="text-lg">No items match your filter criteria.</p>
+            </div>
+        </section>
+        <!-- END: Items Table -->
     </main>
+
+    <!-- BEGIN: Claim Request Modal -->
+    <div id="claimModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-lg max-w-md w-full">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-800">Request Item Claim</h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <form id="claimForm" class="p-6 space-y-4">
+                <input type="hidden" id="itemIdField" />
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Item Name (Auto-filled)
+                    </label>
+                    <input type="text" id="itemNameField" readonly
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-sm" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Your Name *
+                    </label>
+                    <input type="text" id="studentNameField" name="student_name" required placeholder="Enter your full name"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Description of Lost Item *
+                    </label>
+                    <textarea id="descriptionLostField" name="description_lost" required placeholder="Describe the lost item in detail..."
+                        rows="3"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" id="cancelClaimBtn"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                        Submit Claim
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- END: Claim Request Modal -->
+
+    <!-- BEGIN: Success Toast -->
+    <div id="successToast"
+      class="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
+      style="min-width: 320px;">
+      <span class="material-icons text-3xl">check_circle</span>
+      <div>
+        <h4 class="font-bold text-base">Claim Submitted!</h4>
+        <p class="text-green-100 text-sm" id="toastMessage">Your claim request has been submitted successfully.</p>
+      </div>
+      <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <!-- END: Success Toast -->
+
+    <!-- BEGIN: Error Message -->
+    <div id="errorMsg" class="fixed top-20 right-6 z-50 bg-red-500 text-white px-6 py-4 rounded-xl shadow-2xl hidden flex items-center gap-3" style="min-width: 320px;">
+        <span class="material-icons text-3xl">error</span>
+        <div>
+          <h4 class="font-bold text-base">Error</h4>
+          <p class="text-red-100 text-sm" id="errorText">An error occurred. Please try again.</p>
+        </div>
+        <button onclick="dismissError()" class="ml-auto text-red-200 hover:text-white">
+          <span class="material-icons">close</span>
+        </button>
+    </div>
+    <!-- END: Error Message -->
+
     <!-- BEGIN: MainFooter -->
     <footer class="bg-white border-t border-gray-200 mt-20 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">
@@ -223,109 +260,180 @@
             </div>
         </div>
     </footer>
-    </footer>
     <!-- END: MainFooter -->
 
     <!-- INTERACTIVE LOGIC -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const searchInput = document.getElementById("main-search");
-            const filterType = document.getElementById("filter-type");
             const filterCategory = document.getElementById("filter-category");
-            const applyBtn = document.getElementById("apply-filters-btn");
-            const itemCards = document.querySelectorAll(".item-card");
-            const resultsHeader = document.getElementById("results-count-header");
-            const resultsNum = document.getElementById("results-count-num");
-            const noItemsMsg = document.getElementById("no-items-msg");
+            const filterName = document.getElementById("filter-name");
+            const filterMonth = document.getElementById("filter-month");
+            const clearFiltersBtn = document.getElementById("clear-filters-btn");
+            const itemRows = document.querySelectorAll(".item-row");
+            const noResultsMsg = document.getElementById("no-results-msg");
 
-            let hasSearched = false;
+            // Modal elements
+            const claimModal = document.getElementById("claimModal");
+            const closeModalBtn = document.getElementById("closeModalBtn");
+            const cancelClaimBtn = document.getElementById("cancelClaimBtn");
+            const claimForm = document.getElementById("claimForm");
+            const itemIdField = document.getElementById("itemIdField");
+            const itemNameField = document.getElementById("itemNameField");
+            const studentNameField = document.getElementById("studentNameField");
+            const descriptionLostField = document.getElementById("descriptionLostField");
+            const requestClaimBtns = document.querySelectorAll(".request-claim-btn");
 
-            function createEmptyStateMsg() {
-                if (!noItemsMsg) {
-                    const list = document.querySelector('[data-purpose="item-results-list"]');
-                    const msg = document.createElement('div');
-                    msg.id = 'no-items-msg';
-                    msg.className = 'text-center py-10 text-gray-500 text-lg hidden';
-                    msg.innerText = 'No items found matching your filter criteria.';
-                    list.appendChild(msg);
-                    return msg;
-                }
-                return noItemsMsg;
-            }
+            // Filter functionality
+            function applyFilters() {
+                const categoryValue = filterCategory.value.toLowerCase();
+                const nameValue = filterName.value.toLowerCase();
+                const monthValue = filterMonth.value;
 
-            const emptyStateMsg = createEmptyStateMsg();
+                let visibleCount = 0;
 
-            function updateItemVisibility() {
-                const query = searchInput.value.toLowerCase().trim();
-                const typeFilter = filterType.value.toLowerCase();
-                const categoryFilter = filterCategory.value.toLowerCase();
+                itemRows.forEach(row => {
+                    const itemName = row.getAttribute("data-name").toLowerCase();
+                    const itemCategory = row.getAttribute("data-category").toLowerCase();
+                    const itemDate = row.getAttribute("data-date");
 
-                // Show initial prompt if no interaction yet
-                if (!hasSearched && query === '' && typeFilter === 'all types' && categoryFilter === 'all categories') {
-                    itemCards.forEach(card => {
-                        card.classList.remove('flex');
-                        card.classList.add('hidden');
-                    });
-                    resultsHeader.style.display = 'none';
-                    emptyStateMsg.classList.add('hidden');
+                    // Category filter
+                    let categoryMatch = !categoryValue || itemCategory.includes(categoryValue);
 
-                    if (!document.getElementById("start-search-prompt")) {
-                        const prompt = document.createElement('div');
-                        prompt.id = "start-search-prompt";
-                        prompt.className = "text-center py-16 text-gray-500 text-xl font-medium";
-                        prompt.innerText = "Type a keyword or apply a filter to start browsing.";
-                        const list = document.querySelector('[data-purpose="item-results-list"]');
-                        list.prepend(prompt);
-                    } else {
-                        document.getElementById("start-search-prompt").classList.remove('hidden');
+                    // Name filter
+                    let nameMatch = !nameValue || itemName.includes(nameValue);
+
+                    // Month filter
+                    let monthMatch = true;
+                    if (monthValue) {
+                        const [filterYear, filterMonth] = monthValue.split("-");
+                        const dateStr = itemDate.substring(0, 7); // Get year-month from date
+                        monthMatch = dateStr === `${filterYear}-${filterMonth}`;
                     }
-                    return;
-                }
 
-                hasSearched = true;
-                const prompt = document.getElementById("start-search-prompt");
-                if (prompt) prompt.classList.add('hidden');
-
-                let count = 0;
-
-                itemCards.forEach(card => {
-                    const name = card.getAttribute('data-name');
-                    const desc = card.getAttribute('data-description');
-                    const type = card.getAttribute('data-type');
-                    const cat = card.getAttribute('data-category');
-
-                    let matchesSearch = query === '' || name.includes(query) || (desc && desc.includes(query));
-                    let matchesType = typeFilter === 'all types' || type === typeFilter;
-                    let matchesCat = categoryFilter === 'all categories' || cat.includes(categoryFilter) || categoryFilter.includes(cat);
-
-                    if (matchesSearch && matchesType && matchesCat) {
-                        card.classList.remove('hidden');
-                        card.classList.add('flex');
-                        count++;
+                    if (categoryMatch && nameMatch && monthMatch) {
+                        row.classList.remove("hidden");
+                        visibleCount++;
                     } else {
-                        card.classList.remove('flex');
-                        card.classList.add('hidden');
+                        row.classList.add("hidden");
                     }
                 });
 
-                resultsNum.innerText = count.toString();
-                resultsHeader.style.display = 'flex';
-
-                if (count === 0 && itemCards.length > 0) {
-                    emptyStateMsg.classList.remove('hidden');
+                // Show/hide no results message
+                if (visibleCount === 0) {
+                    noResultsMsg.classList.remove("hidden");
                 } else {
-                    emptyStateMsg.classList.add('hidden');
+                    noResultsMsg.classList.add("hidden");
                 }
             }
 
-            // Add event listeners
-            searchInput.addEventListener('input', updateItemVisibility);
-            applyBtn.addEventListener('click', updateItemVisibility);
+            function clearFilters() {
+                filterCategory.value = "";
+                filterName.value = "";
+                filterMonth.value = "";
+                applyFilters();
+            }
 
-            // Handle "enter" key on input
-            searchInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    updateItemVisibility();
+            // Filter event listeners
+            filterCategory.addEventListener("change", applyFilters);
+            filterName.addEventListener("input", applyFilters);
+            filterMonth.addEventListener("change", applyFilters);
+            clearFiltersBtn.addEventListener("click", clearFilters);
+
+            // Modal functions
+            function openModal(itemId, itemName) {
+                itemIdField.value = itemId;
+                itemNameField.value = itemName;
+                studentNameField.value = "";
+                descriptionLostField.value = "";
+                claimModal.classList.remove("hidden");
+            }
+
+            function closeModal() {
+                claimModal.classList.add("hidden");
+                claimForm.reset();
+            }
+
+            function showMessage(type, message) {
+                if (type === "success") {
+                    const toast = document.getElementById("successToast");
+                    const toastMessage = document.getElementById("toastMessage");
+                    toastMessage.textContent = message;
+                    // Slide in animation
+                    setTimeout(() => { toast.style.transform = 'translateX(0)'; }, 100);
+                    // Auto dismiss after 4 seconds
+                    setTimeout(() => { dismissToast(); }, 4000);
+                } else {
+                    const errorMsg = document.getElementById("errorMsg");
+                    const errorText = document.getElementById("errorText");
+                    errorText.textContent = message;
+                    errorMsg.classList.remove("hidden");
+                    setTimeout(() => { dismissError(); }, 4000);
+                }
+            }
+
+            function dismissToast() {
+                const toast = document.getElementById("successToast");
+                toast.style.transform = 'translateX(120%)';
+            }
+
+            function dismissError() {
+                const errorMsg = document.getElementById("errorMsg");
+                errorMsg.classList.add("hidden");
+            }
+
+            // Request claim button listeners
+            requestClaimBtns.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const itemId = this.getAttribute("data-item-id");
+                    const itemName = this.getAttribute("data-item-name");
+                    openModal(itemId, itemName);
+                });
+            });
+
+            // Modal close listeners
+            closeModalBtn.addEventListener("click", closeModal);
+            cancelClaimBtn.addEventListener("click", closeModal);
+            claimModal.addEventListener("click", function (e) {
+                if (e.target === claimModal) closeModal();
+            });
+
+            // Form submission
+            claimForm.addEventListener("submit", async function (e) {
+                e.preventDefault();
+
+                const studentName = studentNameField.value.trim();
+                const descriptionLost = descriptionLostField.value.trim();
+                const itemId = itemIdField.value;
+
+                if (!studentName || !descriptionLost) {
+                    showMessage("error", "Please fill in all required fields.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch("/request-claim", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            item_id: itemId,
+                            student_name: studentName,
+                            description_lost: descriptionLost
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage("success", "Claim request submitted! Staff will review it shortly.");
+                        closeModal();
+                    } else {
+                        showMessage("error", data.error || "Failed to submit claim. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    showMessage("error", "An error occurred. Please try again.");
                 }
             });
         });

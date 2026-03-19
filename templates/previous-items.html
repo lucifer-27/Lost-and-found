@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Previous Items - CampusFind</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+    }
+
+    .material-icons {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- BEGIN: MainHeader -->
+  <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <span class="text-2xl font-bold text-blue-600 flex items-center">
+            <span class="material-icons mr-2">search</span>
+            CampusFind
+          </span>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <!-- END: MainHeader -->
+
+  <!-- BEGIN: Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <section class="mb-8">
+      <div class="flex items-center mb-6">
+        <a href="/staff"
+          class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+          title="Back to Dashboard">
+          <span class="material-icons">arrow_back</span>
+        </a>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Previous Items Archive</h1>
+          <p class="text-gray-600 mt-1">View resolved and archived items with claim history</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Controls -->
+    <section class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-8">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Search & Filter</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Item Name Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-name">
+            Item Name
+          </label>
+          <input id="filter-name" type="text" placeholder="Search item name..."
+            class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        </div>
+
+        <!-- Category Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-category">
+            Category
+          </label>
+          <select id="filter-category"
+            class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">All Categories</option>
+            <option value="electronics">Electronics</option>
+            <option value="clothing">Clothing</option>
+            <option value="accessories">Accessories</option>
+            <option value="books/documents">Books/Documents</option>
+          </select>
+        </div>
+
+        <!-- Type Filter -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-type">
+            Type
+          </label>
+          <select id="filter-type"
+            class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">All Types</option>
+            <option value="lost">Lost</option>
+            <option value="found">Found</option>
+          </select>
+        </div>
+
+        <!-- Clear Filters -->
+        <div class="flex items-end">
+          <button id="clear-filters-btn"
+            class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Items Table -->
+    <section class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Item Name
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Type
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Category
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Claimed By
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Archived Date
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody id="items-tbody" class="divide-y divide-gray-200">
+            <!-- Items will be loaded here -->
+          </tbody>
+        </table>
+        <div id="no-results-msg" class="text-center py-10 text-gray-500 hidden">
+          <p class="text-lg">No archived items found.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- END: Main Content -->
+
+  <!-- BEGIN: Footer -->
+  <footer class="mt-12 py-8 border-t border-gray-200 text-center text-gray-400 text-xs">
+    <p>© 2026 CampusFind PDEU. All Rights Reserved.</p>
+  </footer>
+  <!-- END: Footer -->
+
+  <!-- Item Details Modal -->
+  <div id="item-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+      <div class="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-xl font-bold text-gray-900">Item Details</h2>
+        <button onclick="closeItemModal()" class="text-gray-400 hover:text-gray-600">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="modal-content" class="p-6">
+        <!-- Content will be loaded here -->
+      </div>
+      <div class="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
+        <button onclick="closeItemModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
+          Close
+        </button>
+        <button id="edit-btn" onclick="openEditModal()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+          Edit Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Details Modal -->
+  <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div class="bg-blue-50 border-b border-blue-200 px-6 py-4 flex justify-between items-center">
+        <h2 class="text-xl font-bold text-blue-900">Edit Item Details</h2>
+        <button onclick="closeEditModal()" class="text-blue-400 hover:text-blue-600">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label for="edit-name" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+          <input id="edit-name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        </div>
+        <div>
+          <label for="edit-category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+          <select id="edit-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="electronics">Electronics</option>
+            <option value="clothing">Clothing</option>
+            <option value="accessories">Accessories</option>
+            <option value="books/documents">Books/Documents</option>
+          </select>
+        </div>
+        <div>
+          <label for="edit-location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <input id="edit-location" type="text" placeholder="e.g., Near Library" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        </div>
+        <div>
+          <label for="edit-description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea id="edit-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+        </div>
+      </div>
+      <div class="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
+        <button onclick="closeEditModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
+          Cancel
+        </button>
+        <button onclick="saveEditedItem()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allItems = [];
+    let currentEditingItemId = null;
+
+    async function fetchArchivedItems() {
+      try {
+        const response = await fetch('/api/archived-items');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        allItems = await response.json();
+        renderItems(allItems);
+      } catch (error) {
+        console.error('Error fetching archived items:', error);
+      }
+    }
+
+    function renderItems(items) {
+      const tbody = document.getElementById("items-tbody");
+      const noResultsMsg = document.getElementById("no-results-msg");
+
+      if (items.length === 0) {
+        tbody.innerHTML = '';
+        noResultsMsg.classList.remove("hidden");
+        return;
+      }
+
+      noResultsMsg.classList.add("hidden");
+      tbody.innerHTML = items.map(item => `
+        <tr class="hover:bg-purple-50 transition item-row"
+          data-name="${(item.name || '').toLowerCase()}"
+          data-type="${(item.type || '').toLowerCase()}"
+          data-category="${(item.category || '').toLowerCase()}"
+          data-item-id="${item._id}">
+          <td class="px-6 py-4 text-sm font-medium text-gray-900">${item.name}</td>
+          <td class="px-6 py-4 text-sm">
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium 
+              ${item.type === 'lost' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}">
+              ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              ${item.category || 'N/A'}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600">${item.claimed_by_name} (${item.claimed_by_roll_no})</td>
+          <td class="px-6 py-4 text-sm text-gray-600">${new Date(item.archived_at).toLocaleDateString()}</td>
+          <td class="px-6 py-4 text-sm">
+            <button onclick="viewItemDetails('${item._id}')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition">
+              View Details
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function viewItemDetails(itemId) {
+      try {
+        const response = await fetch(`/api/archived-items/${itemId}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const data = await response.json();
+        displayItemModal(data.item, data.claim);
+        currentEditingItemId = itemId;
+        document.getElementById("item-modal").classList.remove("hidden");
+      } catch (error) {
+        console.error('Error fetching item details:', error);
+        alert('Error loading item details');
+      }
+    }
+
+    function displayItemModal(item, claim) {
+      const content = document.getElementById("modal-content");
+      content.innerHTML = `
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-600">Item Name</p>
+              <p class="text-lg font-bold text-gray-900">${item.name}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Type</p>
+              <p class="text-lg font-bold text-gray-900 capitalize">${item.type}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Category</p>
+              <p class="text-lg font-bold text-gray-900">${item.category || 'N/A'}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Location</p>
+              <p class="text-lg font-bold text-gray-900">${item.location || 'N/A'}</p>
+            </div>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600">Description</p>
+            <p class="text-sm text-gray-700">${item.description || 'N/A'}</p>
+          </div>
+          <div class="border-t border-gray-200 pt-4">
+            <h3 class="font-semibold text-gray-900 mb-2">Claim Information</h3>
+            <div class="space-y-2">
+              <div>
+                <p class="text-sm text-gray-600">Claimed By</p>
+                <p class="text-sm font-bold text-gray-900">${item.claimed_by_name} (${item.claimed_by_roll_no})</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Archived Date</p>
+                <p class="text-sm text-gray-900">${new Date(item.archived_at).toLocaleString()}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Reason</p>
+                <p class="text-sm text-gray-900">${item.reason || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function closeItemModal() {
+      document.getElementById("item-modal").classList.add("hidden");
+      currentEditingItemId = null;
+    }
+
+    function openEditModal() {
+      if (!currentEditingItemId) return;
+      
+      const item = allItems.find(i => i._id === currentEditingItemId);
+      if (!item) return;
+
+      document.getElementById("edit-name").value = item.name;
+      document.getElementById("edit-category").value = item.category;
+      document.getElementById("edit-location").value = item.location || '';
+      document.getElementById("edit-description").value = item.description || '';
+
+      document.getElementById("item-modal").classList.add("hidden");
+      document.getElementById("edit-modal").classList.remove("hidden");
+    }
+
+    function closeEditModal() {
+      document.getElementById("edit-modal").classList.add("hidden");
+    }
+
+    async function saveEditedItem() {
+      if (!currentEditingItemId) return;
+
+      const name = document.getElementById("edit-name").value.trim();
+      const category = document.getElementById("edit-category").value;
+      const location = document.getElementById("edit-location").value.trim();
+      const description = document.getElementById("edit-description").value.trim();
+
+      if (!name) {
+        alert('Item name is required');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/archived-items/${currentEditingItemId}/edit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name,
+            category,
+            location,
+            description
+          })
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const result = await response.json();
+        console.log('Item updated:', result);
+        
+        alert('Item details updated successfully');
+        closeEditModal();
+        await fetchArchivedItems();
+      } catch (error) {
+        console.error('Error saving item:', error);
+        alert('Error saving item details. Please try again.');
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const filterName = document.getElementById("filter-name");
+      const filterCategory = document.getElementById("filter-category");
+      const filterType = document.getElementById("filter-type");
+      const clearFiltersBtn = document.getElementById("clear-filters-btn");
+
+      function applyFilters() {
+        const nameValue = filterName.value.toLowerCase();
+        const categoryValue = filterCategory.value.toLowerCase();
+        const typeValue = filterType.value.toLowerCase();
+
+        let visibleCount = 0;
+
+        document.querySelectorAll(".item-row").forEach(row => {
+          const itemName = row.getAttribute("data-name").toLowerCase();
+          const itemCategory = row.getAttribute("data-category").toLowerCase();
+          const itemType = row.getAttribute("data-type").toLowerCase();
+
+          let nameMatch = !nameValue || itemName.includes(nameValue);
+          let categoryMatch = !categoryValue || itemCategory.includes(categoryValue);
+          let typeMatch = !typeValue || itemType === typeValue;
+
+          if (nameMatch && categoryMatch && typeMatch) {
+            row.classList.remove("hidden");
+            visibleCount++;
+          } else {
+            row.classList.add("hidden");
+          }
+        });
+
+        document.getElementById("no-results-msg").classList.toggle("hidden", visibleCount > 0);
+      }
+
+      function clearFilters() {
+        filterName.value = "";
+        filterCategory.value = "";
+        filterType.value = "";
+        applyFilters();
+      }
+
+      filterName.addEventListener("input", applyFilters);
+      filterCategory.addEventListener("change", applyFilters);
+      filterType.addEventListener("change", applyFilters);
+      clearFiltersBtn.addEventListener("click", clearFilters);
+
+      // Load archived items
+      fetchArchivedItems();
+    });
+  </script>
+</body>
+
+</html>

@@ -30,7 +30,9 @@ db = client["lost_found_db"]
 
 users_collection = db["users"]
 items_collection = db["items"]
+archived_items_collection = db["archived_items"]
 claims_collection = db["claims"]
+notifications_collection = db["notifications"]
 
 # ---------------- HOME ----------------
 @app.route("/")
@@ -140,12 +142,24 @@ def student():
     report_success = session.pop("report_success", False)
     return render_template("student.html", show_welcome=show_welcome, report_success=report_success)
 
+@app.route("/student-history")
+def student_history():
+    if "user" not in session or session.get("role") != "student":
+        return redirect(url_for("login"))
+    return render_template("student_history.html")
+
 @app.route("/staff")
 def staff():
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
     report_success = session.pop("report_success", False)
     return render_template("staff.html", report_success=report_success)
+
+@app.route("/pending-claims")
+def pending_claims():
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+    return render_template("pending_claims.html")
 
 @app.route("/admin")
 def admin():
@@ -227,6 +241,366 @@ def claim():
         return render_template("claim.html", selected_item_name=item["name"], selected_item_id=item_id)
     else:
         return render_template("claim.html")
+
+# -------- REQUEST CLAIM (STUDENT) --------
+@app.route("/request-claim", methods=["POST"])
+def request_claim():
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        # Get student data
+        user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+        student_email = user["email"]
+        
+        # Extract roll number from email (format: 24bcp001@sot.pdpu.ac.in)
+        roll_no = student_email.split("@")[0]
+        
+        data = request.get_json()
+        item_id = data.get("item_id")
+        student_name = data.get("student_name")
+        description_lost = data.get("description_lost")
+        
+        # Get item details
+        item = items_collection.find_one({"_id": ObjectId(item_id)})
+        if not item:
+            return jsonify({"error": "Item not found"}), 404
+        
+        # Record the claim request
+        claim_record = {
+            "item_id": ObjectId(item_id),
+            "item_name": item["name"],
+            "item_description": item["description"],
+            "item_category": item["category"],
+            "item_location": item.get("location", "Not specified"),
+            "item_found_date": item.get("date", "Not specified"),
+            "student_name": student_name,
+            "student_email": student_email,
+            "roll_no": roll_no,
+            "student_description": description_lost,
+            "status": "pending",
+            "requested_at": datetime.utcnow(),
+            "requested_by": session["user_id"]
+        }
+        
+        result = claims_collection.insert_one(claim_record)
+        
+        return jsonify({
+            "success": True,
+            "message": "Claim request submitted successfully! Staff will review your claim.",
+            "claim_id": str(result.inserted_id)
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/items/staff", methods=["GET"])
+def get_staff_items():
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        # Get all active items (not archived)
+        items = list(items_collection.find({"status": "active"}).sort("created_at", -1))
+        
+        # Convert ObjectId to string for JSON serialization
+        for item in items:
+            item["_id"] = str(item["_id"])
+            if "created_at" in item:
+                item["created_at"] = item["created_at"].isoformat()
+        
+        return jsonify({"items": items})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/pending-claims")
+def get_pending_claims():
+    claims = list(claims_collection.find())
+    return jsonify(claims)
+    
+    try:
+        pending = list(claims_collection.find({"status": "pending"}).sort("created_at", -1))
+        
+        # Convert ObjectId to string for JSON serialization
+        for claim in pending:
+            claim["_id"] = str(claim["_id"])
+            claim["item_id"] = str(claim["item_id"])
+            claim["created_at"] = claim["created_at"].isoformat()
+        
+        return jsonify(pending)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/claim/<claim_id>/status", methods=["POST"])
+def update_claim_status(claim_id):
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        data = request.get_json()
+        new_status = data.get("status")  # "approved", "rejected", "returned"
+        
+        if new_status not in ["approved", "rejected", "returned"]:
+            return jsonify({"error": "Invalid status"}), 400
+        
+        # Update claim status
+        claims_collection.update_one(
+            {"_id": ObjectId(claim_id)},
+            {"$set": {"status": new_status, "processed_by": session["user_id"], "processed_at": datetime.utcnow()}}
+        )
+        
+        # If approved, create notification for student
+        if new_status == "returned":
+            claim = claims_collection.find_one({"_id": ObjectId(claim_id)})
+            student_id = claim.get("requested_by")
+            
+            # Create notification for student
+            notifications_collection.insert_one({
+                "user_id": ObjectId(student_id),
+                "type": "returned",
+                "title": f"Your Item '{claim['item_name']}' Has Been Returned!",
+                "message": f"The item '{claim['item_name']}' that you claimed has been processed and is ready for pickup.",
+                "item_name": claim["item_name"],
+                "roll_no": claim["roll_no"],
+                "created_at": datetime.utcnow(),
+                "read": False
+            })
+        
+        return jsonify({"success": True, "message": "Claim status updated"})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/notifications/student", methods=["GET"])
+def get_student_notifications():
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        user_id = ObjectId(session["user_id"])
+        notifications = list(notifications_collection.find({"user_id": user_id}).sort("created_at", -1).limit(50))
+        
+        for notif in notifications:
+            notif["_id"] = str(notif["_id"])
+            notif["user_id"] = str(notif["user_id"])
+            notif["created_at"] = notif["created_at"].isoformat()
+        
+        return jsonify(notifications)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/notifications/<notification_id>/read", methods=["POST"])
+def mark_notification_read(notification_id):
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        notifications_collection.update_one(
+            {"_id": ObjectId(notification_id)},
+            {"$set": {"read": True}}
+        )
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/notifications/<notification_id>/dismiss", methods=["POST"])
+def dismiss_notification(notification_id):
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        notifications_collection.delete_one(
+            {"_id": ObjectId(notification_id)}
+        )
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/notifications/staff", methods=["GET"])
+def get_staff_notifications():
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        user_id = ObjectId(session["user_id"])
+        notifications = list(notifications_collection.find({"staff_id": user_id}).sort("created_at", -1).limit(50))
+        
+        for notif in notifications:
+            notif["_id"] = str(notif["_id"])
+            notif["staff_id"] = str(notif["staff_id"])
+            notif["created_at"] = notif["created_at"].isoformat()
+        
+        return jsonify(notifications)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/notifications/staff/<notification_id>/read", methods=["POST"])
+def mark_staff_notification_read(notification_id):
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        notifications_collection.update_one(
+            {"_id": ObjectId(notification_id)},
+            {"$set": {"read": True}}
+        )
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/notifications/staff/<notification_id>/dismiss", methods=["POST"])
+def dismiss_staff_notification(notification_id):
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        notifications_collection.delete_one(
+            {"_id": ObjectId(notification_id)}
+        )
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/archived-items", methods=["GET"])
+def get_archived_items():
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        archived = list(archived_items_collection.find().sort("archived_at", -1).limit(100))
+        
+        # Convert ObjectId to string for JSON serialization
+        for item in archived:
+            item["_id"] = str(item["_id"])
+            item["original_id"] = str(item["original_id"])
+            item["claim_id"] = str(item["claim_id"])
+            if "archived_at" in item:
+                item["archived_at"] = item["archived_at"].isoformat()
+        
+        return jsonify(archived)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/archived-items/<item_id>", methods=["GET"])
+def get_archived_item_details(item_id):
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        item = archived_items_collection.find_one({"_id": ObjectId(item_id)})
+        if not item:
+            return jsonify({"error": "Item not found"}), 404
+        
+        # Get associated claim details
+        claim = claims_collection.find_one({"_id": item.get("claim_id")})
+        
+        item["_id"] = str(item["_id"])
+        item["original_id"] = str(item["original_id"])
+        item["claim_id"] = str(item["claim_id"])
+        
+        return jsonify({"item": item, "claim": claim})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/archived-items/<item_id>/edit", methods=["POST"])
+def edit_archived_item(item_id):
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        data = request.get_json()
+        
+        archived_items_collection.update_one(
+            {"_id": ObjectId(item_id)},
+            {"$set": {
+                "name": data.get("name"),
+                "description": data.get("description"),
+                "category": data.get("category"),
+                "location": data.get("location"),
+                "last_edited_by_staff": session["user_id"],
+                "last_edited_at": datetime.utcnow()
+            }}
+        )
+        
+        return jsonify({"success": True, "message": "Item details updated"})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/student/<student_id>/flag", methods=["POST"])
+def flag_student(student_id):
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        data = request.get_json()
+        reason = data.get("reason", "Multiple false claims or suspicious activity")
+        
+        # Update student account
+        users_collection.update_one(
+            {"_id": ObjectId(student_id)},
+            {"$set": {
+                "account_flagged": True,
+                "flag_reason": reason,
+                "flagged_at": datetime.utcnow(),
+                "flagged_by_staff": session["user_id"]
+            }}
+        )
+        
+        # Create notification for student
+        notifications_collection.insert_one({
+            "user_id": ObjectId(student_id),
+            "type": "account_flagged",
+            "title": "Account Warning",
+            "message": f"Your account has been flagged by staff. Reason: {reason}. Multiple violations may result in account suspension.",
+            "created_at": datetime.utcnow(),
+            "read": False
+        })
+        
+        return jsonify({"success": True, "message": "Student flagged successfully"})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/student-history", methods=["GET"])
+def student_history_api():
+    if "user" not in session or session.get("role") != "student":
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        student_id = ObjectId(session["user_id"])
+        
+        # Get student info to check if flagged
+        student = users_collection.find_one({"_id": student_id})
+        
+        # Get all archived items claimed by this student
+        archived_items = list(archived_items_collection.find(
+            {"claimed_by": student_id}
+        ).sort("archived_at", -1))
+        
+        # Convert ObjectId to string for JSON serialization
+        for item in archived_items:
+            item["_id"] = str(item["_id"])
+            if "claimed_by" in item:
+                item["claimed_by"] = str(item["claimed_by"])
+        
+        return jsonify({
+            "items": archived_items,
+            "student": {
+                "name": student.get("name", ""),
+                "account_flagged": student.get("account_flagged", False),
+                "flag_reason": student.get("flag_reason", "")
+            }
+        })
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ---------------- REPORT LOST ITEM ----------------
 @app.route("/report-lost", methods=["GET", "POST"])
@@ -316,6 +690,7 @@ def report_found():
     uploaded_image = session.get("uploaded_image")
 
     return render_template("report_found.html", uploaded_image=uploaded_image)
+
 # ---------------- ITEMS ----------------
 @app.route("/items")
 def items():
@@ -330,7 +705,8 @@ def items():
         return render_template("items_staff.html", items=items)
 
     else:
-        items = list(items_collection.find({"status":{"$ne":"returned"}}).sort("created_at",-1).limit(50))
+        # Students can only see FOUND items
+        items = list(items_collection.find({"type": "found", "status":"active"}).sort("created_at",-1).limit(50))
         return render_template("items_student.html", items=items)
 
 # ---------------- CAMERA ----------------
@@ -372,94 +748,9 @@ def upload():
 
     return render_template("camera.html", return_url=url_for("report_found"))
 
-# ---------------- CHATBOT API ----------------
 
-# Built-in FAQ knowledge base for CampusFind
-CHATBOT_FAQ = {
-    "report lost": "To report a lost item:\n1. Log in with your student account\n2. Go to your Student Dashboard\n3. Click 'Report Lost Item'\n4. Fill in the item name, category, date lost, location, and description\n5. Submit the form — your report will be visible to security staff!",
-    "report found": "To report a found item (security staff only):\n1. Log in with your staff account\n2. Go to your Security Dashboard\n3. Click 'Report Found Item'\n4. Fill in item details, take a photo (camera or upload), and submit\n5. The item will appear in the system for students to browse.",
-    "claim": "To claim a found item:\n1. A security staff member processes claims\n2. The student must provide proof of ownership\n3. Staff verifies the claim and logs the return\n4. The item status changes to 'Returned'.",
-    "browse items": "To browse found items:\n1. Log in to your account\n2. Click 'Browse Found Items' from your dashboard\n3. You'll see all active found items with details and images\n4. If you spot your item, contact security staff to initiate a claim.",
-    "register": "To register on CampusFind:\n1. Go to the Register page\n2. Enter your PDPU college email (e.g., 24bcp001@sot.pdpu.ac.in)\n3. Select your role (Student, Staff, or Admin)\n4. Create a secure password (8+ chars with letters, numbers, and special characters)\n5. Submit and then log in!",
-    "login": "To log in:\n1. Go to the Login page\n2. Enter your registered college email\n3. Select your role (Student / Staff / Admin)\n4. Enter your password\n5. You'll be redirected to your dashboard.",
-    "what is campusfind": "CampusFind is the official Lost & Found portal for PDEU (Pandit Deendayal Energy University). It helps students report lost items and security staff log found items, making it easy to reunite people with their belongings.",
-    "notifications": "Notifications keep you updated about your reports. You can view them by clicking the bell icon in your dashboard navbar. Use 'Mark all as read' to clear them.",
-    "roles": "CampusFind has three roles:\n• **Student** — Report lost items, browse found items\n• **Security Staff** — Report found items, process claims, verify ownership\n• **Admin** — View all reports, manage users, see analytics",
-    "contact": "For support, contact CampusFind at support@campusfind.pdeu.ac.in or visit the security office at PDEU Campus, Knowledge Corridor, Gandhinagar.",
-    "how does it work": "Here's how CampusFind works:\n1. **Student loses an item** → Reports it on the portal\n2. **Security finds an item** → Logs it with photo and details\n3. **Student browses found items** → Spots their item\n4. **Staff processes the claim** → Verifies ownership and returns the item\nIt's that simple!",
-    "hello": "Hello! I'm the CampusFind Assistant. I can help you with:\n• How to report lost/found items\n• How claiming works\n• How to register and log in\n• General questions about CampusFind\nJust ask me anything!",
-    "hi": "Hi there! I'm the CampusFind Assistant. Ask me anything about the Lost & Found portal — reporting items, claims, registration, and more!",
-    "help": "I can help you with:\n• Reporting lost items\n• Reporting found items (staff)\n• Browsing found items\n• Claiming items\n• Registration & Login\n• Understanding roles\n• How the system works\nJust type your question!"
-}
 
-def find_faq_answer(user_message):
-    """Check if the user message matches any FAQ keyword as a whole word."""
-    msg = user_message.lower().strip()
-    
-    for keyword, answer in CHATBOT_FAQ.items():
-        if re.search(rf"\b{re.escape(keyword)}\b", msg):
-            return answer
-    return None
 
-def ask_gemini(user_message):
-    """Send the question to Gemini AI with CampusFind context."""
-    if not GEMINI_AVAILABLE:
-        return "AI-powered answers require the google-generativeai package. Please install it with: pip install google-generativeai"
-
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return "I'm sorry, AI-powered answers are currently unavailable. Please try asking about reporting items, claiming, registration, or how CampusFind works!"
-
-    try:
-        genai.configure(api_key=api_key)
-        
-        system_context = (
-            "You are the CampusFind Assistant, a helpful chatbot for the PDEU..."
-            # ... rest of your instructions ...
-        )
-        
-        # Pass the instructions directly to the model configuration
-        model = genai.GenerativeModel(
-            "gemini-2.0-flash",
-            system_instruction=system_context
-        )
-
-        # Now just pass the user's raw message
-        response = model.generate_content(user_message)
-        return response.text
-
-        system_context = (
-            "You are the CampusFind Assistant, a helpful chatbot for the PDEU (Pandit Deendayal Energy University) "
-            "Lost & Found portal called CampusFind. The portal allows students to report lost items, security staff "
-            "to log found items with photos, and staff to process claims by verifying ownership. "
-            "Users register with their PDPU college email. There are three roles: Student, Security Staff, and Admin. "
-            "Keep your answers concise, friendly, and helpful. If the question is unrelated to lost-and-found or campus, "
-            "still answer politely but briefly. Use emojis sparingly."
-        )
-
-        response = model.generate_content(f"{system_context}\n\nUser question: {user_message}")
-        return response.text
-    except Exception as e:
-        return "I'm having trouble connecting to AI services right now. Please try again in a moment, or ask me about CampusFind features like reporting items, claims, or registration!"
-
-@app.route("/api/chat", methods=["POST"])
-def api_chat():
-    data = request.get_json()
-    if not data or "message" not in data:
-        return jsonify({"reply": "Please send a message."}), 400
-
-    user_message = data["message"].strip()
-    if not user_message:
-        return jsonify({"reply": "Please type a question and I'll help!"}), 400
-
-    # Try FAQ first
-    faq_answer = find_faq_answer(user_message)
-    if faq_answer:
-        return jsonify({"reply": faq_answer, "source": "faq"})
-
-    # Fallback to Gemini AI
-    ai_answer = ask_gemini(user_message)
-    return jsonify({"reply": ai_answer, "source": "gemini"})
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
