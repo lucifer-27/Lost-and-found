@@ -31,6 +31,7 @@ db = client["lost_found_db"]
 users_collection = db["users"]
 items_collection = db["items"]
 claims_collection = db["claims"]
+notifications_collection = db["notifications"]   
 
 # ---------------- HOME ----------------
 @app.route("/")
@@ -227,6 +228,9 @@ def claim():
         return render_template("claim.html", selected_item_name=item["name"], selected_item_id=item_id)
     else:
         return render_template("claim.html")
+    
+    #Notification
+    
 
 # ---------------- REPORT LOST ITEM ----------------
 @app.route("/report-lost", methods=["GET", "POST"])
