@@ -1,28 +1,24 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
   <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pending Claims - CampusFind</title>
 
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
   <style>
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui;
       background-color: #f8fafc;
-    }
-
-    .material-icons {
-      vertical-align: middle;
     }
   </style>
 </head>
 
 <body>
+<<<<<<< HEAD
   <!-- BEGIN: MainHeader -->
   <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,11 +35,38 @@
             <span class="material-icons text-sm">notifications</span> Notifications
           </a>
         </div>
+=======
+
+<!-- NAVBAR -->
+<nav class="bg-white border-b">
+  <div class="max-w-7xl mx-auto px-4 flex justify-between h-16 items-center">
+    <h1 class="text-xl font-bold text-blue-600 flex items-center">
+      <span class="material-icons mr-2">search</span>CampusFind
+    </h1>
+
+    <a href="/notifications" class="bg-gray-100 px-3 py-2 rounded flex items-center gap-1">
+      <span class="material-icons text-sm">notifications</span>Notifications
+    </a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="max-w-4xl mx-auto px-4 py-8">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <div class="flex items-center">
+      <a href="/staff" class="mr-4">
+        <span class="material-icons">arrow_back</span>
+      </a>
+      <div>
+        <h2 class="text-2xl font-bold">Pending Claims</h2>
+        <p class="text-sm text-gray-500">Review student requests</p>
+>>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
       </div>
     </div>
-  </nav>
-  <!-- END: MainHeader -->
 
+<<<<<<< HEAD
   <!-- BEGIN: Main Content -->
   <main class="max-w-4xl mx-auto px-4 py-8">
     <!-- BEGIN: SectionTitle -->
@@ -221,10 +244,14 @@
           </button>
         </div>
       </form>
+=======
+    <div class="bg-orange-100 text-orange-800 px-4 py-2 rounded">
+      {{ claims|length }} pending
+>>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
     </div>
   </div>
-  <!-- END: Reject Modal -->
 
+<<<<<<< HEAD
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const flagCheckbox = document.getElementById('flag-student-checkbox');
@@ -263,4 +290,65 @@
   </script>
 </body>
 
+=======
+  <!-- CLAIMS LIST -->
+  {% if claims %}
+
+    {% for c in claims %}
+    <div class="bg-white border rounded-lg p-5 mb-4 shadow">
+
+      <div class="grid md:grid-cols-2 gap-4">
+
+        <!-- ITEM -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-600 mb-2">Item Details</h3>
+          <p><strong>Name:</strong> {{ c.item_name }}</p>
+          <p><strong>Description:</strong> {{ c.item_description }}</p>
+          <p><strong>Location:</strong> {{ c.location }}</p>
+        </div>
+
+        <!-- STUDENT -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-600 mb-2">Student Details</h3>
+          <p><strong>Name:</strong> {{ c.student_name }}</p>
+          <p><strong>Email:</strong> {{ c.student_email }}</p>
+          <p><strong>Roll:</strong> {{ c.roll_no }}</p>
+          <p><strong>Lost Description:</strong> {{ c.description_lost }}</p>
+        </div>
+
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="mt-4 flex gap-3">
+
+        <!-- APPROVE -->
+        <a href="/claim?item_id={{ c.item_id }}"
+           class="bg-green-600 text-white px-4 py-2 rounded">
+          Approve
+        </a>
+
+        <!-- REJECT -->
+        <a href="/reject-claim/{{ c._id }}"
+           class="bg-red-600 text-white px-4 py-2 rounded">
+          Reject
+        </a>
+
+      </div>
+
+    </div>
+    {% endfor %}
+
+  {% else %}
+
+    <div class="text-center text-gray-500 p-10 bg-white rounded shadow">
+      <span class="material-icons text-5xl">inbox</span>
+      <p>No pending claims</p>
+    </div>
+
+  {% endif %} 
+
+</main>
+
+</body>
+>>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
 </html>
