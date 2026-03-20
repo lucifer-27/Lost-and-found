@@ -181,6 +181,7 @@ def admin():
         return redirect(url_for("login"))
 
     flag_success = session.pop("flag_success", None)
+    report_success = session.pop("report_success", None)
 
     # 1. System Activity Monitoring Stats
     total_active_items = items_collection.count_documents({"status":"active"})
@@ -265,7 +266,8 @@ def admin():
         pending_reports=pending_reports,
         users=users,
         all_claim_history=all_claim_history,
-        flag_success=flag_success
+        flag_success=flag_success,
+        report_success=report_success
     )
 
 @app.route("/admin/user/<user_id>")
@@ -386,6 +388,11 @@ def toggle_flag(user_id):
     
     user = users_collection.find_one({"_id": ObjectId(user_id)})
     if user:
+        # Prevent flagging admin users
+        if user.get("role") == "admin":
+            session["flag_success"] = "Admin accounts cannot be flagged."
+            return redirect(request.referrer or url_for("admin"))
+        
         is_flagged = user.get("account_flagged", False)
         new_status = not is_flagged
         users_collection.update_one(
@@ -432,6 +439,22 @@ def notification_student():
 def notifications():
 
     if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+
+    user_id = str(session["user_id"])
+
+    notifications = list(
+        notifications_collection.find({"user_id": user_id})
+        .sort("created_at", -1)
+    )
+
+    return render_template("notification_staff.html", notifications=notifications)
+
+# Admin notifications
+@app.route("/notifications-admin")
+def notifications_admin():
+
+    if "user" not in session or session.get("role") != "admin":
         return redirect(url_for("login"))
 
     user_id = str(session["user_id"])
@@ -783,8 +806,22 @@ def report_lost():
             "created_at": datetime.utcnow()
         })
 
-        session["report_success"] = True
-        return redirect(url_for("student"))
+        # If admin submitted the report, notify all staff members
+        if session.get("role") == "admin":
+            # Get all staff user IDs
+            staff_users = users_collection.find({"role": "staff"})
+            for staff_user in staff_users:
+                create_notification(
+                    str(staff_user["_id"]),
+                    "staff",
+                    f"Administrator reported a lost item: '{name}'. Please assist if necessary.",
+                    "admin_lost_report"
+                )
+            session["report_success"] = True
+            return redirect(url_for("admin"))
+        else:
+            session["report_success"] = True
+            return redirect(url_for("student"))
 
     return render_template("report_lost.html")
 

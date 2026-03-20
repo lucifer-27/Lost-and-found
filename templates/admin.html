@@ -75,6 +75,14 @@
 
           <div class="text-sm text-gray-500 mr-2 font-medium">Welcome, Administrator</div>
 
+          <a class="text-gray-600 hover:text-blue-600 relative" href="/">
+            <span class="material-icons">home</span>
+          </a>
+
+          <a class="text-gray-600 hover:text-blue-600 relative" href="/notifications-admin">
+            <span class="material-icons">notifications</span>
+          </a>
+
           <a href="/logout"
             class="flex items-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full border border-gray-200 shadow-sm transition-colors">
             <span class="material-icons text-sm">logout</span>
@@ -87,14 +95,20 @@
   </nav>
 
   <!-- ACTION SUCCESS TOAST -->
-  {% if flag_success %}
+  {% if flag_success or report_success %}
   <div id="success-toast"
       class="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
       style="min-width: 320px;">
       <span class="material-icons text-3xl">check_circle</span>
       <div>
           <h4 class="font-bold text-base">Success</h4>
-          <p class="text-green-100 text-sm">{{ flag_success }}</p>
+          <p class="text-green-100 text-sm">
+            {% if report_success %}
+              Lost item report submitted successfully.
+            {% else %}
+              {{ flag_success }}
+            {% endif %}
+          </p>
       </div>
       <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white">
           <span class="material-icons">close</span>
@@ -258,10 +272,10 @@
             </tbody>
           </table>
         </div>
-        <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 text-xs text-gray-500 text-center font-medium">
-          Showing up to {{ pending_reports|length }} latest pending items. Let's keep CampusFind secure.
-        </div>
       </section>
+
+      <div style="height: 50px;"></div>
+
 
       <!-- MANAGE USERS TABLE -->
       <section class="bg-white rounded-card border border-gray-100 shadow-sm overflow-hidden"
@@ -338,6 +352,8 @@
           </table>
         </div>
       </section>
+
+      <div style="height: 50px;"></div>
 
       <!-- CLAIM MONITORING TABLE -->
       <section class="bg-white rounded-card border border-gray-100 shadow-sm overflow-hidden"

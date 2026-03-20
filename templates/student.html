@@ -54,6 +54,10 @@
 
         <div class="hidden md:flex items-center space-x-8">
 
+          <a class="text-gray-600 hover:text-blue-600 relative" href="/">
+            <span class="material-icons">home</span>
+          </a>
+
           <a class="text-gray-600 hover:text-blue-600 relative" href="/notification_student">
             <span class="material-icons">notifications</span>
           </a>
@@ -71,23 +75,6 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- WELCOME BANNER (First Login Only) -->
-    {% if show_welcome %}
-    <div id="welcome-banner"
-      class="mb-6 bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 flex items-center justify-between shadow-sm animate-[fadeIn_0.5s_ease-out]">
-      <div class="flex items-center">
-        <span class="material-icons text-green-600 mr-3">celebration</span>
-        <div>
-          <h3 class="font-bold">Welcome to CampusFind!</h3>
-          <p class="text-sm">Easily report lost items or check for found ones.</p>
-        </div>
-      </div>
-      <button onclick="document.getElementById('welcome-banner').style.display='none'"
-        class="text-green-600 hover:text-green-800 focus:outline-none">
-        <span class="material-icons">close</span>
-      </button>
-    </div>
-    {% endif %}
 
     <!-- REPORT SUCCESS TOAST -->
     {% if report_success %}

@@ -18,35 +18,25 @@
 </head>
 
 <body>
-<<<<<<< HEAD
-  <!-- BEGIN: MainHeader -->
-  <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex items-center">
-          <span class="text-2xl font-bold text-blue-600 flex items-center">
-            <span class="material-icons mr-2">search</span>
-            CampusFind
-          </span>
-        </div>
-        <div class="flex items-center gap-4">
-          <a href="/notifications"
-            class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
-            <span class="material-icons text-sm">notifications</span> Notifications
-          </a>
-        </div>
-=======
 
 <!-- NAVBAR -->
-<nav class="bg-white border-b">
-  <div class="max-w-7xl mx-auto px-4 flex justify-between h-16 items-center">
-    <h1 class="text-xl font-bold text-blue-600 flex items-center">
-      <span class="material-icons mr-2">search</span>CampusFind
-    </h1>
-
-    <a href="/notifications" class="bg-gray-100 px-3 py-2 rounded flex items-center gap-1">
-      <span class="material-icons text-sm">notifications</span>Notifications
-    </a>
+<nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <div class="flex items-center">
+        <span class="text-2xl font-bold text-blue-600 flex items-center">
+          <span class="material-icons mr-2">search</span>
+          CampusFind
+        </span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/notifications"
+          class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
+          <span class="material-icons text-sm">notifications</span>
+          Notifications
+        </a>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -56,37 +46,19 @@
   <!-- HEADER -->
   <div class="flex justify-between items-center mb-6">
     <div class="flex items-center">
-      <a href="/staff" class="mr-4">
+      <a href="/staff" class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+        title="Back to Dashboard">
         <span class="material-icons">arrow_back</span>
       </a>
       <div>
-        <h2 class="text-2xl font-bold">Pending Claims</h2>
-        <p class="text-sm text-gray-500">Review student requests</p>
->>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
+        <h2 class="text-2xl font-bold text-gray-800">Pending Claim Requests</h2>
+        <p class="text-sm text-gray-500">Review and process student claim requests</p>
       </div>
     </div>
-
-<<<<<<< HEAD
-  <!-- BEGIN: Main Content -->
-  <main class="max-w-4xl mx-auto px-4 py-8">
-    <!-- BEGIN: SectionTitle -->
-    <section class="mb-8 flex items-center justify-between" data-purpose="page-heading">
-      <div class="flex items-center">
-        <a href="/staff"
-          class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
-          title="Back to Dashboard">
-          <span class="material-icons">arrow_back</span>
-        </a>
-        <div>
-          <h2 class="text-2xl font-bold text-gray-800">Pending Claim Requests</h2>
-          <p class="text-sm text-gray-500">Review and process student claim requests</p>
-        </div>
-      </div>
-      <div class="text-sm font-medium bg-orange-100 text-orange-800 px-4 py-2 rounded-full">
-        {{ claims | length }} pending
-      </div>
-    </section>
-    <!-- END: SectionTitle -->
+    <div class="text-sm font-medium bg-orange-100 text-orange-800 px-4 py-2 rounded-full">
+      {{ claims | length }} pending
+    </div>
+  </div>
 
     <!-- BEGIN: ClaimsList -->
     <div id="claims-container" class="space-y-4" data-purpose="claims-feed">
@@ -195,9 +167,20 @@
           <span class="material-icons">close</span>
         </button>
       </div>
-      <form id="reject-form" method="POST" action="">
+      <form id="reject-form" method="POST" action="" onsubmit="return validateRejectionReason()">
         <div class="p-6 space-y-4">
           <p class="text-sm text-gray-600">Are you sure you want to reject this claim?</p>
+
+          <!-- Reason Field (Always Required) -->
+          <div>
+            <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
+              Reason for Rejection <span class="text-red-600">*</span>
+            </label>
+            <textarea id="rejection-reason" name="reason" placeholder="e.g., Insufficient proof, Item description mismatch, Claim not verified..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              rows="3" required></textarea>
+            <p class="text-xs text-gray-500 mt-1">Please provide a reason for rejecting this claim</p>
+          </div>
 
           <!-- False Claim Checkbox -->
           <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
@@ -209,16 +192,6 @@
                 <p class="text-sm text-gray-600">Mark this student as making a false claim</p>
               </div>
             </label>
-          </div>
-
-          <!-- Reason Field -->
-          <div id="reason-field" class="hidden">
-            <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
-              Reason for Rejection
-            </label>
-            <textarea id="rejection-reason" name="reason" placeholder="e.g., Item description doesn't match..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              rows="3"></textarea>
           </div>
 
           <!-- Warning Message -->
@@ -244,27 +217,19 @@
           </button>
         </div>
       </form>
-=======
-    <div class="bg-orange-100 text-orange-800 px-4 py-2 rounded">
-      {{ claims|length }} pending
->>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
     </div>
   </div>
 
-<<<<<<< HEAD
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const flagCheckbox = document.getElementById('flag-student-checkbox');
-      const reasonField = document.getElementById('reason-field');
       const warningMessage = document.getElementById('warning-message');
 
       if (flagCheckbox) {
         flagCheckbox.addEventListener('change', () => {
           if (flagCheckbox.checked) {
-            reasonField.classList.remove('hidden');
             warningMessage.classList.remove('hidden');
           } else {
-            reasonField.classList.add('hidden');
             warningMessage.classList.add('hidden');
           }
         });
@@ -278,7 +243,6 @@
           document.getElementById('reject-modal').classList.remove('hidden');
           document.getElementById('flag-student-checkbox').checked = false;
           document.getElementById('rejection-reason').value = '';
-          reasonField.classList.add('hidden');
           warningMessage.classList.add('hidden');
         });
       });
@@ -287,68 +251,16 @@
     function closeRejectModal() {
       document.getElementById('reject-modal').classList.add('hidden');
     }
+
+    function validateRejectionReason() {
+      const reason = document.getElementById('rejection-reason').value.trim();
+      if (!reason) {
+        alert('Please provide a reason for rejecting this claim');
+        return false;
+      }
+      return true;
+    }
   </script>
 </body>
 
-=======
-  <!-- CLAIMS LIST -->
-  {% if claims %}
-
-    {% for c in claims %}
-    <div class="bg-white border rounded-lg p-5 mb-4 shadow">
-
-      <div class="grid md:grid-cols-2 gap-4">
-
-        <!-- ITEM -->
-        <div>
-          <h3 class="text-sm font-semibold text-gray-600 mb-2">Item Details</h3>
-          <p><strong>Name:</strong> {{ c.item_name }}</p>
-          <p><strong>Description:</strong> {{ c.item_description }}</p>
-          <p><strong>Location:</strong> {{ c.location }}</p>
-        </div>
-
-        <!-- STUDENT -->
-        <div>
-          <h3 class="text-sm font-semibold text-gray-600 mb-2">Student Details</h3>
-          <p><strong>Name:</strong> {{ c.student_name }}</p>
-          <p><strong>Email:</strong> {{ c.student_email }}</p>
-          <p><strong>Roll:</strong> {{ c.roll_no }}</p>
-          <p><strong>Lost Description:</strong> {{ c.description_lost }}</p>
-        </div>
-
-      </div>
-
-      <!-- ACTIONS -->
-      <div class="mt-4 flex gap-3">
-
-        <!-- APPROVE -->
-        <a href="/claim?item_id={{ c.item_id }}"
-           class="bg-green-600 text-white px-4 py-2 rounded">
-          Approve
-        </a>
-
-        <!-- REJECT -->
-        <a href="/reject-claim/{{ c._id }}"
-           class="bg-red-600 text-white px-4 py-2 rounded">
-          Reject
-        </a>
-
-      </div>
-
-    </div>
-    {% endfor %}
-
-  {% else %}
-
-    <div class="text-center text-gray-500 p-10 bg-white rounded shadow">
-      <span class="material-icons text-5xl">inbox</span>
-      <p>No pending claims</p>
-    </div>
-
-  {% endif %} 
-
-</main>
-
-</body>
->>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
 </html>

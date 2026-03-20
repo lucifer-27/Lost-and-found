@@ -1,18 +1,23 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>Notifications - CampusFind</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
   <style>
     body {
-      font-family: 'Inter', system-ui;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background-color: #f8fafc;
+    }
+
+    .material-icons {
+      vertical-align: middle;
     }
 
     .notification-card {
@@ -24,137 +29,131 @@
       background-color: #3b82f6;
       border-radius: 0 4px 4px 0;
     }
+
+    .notification-card.read .read-indicator {
+      background-color: #e5e7eb;
+    }
   </style>
 </head>
 
 <body>
-
-<!-- NAVBAR -->
-<nav class="bg-white border-b">
-  <div class="max-w-7xl mx-auto px-4 flex justify-between h-16 items-center">
-
-    <h1 class="text-xl font-bold text-blue-600 flex items-center">
-      <span class="material-icons mr-2">search</span>
-      CampusFind
-    </h1>
-
-    <a href="/pending-claims"
-      class="bg-orange-100 text-orange-600 px-3 py-2 rounded flex items-center gap-1">
-      <span class="material-icons text-sm">description</span>
-      Pending Claims
-    </a>
-
-  </div>
-</nav>
-
-<!-- MAIN -->
-<main class="max-w-3xl mx-auto px-4 py-8">
-
-  <!-- HEADER -->
-  <div class="flex justify-between items-center mb-6">
-
-    <div class="flex items-center">
-      <a href="/staff" class="mr-4">
-        <span class="material-icons">arrow_back</span>
-      </a>
-
-      <div>
-        <h2 class="text-2xl font-bold">Staff Notifications</h2>
-        <p class="text-sm text-gray-500">Updates about items and claims</p>
-      </div>
-    </div>
-
-    <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded">
-      {{ notifications | selectattr('read', 'equalto', False) | list | length }} unread
-    </div>
-
-  </div>
-
-  <!-- NOTIFICATIONS -->
-  <div class="space-y-3">
-
-    {% if notifications %}
-
-      {% for n in notifications %}
-
-      <a href="
-      {% if n.type == 'claim_submitted' %}
-        /notification/read/{{ n._id }}?next=/pending-claims
-      {% else %}
-        /notification/read/{{ n._id }}
-      {% endif %}
-      "
-      class="block notification-card bg-white border rounded-lg p-4 flex items-start hover:bg-gray-50">
-
-        <div class="read-indicator mr-3"></div>
-
-        <div class="flex-grow">
-          <div class="flex justify-between mb-1">
-            <h3 class="font-semibold text-gray-900">
-              {{ n.type | default("Update") }}
-            </h3>
-            <span class="text-xs text-gray-500">
-              {{ n.created_at }}
-            </span>
-          </div>
-
-          <p class="text-sm text-gray-700">
-            {{ n.message }}
-          </p>
+  <!-- BEGIN: MainHeader -->
+  <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center">
+          <span class="text-2xl font-bold text-blue-600 flex items-center">
+            <span class="material-icons mr-2">search</span>
+            CampusFind
+          </span>
         </div>
-
-<<<<<<< HEAD
-      container.innerHTML = sortedNotifications.map(notif => {
-        const createdDate = new Date(notif.created_at).toLocaleString();
-        const isRead = notif.read;
-        
-        // Determine icon and color based on notification type
-        let iconName, bgColor, borderColor, typeLabel;
-        
-        if (notif.type === 'claim_submitted') {
-          iconName = 'assignment';
-          bgColor = 'bg-orange-50';
-          borderColor = 'border-orange-200';
-          typeLabel = ' New Claim';
-        } else if (notif.type === 'item_returned') {
-          iconName = 'done_all';
-          bgColor = 'bg-green-50';
-          borderColor = 'border-green-200';
-          typeLabel = '✓ Item Returned';
-        } else if (notif.type === 'item_updated') {
-          iconName = 'info';
-          bgColor = 'bg-blue-50';
-          borderColor = 'border-blue-200';
-          typeLabel = 'ℹ Item Update';
-        } else {
-          iconName = 'notifications';
-          bgColor = 'bg-gray-50';
-          borderColor = 'border-gray-200';
-          typeLabel = ' Update';
-        }
-=======
-      </a>
->>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
-
-      {% endfor %}
-
-    {% else %}
-
-      <div class="text-center text-gray-500 p-10 bg-white rounded shadow">
-        <span class="material-icons text-5xl">notifications_none</span>
-        <p>No notifications</p>
+        <div class="flex items-center gap-4">
+        </div>
       </div>
+    </div>
+  </nav>
+  <!-- END: MainHeader -->
 
-    {% endif %}
+  <!-- BEGIN: NotificationsContent -->
+  <main class="max-w-3xl mx-auto px-4 py-8">
+    <!-- BEGIN: SectionTitle -->
+    <section class="mb-8 flex items-center justify-between" data-purpose="page-heading">
+      <div class="flex items-center">
+        <a href="{% if session.get('role') == 'admin' %}/admin{% else %}/staff{% endif %}"
+          class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+          title="Back to Dashboard">
+          <span class="material-icons">arrow_back</span>
+        </a>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">Staff Notifications</h2>
+          <p class="text-sm text-gray-500">Updates about items and claims</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        {% set unread_count = notifications | selectattr('read', 'false') | list | length %}
+        <div class="text-sm font-medium bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
+          {{ unread_count }} unread
+        </div>
+        {% if unread_count > 0 %}
+        <form action="/mark-all-read" method="POST">
+          <button type="submit" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition">
+            Mark all read
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </section>
+    <!-- END: SectionTitle -->
 
-  </div>
+    <!-- BEGIN: NotificationsList -->
+    <div id="notifications-container" class="space-y-3" data-purpose="notification-feed">
+      {% if notifications | length == 0 %}
+      <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+        <span class="material-icons text-5xl mb-4 text-gray-300 block">notifications_none</span>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">No notifications yet</h3>
+        <p class="text-sm text-gray-500">When staff processes claims or returns items, you'll see updates here.</p>
+      </div>
+      {% endif %}
 
-</main>
+      {% for notif in notifications %}
+      {% if notif.type == 'new_claim' or notif.type == 'claim_submitted' %}
+        {% set border_color = 'border-orange-200' %}
+        {% set type_label = '📋 New Claim' %}
+      {% elif notif.type == 'returned' or notif.type == 'claim_approved' %}
+        {% set border_color = 'border-green-200' %}
+        {% set type_label = '✓ Item Returned' %}
+      {% elif notif.type == 'claim_rejected' %}
+        {% set border_color = 'border-red-200' %}
+        {% set type_label = '✗ Claim Rejected' %}
+      {% elif notif.type == 'claim_done' %}
+        {% set border_color = 'border-green-200' %}
+        {% set type_label = '✓ Claim Processed' %}
+      {% elif notif.type == 'item_returned' %}
+        {% set border_color = 'border-green-200' %}
+        {% set type_label = '✓ Item Returned' %}
+      {% elif notif.type == 'item_updated' %}
+        {% set border_color = 'border-blue-200' %}
+        {% set type_label = 'ℹ Item Updated' %}
+      {% else %}
+        {% set border_color = 'border-blue-200' %}
+        {% set type_label = 'ℹ Update' %}
+      {% endif %}
 
-<!-- FOOTER -->
-<footer class="mt-12 text-center text-gray-400 text-xs">
-  © 2026 CampusFind PDEU
-</footer>
+      <div class="notification-card {{ 'read' if notif.read else '' }} bg-white rounded-lg shadow-sm border {{ border_color }} p-4 flex items-start">
+        <div class="read-indicator mr-4"></div>
+        <div class="flex-grow">
+          <div class="flex items-start justify-between mb-2">
+            <h3 class="font-semibold text-gray-900">{{ type_label }}</h3>
+            <span class="text-xs text-gray-500 ml-2">{{ notif.created_at.strftime('%d %b %Y, %I:%M %p') if notif.created_at else '' }}</span>
+          </div>
+          <p class="text-sm text-gray-700 mb-2">{{ notif.message }}</p>
+        </div>
+        <div class="flex flex-col gap-1 ml-2">
+          {% if not notif.read %}
+          <form action="/mark-read/{{ notif._id }}" method="POST">
+            <button type="submit" class="text-blue-400 hover:text-blue-600 transition" title="Mark as read">
+              <span class="material-icons text-sm">done</span>
+            </button>
+          </form>
+          {% endif %}
+          <form action="/dismiss-notification/{{ notif._id }}" method="POST">
+            <button type="submit" class="text-gray-400 hover:text-gray-600 transition" title="Dismiss">
+              <span class="material-icons text-sm">close</span>
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <!-- END: NotificationsList -->
+  </main>
+  <!-- END: NotificationsContent -->
 
+  <!-- BEGIN: Footer -->
+  <footer class="mt-12 py-8 border-t border-gray-200 text-center text-gray-400 text-xs">
+    <p>© 2026 CampusFind PDEU. All Rights Reserved.</p>
+  </footer>
+  <!-- END: Footer -->
 </body>
+
 </html>

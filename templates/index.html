@@ -18,7 +18,6 @@
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-
     <script>
         tailwind.config = {
             theme: {
@@ -91,15 +90,33 @@
                     <span class="text-2xl font-bold tracking-tight text-brand-blue">CampusFind</span>
                 </div>
 
-                <!-- Login button — goes to login.html -->
-                <div class="flex items-center">
-                    {% if session.get('role') %}
+                <!-- Right Navigation: Dashboard, Notifications, Login/Logout -->
+                <div class="flex items-center gap-3">
+                    <!-- Dashboard Button (only for logged-in users) -->
+                    {% if session.get('user') %}
+                    <a href="
+                        {%- if session.get('role') == 'student' -%}/student
+                        {%- elif session.get('role') == 'staff' -%}/staff
+                        {%- elif session.get('role') == 'admin' -%}/admin
+                        {%- else -%}/login
+                        {%- endif -%}
+                    "
+                        class="text-slate-600 hover:text-brand-blue px-3 py-2 rounded-custom font-semibold text-sm transition-colors flex items-center gap-1">
+                        <span class="material-icons text-base">dashboard</span>
+                        Dashboard
+                    </a>
+
+
+
+                    <!-- Logout Button -->
                     <a href="{{ url_for('logout') }}"
-                        class="bg-red-500 text-white px-6 py-2 rounded-custom font-semibold text-sm">
+                        class="bg-red-500 text-white px-6 py-2 rounded-custom font-semibold text-sm hover:bg-red-600 transition-colors">
                         Logout
                     </a>
+
                     {% else %}
-                    <a href="/login" class="bg-brand-blue text-white px-6 py-2 rounded-custom font-semibold text-sm">
+                    <!-- Login Button (for not logged-in users) -->
+                    <a href="/login" class="bg-brand-blue text-white px-6 py-2 rounded-custom font-semibold text-sm hover:bg-blue-700 transition-colors">
                         Login
                     </a>
                     {% endif %}
@@ -126,29 +143,18 @@
                     and securely.
                 </p>
 
-                <!--  Both buttons go to login page -->
+                <!--  Hero action buttons with role-based behavior -->
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    {% if session.get('user') %}
+                    {% if not session.get('user') %}
 
-                    <a href="/report_found"
-                        class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
-                        I Found Something
-                    </a>
-
-                    <a href="/report_lost"
-                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
-                        I Lost Something
-                    </a>
-
-                    {% else %}
-
+                    <!-- Not logged in: both buttons go to login -->
                     <a href="/login"
-                        class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center">
+                        class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center hover:shadow-lg transition-shadow">
                         I Found Something
                     </a>
 
                     <a href="/login"
-                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center">
+                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center hover:bg-white/10 transition-colors">
                         I Lost Something
                     </a>
 
@@ -315,6 +321,7 @@
         </footer>
 
     </main>
+
 </body>
 
 </html>
