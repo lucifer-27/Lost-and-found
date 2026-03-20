@@ -731,7 +731,7 @@ def request_claim():
 
     claims_collection.insert_one(claim_record)
 
-<<<<<<< HEAD
+
     # Notify ALL staff users about the new claim
     staff_users = list(users_collection.find({"role": "staff"}))
     for staff in staff_users:
@@ -741,7 +741,7 @@ def request_claim():
             f"New claim request from {roll_no} ({student_name}) for '{item['name']}'. Description: {description_lost}",
             "claim_submitted"
         )
-=======
+
         result = claims_collection.insert_one(claim_record)
         # notify staff about new claim
         staff_users = users_collection.find({"role": "staff"})
@@ -843,7 +843,7 @@ def report_found():
 
         session.pop("uploaded_image", None)
         session.pop("visited_report_found", None)
-        
+
         session["report_success"] = True
         return redirect(url_for("staff"))
 
