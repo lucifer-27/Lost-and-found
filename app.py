@@ -164,16 +164,15 @@ def staff():
  
 @app.route("/pending-claims")
 def pending_claims():
-<<<<<<< HEAD
+
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
 
     claims = list(
         claims_collection.find({"status": "pending"}).sort("requested_at", -1)
     )
-=======
+
     claims = list(claims_collection.find({"status": "pending"}))
->>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
     return render_template("pending_claims.html", claims=claims)
 
 @app.route("/admin")
@@ -554,7 +553,7 @@ def claim():
         proof = request.form.get("proof")
         return_date = request.form.get("return_date")
         return_time = request.form.get("return_time")
-<<<<<<< HEAD
+
 
         if item_id:
             items_collection.update_one(
@@ -600,7 +599,7 @@ def claim():
         )
 
         return redirect(url_for("staff"))
-=======
+
         
         # Update item status to returned
         items_collection.update_one(
@@ -621,7 +620,6 @@ def claim():
             "processed_at": datetime.utcnow()
         })
         # ------------------------------------------------
->>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
 
 # -------- REJECT CLAIM (STAFF) --------
 @app.route("/reject-claim/<claim_id>", methods=["POST"])
@@ -753,7 +751,6 @@ def request_claim():
                 f"New claim request for '{item['name']}' received.",
                 "new_claim"
                 )
->>>>>>> e2f3351794bfba8710d017d9d259d963f64c3840
 
     session["claim_success"] = True
     return redirect(url_for("items"))
