@@ -166,12 +166,11 @@ def staff():
         return redirect(url_for("login"))
     report_success = session.pop("report_success", False)
     return render_template("staff.html", report_success=report_success)
-
+ 
 @app.route("/pending-claims")
 def pending_claims():
-    if "user" not in session or session.get("role") != "staff":
-        return redirect(url_for("login"))
-    return render_template("pending_claims.html")
+    claims = list(claims_collection.find({"status": "pending"}))
+    return render_template("pending_claims.html", claims=claims)
 
 @app.route("/admin")
 def admin():
@@ -240,6 +239,12 @@ def claim():
         student_name = request.form.get("student_name")
         roll_no = request.form.get("roll_no")
         student_email = request.form.get("student_email")
+        student_user = users_collection.find_one({"email": student_email})
+
+        if not student_user:
+            return "Student not found"
+        
+        student_user_id = str(student_user["_id"])
         proof = request.form.get("proof")
         return_date = request.form.get("return_date")
         return_time = request.form.get("return_time")
@@ -262,25 +267,6 @@ def claim():
             "processed_by": session["user_id"],
             "processed_at": datetime.utcnow()
         })
-
-        # ---------------- NOTIFICATIONS ----------------
-
-        # 1. Notify student
-        create_notification(
-            student_email,   # TEMP (we will fix later)
-            "student",
-            f"Your item '{item_name}' has been returned successfully.",
-            "claim_completed"
-        )
-
-        # 2. Notify staff (optional)
-        create_notification(
-            session["user_id"],
-            "staff",
-            f"You processed claim for '{item_name}'.",
-            "claim_done"
-        )
-
         # ------------------------------------------------
 
         return redirect(url_for("items"))
@@ -352,6 +338,16 @@ def request_claim():
         }
 
         result = claims_collection.insert_one(claim_record)
+        # notify staff about new claim
+        staff_users = users_collection.find({"role": "staff"})
+
+        for staff in staff_users:
+            create_notification(
+                staff["_id"],
+                "staff",
+                f"New claim request for '{item['name']}' received.",
+                "new_claim"
+                )
 
         return jsonify({
             "success": True,
