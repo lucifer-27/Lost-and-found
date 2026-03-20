@@ -99,8 +99,9 @@
       </div>
     </section>
 
-    <!-- Account Flag Warning (if applicable) -->
-    <section id="flag-warning" class="hidden mb-8">
+    <!-- Account Flag Warning -->
+    {% if is_flagged %}
+    <section class="mb-8">
       <div class="bg-red-50 border-2 border-red-300 rounded-lg p-6">
         <div class="flex gap-4">
           <div class="flex-shrink-0">
@@ -108,7 +109,7 @@
           </div>
           <div class="flex-grow">
             <h3 class="font-bold text-red-900 text-lg mb-1">Account Flagged for False Claims</h3>
-            <p id="flag-reason" class="text-red-800 text-sm mb-2"></p>
+            <p class="text-red-800 text-sm mb-2">{{ flag_reason | default('No specific reason provided.') }}</p>
             <p class="text-red-700 text-sm">
               This means staff has determined that one or more of your claims were false. Future claims may be subject to additional review.
             </p>
@@ -116,14 +117,19 @@
         </div>
       </div>
     </section>
+    {% endif %}
 
     <!-- Stats Cards -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {% set total = claims | length %}
+      {% set returned = claims | selectattr('status', 'equalto', 'returned') | list | length %}
+      {% set rejected = claims | selectattr('status', 'equalto', 'rejected') | list | length %}
+      
       <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">Total Claims</p>
-            <p class="text-3xl font-bold text-gray-900" id="total-claims">0</p>
+            <p class="text-3xl font-bold text-gray-900">{{ total }}</p>
           </div>
           <span class="material-icons text-4xl text-blue-200">list</span>
         </div>
@@ -133,7 +139,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">Resolved Items</p>
-            <p class="text-3xl font-bold text-green-600" id="resolved-count">0</p>
+            <p class="text-3xl font-bold text-green-600">{{ returned }}</p>
           </div>
           <span class="material-icons text-4xl text-green-200">check_circle</span>
         </div>
@@ -143,7 +149,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">Rejected Claims</p>
-            <p class="text-3xl font-bold text-red-600" id="rejected-count">0</p>
+            <p class="text-3xl font-bold text-red-600">{{ rejected }}</p>
           </div>
           <span class="material-icons text-4xl text-red-200">cancel</span>
         </div>
@@ -154,10 +160,59 @@
     <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-8">
       <h2 class="text-2xl font-bold text-gray-900 mb-6">Timeline of Claims</h2>
       <div id="timeline-container" class="timeline">
+        {% if claims | length == 0 %}
         <div class="text-center py-10 text-gray-500">
           <span class="material-icons text-5xl mb-4 text-gray-300 block">schedule</span>
           <p class="text-lg">No claims history yet</p>
         </div>
+        {% endif %}
+
+        {% for claim in claims %}
+        {% if claim.status == 'returned' %}
+          {% set status_class = 'resolved' %}
+          {% set status_label = 'Resolved - Returned' %}
+          {% set status_bg = 'bg-green-50' %}
+        {% elif claim.status == 'rejected' %}
+          {% set status_class = 'rejected' %}
+          {% set status_label = 'Rejected' %}
+          {% set status_bg = 'bg-red-50' %}
+        {% else %}
+          {% set status_class = 'pending' %}
+          {% set status_label = 'Pending' %}
+          {% set status_bg = 'bg-yellow-50' %}
+        {% endif %}
+
+        <div class="timeline-event {{ status_class }}">
+          <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 hover:shadow-md transition">
+            <div class="flex justify-between items-start mb-3">
+              <div class="flex-grow">
+                <h3 class="font-bold text-gray-900 text-lg">{{ claim.item_name }}</h3>
+                <p class="text-sm text-gray-600">Claimed on {{ claim.requested_at.strftime('%d %b %Y') if claim.requested_at else 'N/A' }}</p>
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-medium {{ status_bg }} text-gray-800 whitespace-nowrap ml-2">
+                {{ status_label }}
+              </span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-sm">
+              <div>
+                <p class="text-gray-600">Category</p>
+                <p class="font-medium text-gray-900">{{ claim.category | default('N/A') }}</p>
+              </div>
+              <div>
+                <p class="text-gray-600">Location</p>
+                <p class="font-medium text-gray-900">{{ claim.location | default('N/A') }}</p>
+              </div>
+              <div>
+                <p class="text-gray-600">Your Description</p>
+                <p class="font-medium text-gray-900">{{ claim.description_lost | default('N/A') }}</p>
+              </div>
+            </div>
+            {% if claim.rejection_reason %}
+            <p class="text-sm text-red-700 mt-2"><strong>Reason:</strong> {{ claim.rejection_reason }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </section>
   </main>
@@ -168,187 +223,6 @@
     <p>© 2026 CampusFind PDEU. All Rights Reserved.</p>
   </footer>
   <!-- END: Footer -->
-
-  <!-- Item Details Modal -->
-  <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
-      <div class="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-        <h2 class="text-xl font-bold text-gray-900">Item Details</h2>
-        <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
-      <div id="details-content" class="p-6">
-        <!-- Content will be loaded here -->
-      </div>
-      <div class="bg-gray-50 border-t border-gray-200 px-6 py-4">
-        <button onclick="closeDetailsModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let studentHistory = [];
-
-    async function fetchStudentHistory() {
-      try {
-        const response = await fetch('/api/student-history');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const data = await response.json();
-        studentHistory = data.items || [];
-        
-        // Check if student is flagged
-        if (data.student && data.student.account_flagged) {
-          showFlagWarning(data.student);
-        }
-        
-        renderHistory(studentHistory);
-      } catch (error) {
-        console.error('Error fetching history:', error);
-      }
-    }
-
-    function showFlagWarning(student) {
-      const flagWarning = document.getElementById('flag-warning');
-      const flagReason = document.getElementById('flag-reason');
-      
-      flagReason.textContent = student.flag_reason || 'No specific reason provided.';
-      flagWarning.classList.remove('hidden');
-    }
-
-    function renderHistory(items) {
-      const timeline = document.getElementById('timeline-container');
-      
-      // Calculate stats
-      const totalClaims = items.length;
-      const resolvedCount = items.filter(i => i.reason === 'returned').length;
-      const rejectedCount = items.filter(i => i.reason === 'rejected' || i.reason === 'false_claim').length;
-
-      document.getElementById('total-claims').textContent = totalClaims;
-      document.getElementById('resolved-count').textContent = resolvedCount;
-      document.getElementById('rejected-count').textContent = rejectedCount;
-
-      if (items.length === 0) {
-        timeline.innerHTML = `
-          <div class="text-center py-10 text-gray-500">
-            <span class="material-icons text-5xl mb-4 text-gray-300 block">schedule</span>
-            <p class="text-lg">No claims history yet</p>
-          </div>
-        `;
-        return;
-      }
-
-      // Sort by date (newest first)
-      const sorted = [...items].sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at));
-
-      timeline.innerHTML = sorted.map(item => {
-        const archivedDate = new Date(item.archived_at);
-        const statusClass = item.reason === 'returned' ? 'resolved' : item.reason === 'rejected' || item.reason === 'false_claim' ? 'rejected' : 'pending';
-        const statusLabel = item.reason === 'returned' ? 'Resolved - Returned' : item.reason === 'rejected' || item.reason === 'false_claim' ? 'Rejected' : 'Pending';
-        const statusColor = item.reason === 'returned' ? 'bg-green-50' : item.reason === 'rejected' || item.reason === 'false_claim' ? 'bg-red-50' : 'bg-yellow-50';
-
-        return `
-          <div class="timeline-event ${statusClass}">
-            <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 cursor-pointer hover:shadow-md transition" onclick="viewItemDetails('${item._id}')">
-              <div class="flex justify-between items-start mb-3">
-                <div class="flex-grow">
-                  <h3 class="font-bold text-gray-900 text-lg">${item.name}</h3>
-                  <p class="text-sm text-gray-600">Claimed on ${archivedDate.toLocaleDateString()}</p>
-                </div>
-                <span class="px-3 py-1 rounded-full text-xs font-medium ${statusColor} text-gray-800 whitespace-nowrap ml-2">
-                  ${statusLabel}
-                </span>
-              </div>
-              <div class="grid grid-cols-3 gap-2 text-sm">
-                <div>
-                  <p class="text-gray-600">Category</p>
-                  <p class="font-medium text-gray-900">${item.category}</p>
-                </div>
-                <div>
-                  <p class="text-gray-600">Type</p>
-                  <p class="font-medium text-gray-900 capitalize">${item.type}</p>
-                </div>
-                <div>
-                  <p class="text-gray-600">Location</p>
-                  <p class="font-medium text-gray-900">${item.location || 'N/A'}</p>
-                </div>
-              </div>
-              ${item.reason ? `<p class="text-sm text-gray-700 mt-2"><strong>Resolution:</strong> ${item.reason}</p>` : ''}
-              <p class="text-sm text-blue-600 mt-2 flex items-center gap-1">
-                <span class="material-icons text-sm">info</span>
-                Click to view details
-              </p>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function viewItemDetails(itemId) {
-      const item = studentHistory.find(i => i._id === itemId);
-      if (!item) return;
-
-      const content = document.getElementById('details-content');
-      content.innerHTML = `
-        <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <p class="text-sm text-gray-600">Item Name</p>
-              <p class="text-lg font-bold text-gray-900">${item.name}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-600">Type</p>
-              <p class="text-lg font-bold text-gray-900 capitalize">${item.type}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-600">Category</p>
-              <p class="text-lg font-bold text-gray-900">${item.category}</p>
-            </div>
-            <div>
-              <p class="text-sm text-gray-600">Location Found</p>
-              <p class="text-lg font-bold text-gray-900">${item.location || 'N/A'}</p>
-            </div>
-          </div>
-          <div>
-            <p class="text-sm text-gray-600">Description</p>
-            <p class="text-sm text-gray-700">${item.description || 'N/A'}</p>
-          </div>
-          <div class="border-t border-gray-200 pt-4">
-            <h3 class="font-semibold text-gray-900 mb-2">Claim Status</h3>
-            <div class="space-y-2">
-              <div>
-                <p class="text-sm text-gray-600">Status</p>
-                <p class="text-sm font-bold text-gray-900">${item.reason === 'returned' ? 'Resolved - Item Returned' : item.reason === 'rejected' || item.reason === 'false_claim' ? 'Rejected' : 'Pending'}</p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-600">Claimed Date</p>
-                <p class="text-sm text-gray-900">${new Date(item.archived_at).toLocaleString()}</p>
-              </div>
-              ${item.reason ? `
-                <div>
-                  <p class="text-sm text-gray-600">Reason</p>
-                  <p class="text-sm text-gray-900">${item.reason}</p>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('details-modal').classList.remove('hidden');
-    }
-
-    function closeDetailsModal() {
-      document.getElementById('details-modal').classList.add('hidden');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchStudentHistory();
-    });
-  </script>
 </body>
 
 </html>

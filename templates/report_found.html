@@ -125,19 +125,29 @@
 
                 {% if uploaded_image %}
                 <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-semibold text-blue-800">Image captured</p>
-                            <p class="text-xs text-blue-600">Your photo has been saved and will be attached to this
-                                report.</p>
+                            <p class="text-xs text-blue-600">
+                                Your photo has been saved and will be attached to this report.
+                            </p>
                         </div>
-                        <a href="/report-found" class="text-sm text-blue-700 hover:underline">Change</a>
+
+                        <a href="/camera" class="text-sm text-blue-700 hover:underline">
+                            Change
+                        </a>
                     </div>
+
+                    <!-- Image preview -->
                     <div class="mt-4">
                         <img src="{{ url_for('uploaded_file', filename=uploaded_image) }}" alt="Captured photo"
                             class="max-w-xs rounded-md border" />
                     </div>
+
+                    <!-- Hidden field to submit image -->
                     <input type="hidden" name="uploaded_image" value="{{ uploaded_image }}" />
+
                 </div>
                 {% endif %}
 
@@ -385,6 +395,12 @@
     // Hide error as soon as user picks a file
     document.getElementById('upload_image_input').addEventListener('change', function () {
         document.getElementById('image-error').classList.add('hidden');
+    });
+
+    window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
     });
 </script>
 

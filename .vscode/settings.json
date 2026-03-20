@@ -1,0 +1,12 @@
+{
+    "python.defaultInterpreterPath": ".\\venv\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [
+        ".\\venv\\Lib\\site-packages"
+    ],
+    "python.pythonPath": ".\\venv\\Scripts\\python.exe",
+    "python.envFile": "${workspaceFolder}/.env",
+    "pyre.searchPaths": [
+        ".\\venv\\Lib\\site-packages"
+    ],
+    "pyre.pyrePath": ".\\venv\\Scripts\\python.exe"
+}

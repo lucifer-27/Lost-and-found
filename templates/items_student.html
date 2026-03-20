@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Found Items | CampusFind</title>
+    <title>Lost & Found Items | CampusFind</title>
     <!-- Tailwind CSS v3 with Plugins -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <!-- Material Icons -->
@@ -40,17 +40,44 @@
                     <span class="material-icons">arrow_back</span>
                 </a>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-800">Found Items</h1>
-                    <p class="text-gray-600 mt-1">Browse found items and request a claim if you recognize your lost item</p>
+                    <h1 class="text-3xl font-bold text-gray-800">Lost & Found Items</h1>
+                    <p class="text-gray-600 mt-1">Browse items and request a claim if you recognize your lost item</p>
                 </div>
             </div>
         </section>
         <!-- END: Header Section -->
 
+        <!-- BEGIN: Success/Error Messages -->
+        {% if claim_success %}
+        <div id="successBanner" class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+            <span class="material-icons text-green-600 text-2xl">check_circle</span>
+            <div class="flex-grow">
+                <h4 class="font-bold text-green-800">Claim Submitted!</h4>
+                <p class="text-green-700 text-sm">Your claim request has been submitted successfully. Staff will review it shortly.</p>
+            </div>
+            <button onclick="document.getElementById('successBanner').remove()" class="text-green-400 hover:text-green-600">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        {% endif %}
+        {% if claim_error %}
+        <div id="errorBanner" class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+            <span class="material-icons text-red-600 text-2xl">error</span>
+            <div class="flex-grow">
+                <h4 class="font-bold text-red-800">Error</h4>
+                <p class="text-red-700 text-sm">{{ claim_error }}</p>
+            </div>
+            <button onclick="document.getElementById('errorBanner').remove()" class="text-red-400 hover:text-red-600">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        {% endif %}
+        <!-- END: Success/Error Messages -->
+
         <!-- BEGIN: Filter Controls -->
         <section class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-8">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Filters</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <!-- Category Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-category">
@@ -66,6 +93,19 @@
                     </select>
                 </div>
 
+                <!-- Type Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-type">
+                        Type
+                    </label>
+                    <select id="filter-type"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Types</option>
+                        <option value="lost">Lost</option>
+                        <option value="found">Found</option>
+                    </select>
+                </div>
+
                 <!-- Item Name Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-name">
@@ -78,7 +118,7 @@
                 <!-- Month Filter -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-month">
-                        Month Found
+                        Month
                     </label>
                     <input id="filter-month" type="month"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
@@ -105,13 +145,16 @@
                                 Item Name
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Type
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Description
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Category
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                Found Date
+                                Date
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Location
@@ -126,11 +169,23 @@
                         <tr class="hover:bg-blue-50 transition item-row"
                             data-name="{{ item.name | default('') | lower }}"
                             data-category="{{ item.category | default('') | lower }}"
+                            data-type="{{ item.type | default('') | lower }}"
                             data-date="{{ item.date | default('') }}"
                             data-item-id="{{ item._id }}"
                             data-item-description="{{ item.description | default('') }}">
                             <td class="px-6 py-4 text-sm font-medium text-gray-900">
                                 {{ item.name }}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                {% if item.type == 'lost' %}
+                                <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Lost
+                                </span>
+                                {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Found
+                                </span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
                                 {{ item.description | default('No description') }}
@@ -158,7 +213,7 @@
                 </table>
                 {% if not items %}
                 <div class="text-center py-10 text-gray-500">
-                    <p class="text-lg">No found items available at the moment.</p>
+                    <p class="text-lg">No items available at the moment.</p>
                 </div>
                 {% endif %}
             </div>
@@ -178,8 +233,8 @@
                     <span class="material-icons">close</span>
                 </button>
             </div>
-            <form id="claimForm" class="p-6 space-y-4">
-                <input type="hidden" id="itemIdField" />
+            <form id="claimForm" action="/request-claim" method="POST" class="p-6 space-y-4">
+                <input type="hidden" id="itemIdField" name="item_id" />
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -221,34 +276,6 @@
     </div>
     <!-- END: Claim Request Modal -->
 
-    <!-- BEGIN: Success Toast -->
-    <div id="successToast"
-      class="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
-      style="min-width: 320px;">
-      <span class="material-icons text-3xl">check_circle</span>
-      <div>
-        <h4 class="font-bold text-base">Claim Submitted!</h4>
-        <p class="text-green-100 text-sm" id="toastMessage">Your claim request has been submitted successfully.</p>
-      </div>
-      <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white">
-        <span class="material-icons">close</span>
-      </button>
-    </div>
-    <!-- END: Success Toast -->
-
-    <!-- BEGIN: Error Message -->
-    <div id="errorMsg" class="fixed top-20 right-6 z-50 bg-red-500 text-white px-6 py-4 rounded-xl shadow-2xl hidden flex items-center gap-3" style="min-width: 320px;">
-        <span class="material-icons text-3xl">error</span>
-        <div>
-          <h4 class="font-bold text-base">Error</h4>
-          <p class="text-red-100 text-sm" id="errorText">An error occurred. Please try again.</p>
-        </div>
-        <button onclick="dismissError()" class="ml-auto text-red-200 hover:text-white">
-          <span class="material-icons">close</span>
-        </button>
-    </div>
-    <!-- END: Error Message -->
-
     <!-- BEGIN: MainFooter -->
     <footer class="bg-white border-t border-gray-200 mt-20 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">
@@ -266,6 +293,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const filterCategory = document.getElementById("filter-category");
+            const filterType = document.getElementById("filter-type");
             const filterName = document.getElementById("filter-name");
             const filterMonth = document.getElementById("filter-month");
             const clearFiltersBtn = document.getElementById("clear-filters-btn");
@@ -279,13 +307,12 @@
             const claimForm = document.getElementById("claimForm");
             const itemIdField = document.getElementById("itemIdField");
             const itemNameField = document.getElementById("itemNameField");
-            const studentNameField = document.getElementById("studentNameField");
-            const descriptionLostField = document.getElementById("descriptionLostField");
             const requestClaimBtns = document.querySelectorAll(".request-claim-btn");
 
             // Filter functionality
             function applyFilters() {
                 const categoryValue = filterCategory.value.toLowerCase();
+                const typeValue = filterType.value.toLowerCase();
                 const nameValue = filterName.value.toLowerCase();
                 const monthValue = filterMonth.value;
 
@@ -294,23 +321,20 @@
                 itemRows.forEach(row => {
                     const itemName = row.getAttribute("data-name").toLowerCase();
                     const itemCategory = row.getAttribute("data-category").toLowerCase();
+                    const itemType = row.getAttribute("data-type").toLowerCase();
                     const itemDate = row.getAttribute("data-date");
 
-                    // Category filter
                     let categoryMatch = !categoryValue || itemCategory.includes(categoryValue);
-
-                    // Name filter
+                    let typeMatch = !typeValue || itemType === typeValue;
                     let nameMatch = !nameValue || itemName.includes(nameValue);
 
-                    // Month filter
                     let monthMatch = true;
                     if (monthValue) {
-                        const [filterYear, filterMonth] = monthValue.split("-");
-                        const dateStr = itemDate.substring(0, 7); // Get year-month from date
-                        monthMatch = dateStr === `${filterYear}-${filterMonth}`;
+                        const dateStr = itemDate.substring(0, 7);
+                        monthMatch = dateStr === monthValue;
                     }
 
-                    if (categoryMatch && nameMatch && monthMatch) {
+                    if (categoryMatch && typeMatch && nameMatch && monthMatch) {
                         row.classList.remove("hidden");
                         visibleCount++;
                     } else {
@@ -318,7 +342,6 @@
                     }
                 });
 
-                // Show/hide no results message
                 if (visibleCount === 0) {
                     noResultsMsg.classList.remove("hidden");
                 } else {
@@ -328,6 +351,7 @@
 
             function clearFilters() {
                 filterCategory.value = "";
+                filterType.value = "";
                 filterName.value = "";
                 filterMonth.value = "";
                 applyFilters();
@@ -335,6 +359,7 @@
 
             // Filter event listeners
             filterCategory.addEventListener("change", applyFilters);
+            filterType.addEventListener("change", applyFilters);
             filterName.addEventListener("input", applyFilters);
             filterMonth.addEventListener("change", applyFilters);
             clearFiltersBtn.addEventListener("click", clearFilters);
@@ -343,42 +368,12 @@
             function openModal(itemId, itemName) {
                 itemIdField.value = itemId;
                 itemNameField.value = itemName;
-                studentNameField.value = "";
-                descriptionLostField.value = "";
                 claimModal.classList.remove("hidden");
             }
 
             function closeModal() {
                 claimModal.classList.add("hidden");
                 claimForm.reset();
-            }
-
-            function showMessage(type, message) {
-                if (type === "success") {
-                    const toast = document.getElementById("successToast");
-                    const toastMessage = document.getElementById("toastMessage");
-                    toastMessage.textContent = message;
-                    // Slide in animation
-                    setTimeout(() => { toast.style.transform = 'translateX(0)'; }, 100);
-                    // Auto dismiss after 4 seconds
-                    setTimeout(() => { dismissToast(); }, 4000);
-                } else {
-                    const errorMsg = document.getElementById("errorMsg");
-                    const errorText = document.getElementById("errorText");
-                    errorText.textContent = message;
-                    errorMsg.classList.remove("hidden");
-                    setTimeout(() => { dismissError(); }, 4000);
-                }
-            }
-
-            function dismissToast() {
-                const toast = document.getElementById("successToast");
-                toast.style.transform = 'translateX(120%)';
-            }
-
-            function dismissError() {
-                const errorMsg = document.getElementById("errorMsg");
-                errorMsg.classList.add("hidden");
             }
 
             // Request claim button listeners
@@ -395,46 +390,6 @@
             cancelClaimBtn.addEventListener("click", closeModal);
             claimModal.addEventListener("click", function (e) {
                 if (e.target === claimModal) closeModal();
-            });
-
-            // Form submission
-            claimForm.addEventListener("submit", async function (e) {
-                e.preventDefault();
-
-                const studentName = studentNameField.value.trim();
-                const descriptionLost = descriptionLostField.value.trim();
-                const itemId = itemIdField.value;
-
-                if (!studentName || !descriptionLost) {
-                    showMessage("error", "Please fill in all required fields.");
-                    return;
-                }
-
-                try {
-                    const response = await fetch("/request-claim", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            item_id: itemId,
-                            student_name: studentName,
-                            description_lost: descriptionLost
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        showMessage("success", "Claim request submitted! Staff will review it shortly.");
-                        closeModal();
-                    } else {
-                        showMessage("error", data.error || "Failed to submit claim. Please try again.");
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                    showMessage("error", "An error occurred. Please try again.");
-                }
             });
         });
     </script>

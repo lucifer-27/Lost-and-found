@@ -2,7 +2,7 @@ import os
 import re
 import base64
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, flash, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
@@ -154,11 +154,6 @@ def student():
     report_success = session.pop("report_success", False)
     return render_template("student.html", show_welcome=show_welcome, report_success=report_success)
 
-@app.route("/student-history")
-def student_history():
-    if "user" not in session or session.get("role") != "student":
-        return redirect(url_for("login"))
-    return render_template("student_history.html")
 
 @app.route("/staff")
 def staff():
@@ -171,30 +166,247 @@ def staff():
 def pending_claims():
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
-    return render_template("pending_claims.html")
+
+    claims = list(
+        claims_collection.find({"status": "pending"}).sort("requested_at", -1)
+    )
+    return render_template("pending_claims.html", claims=claims)
 
 @app.route("/admin")
 def admin():
     if "user" not in session or session.get("role") != "admin":
         return redirect(url_for("login"))
 
-    total_reports = items_collection.count_documents({})
-    pending_items = items_collection.count_documents({"status":"active"})
-    users_count = users_collection.count_documents({})
-    claims = claims_collection.count_documents({})
+    flag_success = session.pop("flag_success", None)
 
+    # 1. System Activity Monitoring Stats
+    total_active_items = items_collection.count_documents({"status":"active"})
+    total_items = items_collection.count_documents({})
+    total_archived = archived_items_collection.count_documents({})
+    total_reports = total_items + total_archived
+
+    total_claims_submitted = claims_collection.count_documents({})
+    pending_claims = claims_collection.count_documents({"status": "pending"})
+    returned_items = claims_collection.count_documents({"status": "returned"})
+
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    monthly_reports = items_collection.count_documents({"created_at": {"$gte": month_start}}) + archived_items_collection.count_documents({"created_at": {"$gte": month_start}})
+    yearly_reports = items_collection.count_documents({"created_at": {"$gte": year_start}}) + archived_items_collection.count_documents({"created_at": {"$gte": year_start}})
+
+    users_count = users_collection.count_documents({})
+
+    # 2. User Information Management (Enrich arrays)
+    users = list(users_collection.find({"account_flagged": {"$ne": True}}).sort("_id",-1))
+    
+    all_users_items = list(items_collection.find({}, {"reported_by": 1})) + list(archived_items_collection.find({}, {"reported_by": 1}))
+    all_claims = list(claims_collection.find({}))
+    
+    items_by_user = {}
+    for item in all_users_items:
+        uid = str(item.get("reported_by", ""))
+        if uid:
+            items_by_user[uid] = items_by_user.get(uid, 0) + 1
+            
+    claims_dict = {}
+    approved_dict = {}
+    rejected_dict = {}
+    for clm in all_claims:
+        uid = str(clm.get("requested_by", ""))
+        if uid:
+            claims_dict[uid] = claims_dict.get(uid, 0) + 1
+            if clm.get("status") in ["returned", "approved"]:
+                approved_dict[uid] = approved_dict.get(uid, 0) + 1
+            elif clm.get("status") == "rejected":
+                rejected_dict[uid] = rejected_dict.get(uid, 0) + 1
+
+    for u in users:
+        u_id = str(u["_id"])
+        u["total_reports"] = items_by_user.get(u_id, 0)
+        u["total_claims"] = claims_dict.get(u_id, 0)
+        u["approved_claims"] = approved_dict.get(u_id, 0)
+        u["rejected_claims"] = rejected_dict.get(u_id, 0)
+
+    # 3. Claim Monitoring History Table
+    all_claim_history = list(claims_collection.find().sort("requested_at", -1).limit(100))
+    for claim in all_claim_history:
+        clm_user = users_collection.find_one({"_id": ObjectId(claim["requested_by"])}) if claim.get("requested_by") else None
+        claim["student_email"] = clm_user["email"] if clm_user else "Unknown"
+        
+        item = items_collection.find_one({"_id": ObjectId(claim["item_id"])}) or archived_items_collection.find_one({"_id": ObjectId(claim["item_id"])})
+        claim["item_name"] = item["name"] if item else "Unknown Item"
+
+    # Pending Reports (Items with/without claims)
     pending_reports = list(items_collection.find({"status":"active"}).sort("created_at",-1).limit(10))
-    users = list(users_collection.find().sort("_id",-1))
+    for report in pending_reports:
+        has_claim = claims_collection.find_one({"item_id": report["_id"], "status": "pending"})
+        if has_claim:
+            report["has_claim"] = True
+            report["claim_id"] = has_claim["_id"]
+        else:
+            report["has_claim"] = False
 
     return render_template(
         "admin.html",
         total_reports=total_reports,
-        pending_items=pending_items,
+        total_active_items=total_active_items,
+        total_claims_submitted=total_claims_submitted,
+        pending_claims=pending_claims,
+        returned_items=returned_items,
+        monthly_reports=monthly_reports,
+        yearly_reports=yearly_reports,
         users_count=users_count,
-        claims=claims,
+        claims=returned_items,
         pending_reports=pending_reports,
-        users=users
+        users=users,
+        all_claim_history=all_claim_history,
+        flag_success=flag_success
     )
+
+@app.route("/admin/user/<user_id>")
+def admin_user_details(user_id):
+    if "user" not in session or session.get("role") != "admin":
+        return redirect(url_for("login"))
+    
+    try:
+        inspected_user = users_collection.find_one({"_id": ObjectId(user_id)})
+    except:
+        inspected_user = None
+    
+    if not inspected_user:
+        flash("User not found.", "error")
+        return redirect(url_for("admin"))
+        
+    user_items = list(items_collection.find({"reported_by": user_id})) + list(archived_items_collection.find({"reported_by": user_id}))
+    user_items.sort(key=lambda x: x.get("created_at") or datetime.min, reverse=True)
+    
+    user_claims = list(claims_collection.find({"requested_by": user_id}).sort("requested_at", -1))
+    for claim in user_claims:
+        try:
+            item = items_collection.find_one({"_id": ObjectId(claim["item_id"])}) or archived_items_collection.find_one({"_id": ObjectId(claim["item_id"])})
+            claim["item_name"] = item["name"] if item else "Unknown Item"
+        except:
+            claim["item_name"] = "Unknown Item"
+        
+        # Fetch staff email if processed
+        if claim.get("processed_by"):
+            try:
+                staff = users_collection.find_one({"_id": ObjectId(claim["processed_by"])})
+                claim["staff_email"] = staff["email"] if staff else "Unknown Staff"
+            except:
+                claim["staff_email"] = "Unknown Staff"
+
+    return render_template(
+        "admin_user_details.html",
+        inspected_user=inspected_user,
+        user_items=user_items,
+        user_claims=user_claims,
+        flag_success=session.pop("flag_success", None)
+    )
+
+@app.route("/admin/item/<item_id>")
+def admin_item_status(item_id):
+    if "user" not in session or session.get("role") != "admin":
+        return redirect(url_for("login"))
+    
+    try:
+        item = items_collection.find_one({"_id": ObjectId(item_id)}) or archived_items_collection.find_one({"_id": ObjectId(item_id)})
+    except:
+        item = None
+    
+    if not item:
+        flash("Item not found.", "error")
+        return redirect(url_for("admin"))
+    
+    # Get all claims for this item
+    try:
+        claims = list(claims_collection.find({"item_id": ObjectId(item_id)}).sort("requested_at", -1))
+    except:
+        claims = []
+    
+    # Enrich claims with student and staff info
+    for claim in claims:
+        try:
+            student = users_collection.find_one({"_id": ObjectId(claim["requested_by"])}) if claim.get("requested_by") else None
+            claim["student_email"] = student["email"] if student else "Unknown"
+        except:
+            claim["student_email"] = "Unknown"
+        
+        if claim.get("processed_by"):
+            try:
+                staff = users_collection.find_one({"_id": ObjectId(claim["processed_by"])})
+                claim["staff_email"] = staff["email"] if staff else "Unknown Staff"
+            except:
+                claim["staff_email"] = "Unknown Staff"
+
+    # Define steps for timeline
+    steps = [
+        {"name": "Reported Found", "completed": True, "date": item.get("created_at")},
+        {"name": "Claim Requested", "completed": False, "date": None},
+        {"name": "Claim Approved", "completed": False, "date": None},
+        {"name": "Ready for Pickup", "completed": False, "date": None},
+        {"name": "Item Returned", "completed": False, "date": None}
+    ]
+    
+    if claims:
+        steps[1]["completed"] = True
+        steps[1]["date"] = claims[-1]["requested_at"] # First claim date
+        
+        # Check for approved/returned claim
+        final_claim = next((c for c in claims if c.get("status") in ["approved", "returned"]), None)
+        if final_claim:
+            steps[2]["completed"] = True
+            steps[2]["date"] = final_claim.get("processed_at")
+            steps[3]["completed"] = True
+            steps[3]["date"] = final_claim.get("processed_at")
+            
+            if item.get("status") == "returned":
+                steps[4]["completed"] = True
+                steps[4]["date"] = final_claim.get("processed_at")
+
+    return render_template("admin_item_status.html", item=item, claims=claims, steps=steps)
+
+@app.route("/admin/flagged-users")
+def flagged_users():
+    if "user" not in session or session.get("role") != "admin":
+        return redirect(url_for("login"))
+
+    users = list(users_collection.find({"account_flagged": True}).sort("_id",-1))
+    return render_template("flagged_users.html", users=users)
+
+@app.route("/admin/toggle-flag/<user_id>", methods=["POST"])
+def toggle_flag(user_id):
+    if "user" not in session or session.get("role") != "admin":
+        return redirect(url_for("login"))
+    
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    if user:
+        is_flagged = user.get("account_flagged", False)
+        new_status = not is_flagged
+        users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"account_flagged": new_status}}
+        )
+        
+        roll_no = user.get("email", "").split("@")[0] if "@" in user.get("email", "") else "User"
+        
+        if new_status:
+            session["flag_success"] = f"Roll no {roll_no} flagged successfully."
+        else:
+            session["flag_success"] = f"Roll no {roll_no} unflagged successfully."
+
+        # Notify the user
+        status_text = "flagged" if new_status else "unflagged"
+        create_notification(
+            str(user["_id"]),
+            "student" if user.get("role") == "student" else "staff",
+            f"Your account has been {status_text} by the administrator.",
+            "account_flagged" if new_status else "account_unflagged"
+        )
+        
+    return redirect(request.referrer or url_for("admin"))
 
 # ---------------- NOTIFICATIONS ----------------
 #Student notifications
@@ -228,138 +440,276 @@ def notifications():
 
     return render_template("notification_staff.html", notifications=notifications)
 
+# -------- PROCESS CLAIM (STAFF) --------
+@app.route("/process-claim/<claim_id>", methods=["GET", "POST"])
+def process_claim(claim_id):
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+
+    claim = claims_collection.find_one({"_id": ObjectId(claim_id)})
+    if not claim:
+        return redirect(url_for("pending_claims"))
+
+    if request.method == "GET":
+        return render_template("claim.html", claim=claim)
+
+    if request.method == "POST":
+        proof = request.form.get("proof")
+        return_date = request.form.get("return_date")
+        return_time = request.form.get("return_time")
+
+        # Update claim status
+        claims_collection.update_one(
+            {"_id": ObjectId(claim_id)},
+            {"$set": {
+                "status": "returned",
+                "processed_by": session["user_id"],
+                "processed_at": datetime.utcnow(),
+                "proof": proof,
+                "return_date": f"{return_date} {return_time}"
+            }}
+        )
+
+        # Update item status to returned
+        items_collection.update_one(
+            {"_id": claim["item_id"]},
+            {"$set": {"status": "returned"}}
+        )
+
+        # Get the full item to archive it
+        item = items_collection.find_one({"_id": claim["item_id"]})
+
+        # Archive the item
+        if item:
+            archived_items_collection.insert_one({
+                "original_item_id": item["_id"],
+                "name": item.get("name", ""),
+                "category": item.get("category", ""),
+                "type": item.get("type", ""),
+                "date": item.get("date", ""),
+                "location": item.get("location", ""),
+                "description": item.get("description", ""),
+                "image": item.get("image", ""),
+                "reported_by": item.get("reported_by", ""),
+                "claimed_by_name": claim.get("student_name", ""),
+                "claimed_by_email": claim.get("student_email", ""),
+                "claimed_by_roll_no": claim.get("roll_no", ""),
+                "reason": "returned",
+                "proof": proof,
+                "return_date_time": f"{return_date} {return_time}",
+                "archived_at": datetime.utcnow()
+            })
+
+        # Notify the student who requested the claim
+        student_user = users_collection.find_one({"email": claim.get("student_email", "")})
+        if student_user:
+            create_notification(
+                str(student_user["_id"]),
+                "student",
+                f"Your item '{claim.get('item_name', '')}' has been returned successfully! Please collect it from the security office.",
+                "returned"
+            )
+
+        # Notify staff who processed
+        create_notification(
+            session["user_id"],
+            "staff",
+            f"You approved and returned '{claim.get('item_name', '')}' to {claim.get('student_name', '')} ({claim.get('roll_no', '')}).",
+            "claim_done"
+        )
+
+        return redirect(url_for("pending_claims"))
+
+# -------- MANUAL CLAIM (STAFF, NO STUDENT REQUEST) --------
 @app.route("/claim", methods=["GET", "POST"])
 def claim():
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
-    
+
+    if request.method == "GET":
+        item_id = request.args.get("item_id")
+        if item_id:
+            item = items_collection.find_one({"_id": ObjectId(item_id)})
+            if item:
+                return render_template("claim.html", 
+                                       selected_item_id=str(item["_id"]),
+                                       selected_item_name=item.get("name", ""))
+        return render_template("claim.html")
+
     if request.method == "POST":
-        # Handle claim processing
         item_id = request.form.get("item_id")
-        item_name = request.form.get("item_name")
         student_name = request.form.get("student_name")
         roll_no = request.form.get("roll_no")
         student_email = request.form.get("student_email")
         proof = request.form.get("proof")
         return_date = request.form.get("return_date")
         return_time = request.form.get("return_time")
-        
-        # Update item status to returned
-        items_collection.update_one(
-            {"_id": ObjectId(item_id)},
-            {"$set": {"status": "returned"}}
-        )
-        
-        # Record the claim
-        claims_collection.insert_one({
-            "item_id": ObjectId(item_id),
-            "item_name": item_name,
-            "student_name": student_name,
-            "roll_no": roll_no,
-            "student_email": student_email,
-            "proof": proof,
-            "return_date": f"{return_date} {return_time}",
-            "processed_by": session["user_id"],
-            "processed_at": datetime.utcnow()
-        })
 
-        # ---------------- NOTIFICATIONS ----------------
+        if item_id:
+            items_collection.update_one(
+                {"_id": ObjectId(item_id)},
+                {"$set": {"status": "returned"}}
+            )
+            item = items_collection.find_one({"_id": ObjectId(item_id)})
+            
+            if item:
+                archived_items_collection.insert_one({
+                    "original_item_id": item["_id"],
+                    "name": item.get("name", ""),
+                    "category": item.get("category", ""),
+                    "type": item.get("type", ""),
+                    "date": item.get("date", ""),
+                    "location": item.get("location", ""),
+                    "description": item.get("description", ""),
+                    "image": item.get("image", ""),
+                    "reported_by": item.get("reported_by", ""),
+                    "claimed_by_name": student_name,
+                    "claimed_by_email": student_email,
+                    "claimed_by_roll_no": roll_no,
+                    "reason": "returned",
+                    "proof": proof,
+                    "return_date_time": f"{return_date} {return_time}",
+                    "archived_at": datetime.utcnow()
+                })
 
-        # 1. Notify student
-        create_notification(
-            student_email,   # TEMP (we will fix later)
-            "student",
-            f"Your item '{item_name}' has been returned successfully.",
-            "claim_completed"
-        )
+                student_user = users_collection.find_one({"email": student_email})
+                if student_user:
+                    create_notification(
+                        str(student_user["_id"]),
+                        "student",
+                        f"Your item '{item.get('name', '')}' has been returned successfully! Please collect it from the security office.",
+                        "returned"
+                    )
 
-        # 2. Notify staff (optional)
         create_notification(
             session["user_id"],
             "staff",
-            f"You processed claim for '{item_name}'.",
+            f"You manually returned an item to {student_name} ({roll_no}).",
             "claim_done"
         )
 
-        # ------------------------------------------------
+        return redirect(url_for("staff"))
 
-        return redirect(url_for("items"))
-    
-    # GET request - show claim form
-    item_id = request.args.get("item_id")
-    if item_id:
-        item = items_collection.find_one({"_id": ObjectId(item_id)})
-        return render_template("claim.html", selected_item_name=item["name"], selected_item_id=item_id)
-    else:
-        return render_template("claim.html")
-    
-    #Notification
+# -------- REJECT CLAIM (STAFF) --------
+@app.route("/reject-claim/<claim_id>", methods=["POST"])
+def reject_claim(claim_id):
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+
+    claim = claims_collection.find_one({"_id": ObjectId(claim_id)})
+    if not claim:
+        return redirect(url_for("pending_claims"))
+
+    reason = request.form.get("reason", "")
+    is_false_claim = request.form.get("false_claim") == "on"
+
+    # Update claim status
+    update_data = {
+        "status": "rejected",
+        "processed_by": session["user_id"],
+        "processed_at": datetime.utcnow(),
+        "rejection_reason": reason
+    }
+    claims_collection.update_one(
+        {"_id": ObjectId(claim_id)},
+        {"$set": update_data}
+    )
+
+    # If false claim, flag the student
+    if is_false_claim and reason:
+        users_collection.update_one(
+            {"email": claim.get("student_email", "")},
+            {"$set": {
+                "account_flagged": True,
+                "flag_reason": reason
+            }}
+        )
+
+    # Notify the student
+    student_user = users_collection.find_one({"email": claim.get("student_email", "")})
+    if student_user:
+        msg = f"Your claim for '{claim.get('item_name', '')}' has been rejected."
+        if reason:
+            msg += f" Reason: {reason}"
+
+        notif_type = "account_flagged" if is_false_claim else "claim_rejected"
+        create_notification(
+            str(student_user["_id"]),
+            "student",
+            msg,
+            notif_type
+        )
+
+    return redirect(url_for("pending_claims"))
 
 # -------- REQUEST CLAIM (STUDENT) --------
 @app.route("/request-claim", methods=["POST"])
 def request_claim():
 
     if "user" not in session or session.get("role") != "student":
-        return jsonify({"error": "Unauthorized"}), 403
+        return redirect(url_for("login"))
 
-    try:
-        data = request.get_json()
+    item_id = request.form.get("item_id")
+    student_name = request.form.get("student_name")
+    description_lost = request.form.get("description_lost")
 
-        item_id = data.get("item_id")
-        student_name = data.get("student_name")
-        description_lost = data.get("description_lost")
+    if not item_id:
+        return redirect(url_for("items"))
 
-        if not item_id:
-            return jsonify({"error": "Item ID missing"}), 400
+    # Get student email
+    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+    student_email = user["email"]
 
-        # Get student email
-        user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
-        student_email = user["email"]
+    # Extract roll number
+    roll_no = student_email.split("@")[0]
 
-        # Extract roll number
-        roll_no = student_email.split("@")[0]
+    # Get item info
+    item = items_collection.find_one({"_id": ObjectId(item_id)})
 
-        # Get item info
-        item = items_collection.find_one({"_id": ObjectId(item_id)})
+    if not item:
+        return redirect(url_for("items"))
 
-        if not item:
-            return jsonify({"error": "Item not found"}), 404
+    # Prevent duplicate claim
+    existing = claims_collection.find_one({
+        "item_id": ObjectId(item_id),
+        "requested_by": session["user_id"],
+        "status": "pending"
+    })
 
-        # Prevent duplicate claim
-        existing = claims_collection.find_one({
-            "item_id": ObjectId(item_id),
-            "requested_by": session["user_id"],
-            "status": "pending"
-        })
+    if existing:
+        session["claim_error"] = "You already submitted a claim for this item."
+        return redirect(url_for("items"))
 
-        if existing:
-            return jsonify({"error": "You already submitted a claim for this item."}), 400
+    # Create claim record
+    claim_record = {
+        "item_id": ObjectId(item_id),
+        "item_name": item["name"],
+        "item_description": item.get("description", ""),
+        "category": item.get("category", ""),
+        "location": item.get("location", ""),
+        "student_name": student_name,
+        "student_email": student_email,
+        "roll_no": roll_no,
+        "description_lost": description_lost,
+        "status": "pending",
+        "requested_at": datetime.utcnow(),
+        "requested_by": session["user_id"]
+    }
 
-        # Create claim record
-        claim_record = {
-            "item_id": ObjectId(item_id),
-            "item_name": item["name"],
-            "item_description": item.get("description", ""),
-            "category": item.get("category", ""),
-            "location": item.get("location", ""),
-            "student_name": student_name,
-            "student_email": student_email,
-            "roll_no": roll_no,
-            "description_lost": description_lost,
-            "status": "pending",
-            "requested_at": datetime.utcnow(),
-            "requested_by": session["user_id"]
-        }
+    claims_collection.insert_one(claim_record)
 
-        result = claims_collection.insert_one(claim_record)
+    # Notify ALL staff users about the new claim
+    staff_users = list(users_collection.find({"role": "staff"}))
+    for staff in staff_users:
+        create_notification(
+            str(staff["_id"]),
+            "staff",
+            f"New claim request from {roll_no} ({student_name}) for '{item['name']}'. Description: {description_lost}",
+            "claim_submitted"
+        )
 
-        return jsonify({
-            "success": True,
-            "claim_id": str(result.inserted_id)
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    session["claim_success"] = True
+    return redirect(url_for("items"))
         
 
 # ---------------- REPORT LOST ITEM ----------------
@@ -444,12 +794,27 @@ def report_found():
 
         items_collection.insert_one(item)
 
+        session.pop("uploaded_image", None)
+        session.pop("visited_report_found", None)
+        
         session["report_success"] = True
         return redirect(url_for("staff"))
 
     uploaded_image = session.get("uploaded_image")
 
+    # Remove image if page reload happens
+    if request.method == "GET" and session.get("visited_report_found"):
+        session.pop("uploaded_image", None)
+
+    session["visited_report_found"] = True
+
     return render_template("report_found.html", uploaded_image=uploaded_image)
+    
+    response = make_response(render_template("report_found.html", uploaded_image=uploaded_image))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # ---------------- ITEMS ----------------
 @app.route("/items")
@@ -459,15 +824,17 @@ def items():
         return redirect(url_for("login"))
 
     role = session.get("role")
+    claim_success = session.pop("claim_success", False)
+    claim_error = session.pop("claim_error", "")
 
     if role == "staff":
         items = list(items_collection.find().sort("created_at",-1).limit(50))
         return render_template("items_staff.html", items=items)
 
     else:
-        # Students can only see FOUND items
-        items = list(items_collection.find({"type": "found", "status":"active"}).sort("created_at",-1).limit(50))
-        return render_template("items_student.html", items=items)
+        # Students can see both lost and found active items
+        items = list(items_collection.find({"status":"active"}).sort("created_at",-1).limit(50))
+        return render_template("items_student.html", items=items, claim_success=claim_success, claim_error=claim_error)
 
 # ---------------- CAMERA ----------------
 @app.route("/camera")
@@ -511,6 +878,94 @@ def upload():
 
 
 
+
+# ---------------- PREVIOUS ITEMS (STAFF) ----------------
+@app.route("/previous-items")
+def previous_items():
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("login"))
+
+    items = list(archived_items_collection.find().sort("archived_at", -1).limit(50))
+    return render_template("previous-items.html", items=items)
+
+# ---------------- STUDENT HISTORY ----------------
+@app.route("/student-history")
+def student_history():
+    if "user" not in session or session.get("role") != "student":
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    student_email = user["email"]
+
+    # Get all claims by this student
+    student_claims = list(claims_collection.find({"requested_by": user_id}).sort("requested_at", -1))
+
+    # Get archived items for this student
+    archived = list(archived_items_collection.find({"claimed_by_email": student_email}).sort("archived_at", -1))
+
+    # Check if student is flagged
+    is_flagged = user.get("account_flagged", False)
+    flag_reason = user.get("flag_reason", "")
+
+    return render_template(
+        "student_history.html",
+        claims=student_claims,
+        archived_items=archived,
+        is_flagged=is_flagged,
+        flag_reason=flag_reason
+    )
+
+# ---------------- MARK NOTIFICATION READ ----------------
+@app.route("/mark-read/<notification_id>", methods=["POST"])
+def mark_read(notification_id):
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    notifications_collection.update_one(
+        {"_id": ObjectId(notification_id)},
+        {"$set": {"read": True}}
+    )
+
+    role = session.get("role")
+    if role == "staff":
+        return redirect(url_for("notifications"))
+    else:
+        return redirect(url_for("notification_student"))
+
+# ---------------- DISMISS NOTIFICATION ----------------
+@app.route("/dismiss-notification/<notification_id>", methods=["POST"])
+def dismiss_notification(notification_id):
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    notifications_collection.delete_one(
+        {"_id": ObjectId(notification_id)}
+    )
+
+    role = session.get("role")
+    if role == "staff":
+        return redirect(url_for("notifications"))
+    else:
+        return redirect(url_for("notification_student"))
+
+# ---------------- MARK ALL READ ----------------
+@app.route("/mark-all-read", methods=["POST"])
+def mark_all_read():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    user_id = str(session["user_id"])
+    notifications_collection.update_many(
+        {"user_id": user_id, "read": False},
+        {"$set": {"read": True}}
+    )
+
+    role = session.get("role")
+    if role == "staff":
+        return redirect(url_for("notifications"))
+    else:
+        return redirect(url_for("notification_student"))
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":

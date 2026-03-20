@@ -86,6 +86,31 @@
     </div>
   </nav>
 
+  <!-- ACTION SUCCESS TOAST -->
+  {% if flag_success %}
+  <div id="success-toast"
+      class="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
+      style="min-width: 320px;">
+      <span class="material-icons text-3xl">check_circle</span>
+      <div>
+          <h4 class="font-bold text-base">Success</h4>
+          <p class="text-green-100 text-sm">{{ flag_success }}</p>
+      </div>
+      <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white">
+          <span class="material-icons">close</span>
+      </button>
+  </div>
+  <script>
+      const toast = document.getElementById('success-toast');
+      setTimeout(() => { toast.style.transform = 'translateX(0)'; }, 100);
+      setTimeout(() => { dismissToast(); }, 4000);
+      function dismissToast() {
+          toast.style.transform = 'translateX(120%)';
+          setTimeout(() => { toast.remove(); }, 500);
+      }
+  </script>
+  {% endif %}
+
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <!-- STATS BLOCKS -->
@@ -94,49 +119,81 @@
       <!-- Total Reports -->
       <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Reports</span>
-          <span class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-            <span class="material-icons text-xl">assessment</span>
-          </span>
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Reports</span>
+          <span class="p-2 bg-blue-50 text-blue-600 rounded-lg material-icons text-xl">assessment</span>
         </div>
         <div class="text-3xl font-bold text-gray-800">{{ total_reports }}</div>
-        <div class="text-xs text-green-600 mt-2 font-medium">All time reports</div>
+        <div class="text-xs text-blue-600 mt-2 font-medium">All time reported items</div>
       </div>
 
-      <!-- Pending Verification -->
+      <!-- Active Items -->
       <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Pending Verification</span>
-          <span class="p-2 bg-amber-50 text-amber-600 rounded-lg">
-            <span class="material-icons text-xl">pending_actions</span>
-          </span>
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Items</span>
+          <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg material-icons text-xl">inventory_2</span>
         </div>
-        <div class="text-3xl font-bold text-gray-800">{{ pending_items }}</div>
-        <div class="text-xs text-amber-600 mt-2 font-medium">Active Items</div>
+        <div class="text-3xl font-bold text-gray-800">{{ total_active_items }}</div>
+        <div class="text-xs text-indigo-600 mt-2 font-medium">Currently unreturned</div>
+      </div>
+
+      <!-- Total Claims -->
+      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Claims</span>
+          <span class="p-2 bg-purple-50 text-purple-600 rounded-lg material-icons text-xl">assignment</span>
+        </div>
+        <div class="text-3xl font-bold text-gray-800">{{ total_claims_submitted }}</div>
+        <div class="text-xs text-purple-600 mt-2 font-medium">Claims submitted all time</div>
+      </div>
+
+      <!-- Pending Claims -->
+      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending Claims</span>
+          <span class="p-2 bg-amber-50 text-amber-600 rounded-lg material-icons text-xl">pending_actions</span>
+        </div>
+        <div class="text-3xl font-bold text-gray-800">{{ pending_claims }}</div>
+        <div class="text-xs text-amber-600 mt-2 font-medium">Require staff verify</div>
+      </div>
+
+      <!-- Returned Items -->
+      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Returned Items</span>
+          <span class="p-2 bg-green-50 text-green-600 rounded-lg material-icons text-xl">verified</span>
+        </div>
+        <div class="text-3xl font-bold text-gray-800">{{ returned_items }}</div>
+        <div class="text-xs text-green-600 mt-2 font-medium">Successfully processed items</div>
+      </div>
+
+      <!-- Monthly Reports -->
+      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Monthly Stats</span>
+          <span class="p-2 bg-teal-50 text-teal-600 rounded-lg material-icons text-xl">calendar_month</span>
+        </div>
+        <div class="text-3xl font-bold text-gray-800">{{ monthly_reports }}</div>
+        <div class="text-xs text-teal-600 mt-2 font-medium">Reports this month</div>
+      </div>
+
+      <!-- Yearly Reports -->
+      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Yearly Stats</span>
+          <span class="p-2 bg-orange-50 text-orange-600 rounded-lg material-icons text-xl">calendar_today</span>
+        </div>
+        <div class="text-3xl font-bold text-gray-800">{{ yearly_reports }}</div>
+        <div class="text-xs text-orange-600 mt-2 font-medium">Reports this year</div>
       </div>
 
       <!-- Total Users -->
       <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Users</span>
-          <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-            <span class="material-icons text-xl">people</span>
-          </span>
+          <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Registered Users</span>
+          <span class="p-2 bg-rose-50 text-rose-600 rounded-lg material-icons text-xl">people</span>
         </div>
         <div class="text-3xl font-bold text-gray-800">{{ users_count }}</div>
-        <div class="text-xs text-indigo-600 mt-2 font-medium">Registered Accounts</div>
-      </div>
-
-      <!-- Claims Processed -->
-      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Claims Processed</span>
-          <span class="p-2 bg-green-50 text-green-600 rounded-lg">
-            <span class="material-icons text-xl">verified</span>
-          </span>
-        </div>
-        <div class="text-3xl font-bold text-gray-800">{{ claims }}</div>
-        <div class="text-xs text-gray-400 mt-2 font-medium">Successfully returned</div>
+        <div class="text-xs text-rose-600 mt-2 font-medium">Active & flagged accounts</div>
       </div>
 
     </section>
@@ -160,7 +217,7 @@
                 <th class="px-6 py-4">Item</th>
                 <th class="px-6 py-4">Category</th>
                 <th class="px-6 py-4">Date</th>
-                <th class="px-6 py-4 text-center">Flagged Status</th>
+                <th class="px-6 py-4 text-center">Live Status</th>
                 <th class="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -176,15 +233,18 @@
                 </td>
                 <td class="px-6 py-4 text-gray-500 font-medium">{{ report.date }}</td>
                 <td class="px-6 py-4 text-center">
-                  <span
-                    class="inline-block w-2.5 h-2.5 rounded-full {% if report.type == 'found' %}bg-green-500{% else %}bg-red-500{% endif %} shadow-sm"
-                    title="Active"></span>
+                  {% if report.has_claim %}
+                  <span class="inline-block px-2 text-[10px] py-0.5 rounded-full bg-amber-500 text-white font-bold tracking-wider" title="Claim Pending">CLAIM PENDING</span>
+                  {% else %}
+                  <span class="inline-block px-2 text-[10px] py-0.5 rounded-full bg-green-500 text-white font-bold tracking-wider" title="Active">ACTIVE</span>
+                  {% endif %}
                 </td>
                 <td class="px-6 py-4 text-right">
                   <div class="flex justify-end gap-2">
-                    <a href="/claim?item_id={{ report.id }}"
-                      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm inline-block">
-                      Process
+                    <a href="/admin/item/{{ report._id }}"
+                      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm inline-block flex items-center gap-1">
+                      <span class="material-icons text-sm">track_changes</span>
+                      Item Status
                     </a>
                   </div>
                 </td>
@@ -207,40 +267,50 @@
       <section class="bg-white rounded-card border border-gray-100 shadow-sm overflow-hidden"
         data-purpose="manage-users-section">
         <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <h2 class="text-lg font-bold text-gray-800">Manage Users</h2>
-          <div class="relative">
-            <span class="material-icons absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
-            <input
-              class="text-sm border-gray-200 rounded-lg pl-9 pr-4 py-2 focus:ring-blue-500 focus:border-blue-500 w-64 shadow-sm"
-              placeholder="Search users..." type="text" />
+          <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <span class="material-icons text-blue-600">manage_accounts</span>
+            User Analytics & Management
+          </h2>
+          <div class="flex items-center gap-4">
+            <div class="relative">
+              <span class="material-icons absolute left-3 top-2.5 text-gray-400 text-sm">search</span>
+              <input id="user-search" onkeyup="filterUsers()"
+                class="text-sm border-gray-200 rounded-lg pl-9 pr-4 py-2 focus:ring-blue-500 focus:border-blue-500 w-64 shadow-sm"
+                placeholder="Search users by name, email, or role..." type="text" />
+            </div>
+            <a href="/admin/flagged-users" class="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 transition-colors shadow-sm">
+              <span class="material-icons text-sm">warning</span>
+              Flagged Users
+            </a>
           </div>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-left border-collapse">
+          <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr class="text-xs uppercase text-gray-500 font-semibold border-b border-gray-100 bg-white">
-                <th class="px-6 py-4 w-16">ID</th>
-                <th class="px-6 py-4">Account Email</th>
-                <th class="px-6 py-4">University ID</th>
-                <th class="px-6 py-4">Role / Type</th>
-                <th class="px-6 py-4">Reputation</th>
-                <th class="px-6 py-4 text-right">Security Action</th>
+                <th class="px-6 py-4">Account Details</th>
+                <th class="px-6 py-4">Role</th>
+                <th class="px-6 py-4 text-center">Reports</th>
+                <th class="px-6 py-4 text-center">Claims <span class="text-gray-400 font-normal lowercase">(Total)</span></th>
+                <th class="px-6 py-4 text-center text-green-600">Approved</th>
+                <th class="px-6 py-4 text-center text-red-600">Rejected</th>
+                <th class="px-6 py-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody class="text-sm divide-y divide-gray-100">
+            <tbody id="users-table-body" class="text-sm divide-y divide-gray-100">
               {% for user in users %}
-              <tr class="hover:bg-gray-50 transition-colors">
+              <tr class="hover:bg-blue-50 cursor-pointer transition-colors group" onclick="window.location.href='/admin/user/{{ user._id }}'">
                 <td class="px-6 py-4">
-                  <div
-                    class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shadow-sm">
-                    {{ user.id }}
+                  <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-sm shadow-sm">
+                      {{ (user.name or user.email)[0] | upper }}
+                    </div>
+                    <div>
+                      <div class="font-bold text-gray-900 group-hover:text-blue-700">{{ user.name or "Unknown User" }}</div>
+                      <div class="text-xs text-gray-500 font-mono">{{ user.email.split('@')[0] if '@' in user.email else user.email }}</div>
+                    </div>
                   </div>
                 </td>
-                <td class="px-6 py-4">
-                  <div class="font-medium text-gray-800">{{ user.email }}</div>
-                </td>
-                <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-500">{{ user.email.split('@')[0] if '@'
-                  in user.email else 'N/A' }}</td>
                 <td class="px-6 py-4">
                   <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase
                         {% if user.role == 'admin' %}bg-purple-100 text-purple-700
@@ -249,23 +319,81 @@
                     {{ user.role }}
                   </span>
                 </td>
-                <td class="px-6 py-4">
-                  <span class="text-green-600 font-bold text-xs uppercase flex items-center">
-                    <span class="material-icons text-green-600 mr-1" style="font-size: 14px;">check_circle</span>
-                    Active
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                  <button
-                    class="text-xs font-bold text-gray-400 hover:text-red-600 hover:bg-red-50 uppercase tracking-tighter border border-gray-200 rounded-lg px-3 py-1.5 transition-all outline-none">
-                    Flag User
-                  </button>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ user.total_reports }}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ user.total_claims }}</td>
+                <td class="px-6 py-4 text-center font-bold text-green-600">{{ user.approved_claims }}</td>
+                <td class="px-6 py-4 text-center font-bold text-red-600">{{ user.rejected_claims }}</td>
+                <td class="px-6 py-4 text-right" onclick="event.stopPropagation();">
+                  <a href="/admin/user/{{ user._id }}" class="text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-200 rounded-lg px-3 py-1.5 transition-all shadow-sm">
+                    Inspect User
+                  </a>
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="6" class="px-6 py-8 text-center text-gray-500 text-lg font-medium">No users found in
-                  database.</td>
+                <td colspan="7" class="px-6 py-8 text-center text-gray-500 text-lg font-medium">No active users found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CLAIM MONITORING TABLE -->
+      <section class="bg-white rounded-card border border-gray-100 shadow-sm overflow-hidden"
+        data-purpose="claim-monitoring-section">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+          <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <span class="material-icons text-purple-600">history</span>
+            Global Claim Monitoring
+          </h2>
+          <div class="relative">
+            <span class="material-icons absolute left-3 top-2.5 text-gray-400 text-sm">filter_list</span>
+            <input id="claim-search" onkeyup="filterClaims()"
+              class="text-sm border-gray-200 rounded-lg pl-9 pr-4 py-2 focus:ring-purple-500 focus:border-purple-500 w-64 shadow-sm"
+              placeholder="Filter by status, email, or item..." type="text" />
+          </div>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar" style="max-height: 500px;">
+          <table class="w-full text-left border-collapse whitespace-nowrap relative">
+            <thead class="sticky top-0 z-10 bg-white drop-shadow-sm">
+              <tr class="text-xs uppercase text-gray-500 font-semibold border-b border-gray-100">
+                <th class="px-6 py-4">Associated Item</th>
+                <th class="px-6 py-4">Requested By</th>
+                <th class="px-6 py-4 text-center">Status</th>
+                <th class="px-6 py-4">Processed By</th>
+                <th class="px-6 py-4 cursor-pointer hover:bg-gray-50" title="Date Action Taken">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="claims-table-body" class="text-sm divide-y divide-gray-100">
+              {% for claim in all_claim_history %}
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 font-bold text-gray-900">{{ claim.item_name }}</td>
+                <td class="px-6 py-4">
+                  <div class="font-medium text-gray-700">{{ claim.student_email }}</div>
+                  <div class="text-xs text-gray-400">{{ claim.requested_by[-6:] }}</div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  {% if claim.status == 'pending' %}
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-100 text-amber-700">PENDING</span>
+                  {% elif claim.status == 'approved' or claim.status == 'returned' %}
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-green-100 text-green-700">RETURNED</span>
+                  {% elif claim.status == 'rejected' %}
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-red-100 text-red-700">REJECTED</span>
+                  {% else %}
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-700">{{ claim.status }}</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-4 text-gray-500 font-medium">
+                  {{ claim.processed_by if claim.processed_by else '--' }}
+                </td>
+                <td class="px-6 py-4 text-gray-500 text-xs font-mono">
+                  {{ claim.processed_at if claim.processed_at else (claim.requested_at if claim.requested_at else 'N/A') }}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="px-6 py-8 text-center text-gray-500 font-medium">No claims history available.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -284,6 +412,44 @@
     </div>
   </footer>
 
+  <script>
+    function filterUsers() {
+      const input = document.getElementById('user-search').value.toLowerCase();
+      const rows = document.querySelectorAll('#users-table-body tr');
+
+      rows.forEach(row => {
+        if (row.cells.length === 1) return;
+
+        const email = row.cells[0]?.textContent.toLowerCase() || "";
+        const role = row.cells[1]?.textContent.toLowerCase() || "";
+
+        if (email.includes(input) || role.includes(input)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function filterClaims() {
+      const input = document.getElementById('claim-search').value.toLowerCase();
+      const rows = document.querySelectorAll('#claims-table-body tr');
+
+      rows.forEach(row => {
+        if (row.cells.length === 1) return;
+
+        const item = row.cells[0]?.textContent.toLowerCase() || "";
+        const email = row.cells[1]?.textContent.toLowerCase() || "";
+        const status = row.cells[2]?.textContent.toLowerCase() || "";
+
+        if (item.includes(input) || email.includes(input) || status.includes(input)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+  </script>
 </body>
 
 </html>

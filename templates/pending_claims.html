@@ -34,7 +34,8 @@
           </span>
         </div>
         <div class="flex items-center gap-4">
-          <a href="/notifications" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
+          <a href="/notifications"
+            class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
             <span class="material-icons text-sm">notifications</span> Notifications
           </a>
         </div>
@@ -43,7 +44,7 @@
   </nav>
   <!-- END: MainHeader -->
 
-  <!-- BEGIN: NotificationsContent -->
+  <!-- BEGIN: Main Content -->
   <main class="max-w-4xl mx-auto px-4 py-8">
     <!-- BEGIN: SectionTitle -->
     <section class="mb-8 flex items-center justify-between" data-purpose="page-heading">
@@ -59,22 +60,102 @@
         </div>
       </div>
       <div class="text-sm font-medium bg-orange-100 text-orange-800 px-4 py-2 rounded-full">
-        <span id="claim-count">0</span> pending
+        {{ claims | length }} pending
       </div>
     </section>
     <!-- END: SectionTitle -->
 
     <!-- BEGIN: ClaimsList -->
     <div id="claims-container" class="space-y-4" data-purpose="claims-feed">
+      {% if claims | length == 0 %}
       <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
         <span class="material-icons text-5xl mb-4 text-gray-300 block">inbox</span>
         <h3 class="text-lg font-medium text-gray-900 mb-1">No pending claims</h3>
-        <p class="text-sm text-gray-500">All claims have been processed. Come back when students submit new requests.</p>
+        <p class="text-sm text-gray-500">All claims have been processed. Come back when students submit new requests.
+        </p>
       </div>
+      {% endif %}
+
+      {% for claim in claims %}
+      <div class="bg-white rounded-lg shadow-sm border border-orange-200 bg-orange-50 p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Left side: Item Details -->
+          <div>
+            <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Item Details</h3>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-gray-600">Item Name</p>
+                <p class="text-lg font-bold text-gray-900">{{ claim.item_name }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Description</p>
+                <p class="text-sm text-gray-700">{{ claim.item_description | default('N/A') }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Category</p>
+                <p class="text-sm text-gray-700 capitalize">{{ claim.category | default('N/A') }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Location</p>
+                <p class="text-sm text-gray-700">{{ claim.location | default('N/A') }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Student Request Details -->
+          <div>
+            <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Student Claim Details</h3>
+            <div class="space-y-3">
+              <div>
+                <p class="text-sm text-gray-600">Roll Number (ID)</p>
+                <p
+                  class="text-lg font-bold text-orange-700 bg-white px-3 py-2 rounded inline-block border border-orange-300">
+                  {{ claim.roll_no }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Student Name</p>
+                <p class="text-sm text-gray-700">{{ claim.student_name }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Student Email</p>
+                <p class="text-sm text-gray-700">{{ claim.student_email }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">What They Lost</p>
+                <p class="text-sm text-gray-700">{{ claim.description_lost | default('Not specified') }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-600">Requested On</p>
+                <p class="text-sm text-gray-700">{{ claim.requested_at.strftime('%d %b %Y, %I:%M %p') if
+                  claim.requested_at else 'N/A' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex gap-3 border-t border-orange-200 pt-4 flex-wrap">
+          <!-- Process Claim Button -->
+          <a href="/process-claim/{{ claim._id }}"
+            class="flex-1 min-w-[150px] inline-block text-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer">
+            <span class="material-icons mr-1" style="font-size: 16px; vertical-align: -2px;">assignment_turned_in</span>
+            Process Claim
+          </a>
+
+          <!-- Reject Button (opens modal) -->
+          <button
+            class="reject-btn flex-1 min-w-[150px] bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+            data-claim-id="{{ claim._id }}">
+            <span class="material-icons mr-1" style="font-size: 16px; vertical-align: -2px;">cancel</span>
+            Reject
+          </button>
+        </div>
+      </div>
+      {% endfor %}
     </div>
     <!-- END: ClaimsList -->
   </main>
-  <!-- END: NotificationsContent -->
+  <!-- END: Main Content -->
 
   <!-- BEGIN: Footer -->
   <footer class="mt-12 py-8 border-t border-gray-200 text-center text-gray-400 text-xs">
@@ -82,7 +163,7 @@
   </footer>
   <!-- END: Footer -->
 
-  <!-- BEGIN: Reject Modal for False Claim Detection -->
+  <!-- BEGIN: Reject Modal -->
   <div id="reject-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
       <div class="bg-red-50 border-b border-red-200 px-6 py-4 flex justify-between items-center">
@@ -91,239 +172,60 @@
           <span class="material-icons">close</span>
         </button>
       </div>
-      <div class="p-6 space-y-4">
-        <p class="text-sm text-gray-600">Are you sure you want to reject this claim?</p>
-        
-        <!-- False Claim Checkbox -->
-        <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
-          <label class="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" id="flag-student-checkbox" class="mt-1 w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
-            <div class="flex-1">
-              <p class="font-medium text-gray-900">Flag as False Claim</p>
-              <p class="text-sm text-gray-600">Mark this student as making a false claim</p>
-            </div>
-          </label>
-        </div>
+      <form id="reject-form" method="POST" action="">
+        <div class="p-6 space-y-4">
+          <p class="text-sm text-gray-600">Are you sure you want to reject this claim?</p>
 
-        <!-- Reason Field -->
-        <div id="reason-field" class="hidden">
-          <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
-            Reason for Rejection
-          </label>
-          <textarea id="rejection-reason" placeholder="e.g., Item description doesn't match, student already received similar item..." 
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            rows="3"></textarea>
-          <p class="text-xs text-gray-500 mt-1">This will be visible to staff and may be shown to the student if their account is flagged.</p>
-        </div>
+          <!-- False Claim Checkbox -->
+          <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" id="flag-student-checkbox" name="false_claim"
+                class="mt-1 w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
+              <div class="flex-1">
+                <p class="font-medium text-gray-900">Flag as False Claim</p>
+                <p class="text-sm text-gray-600">Mark this student as making a false claim</p>
+              </div>
+            </label>
+          </div>
 
-        <!-- Warning Message -->
-        <div id="warning-message" class="hidden bg-red-50 border border-red-200 rounded-lg p-3">
-          <div class="flex gap-2">
-            <span class="material-icons text-red-600 text-lg flex-shrink-0">warning</span>
-            <div class="text-sm">
-              <p class="font-medium text-red-900">This will flag the student account</p>
-              <p class="text-red-800">The student will be notified and may be restricted from future claims.</p>
+          <!-- Reason Field -->
+          <div id="reason-field" class="hidden">
+            <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-2">
+              Reason for Rejection
+            </label>
+            <textarea id="rejection-reason" name="reason" placeholder="e.g., Item description doesn't match..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              rows="3"></textarea>
+          </div>
+
+          <!-- Warning Message -->
+          <div id="warning-message" class="hidden bg-red-50 border border-red-200 rounded-lg p-3">
+            <div class="flex gap-2">
+              <span class="material-icons text-red-600 text-lg flex-shrink-0">warning</span>
+              <div class="text-sm">
+                <p class="font-medium text-red-900">This will flag the student account</p>
+                <p class="text-red-800">The student will be notified and may be restricted from future claims.</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
-        <button onclick="closeRejectModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
-          Cancel
-        </button>
-        <button onclick="confirmReject()" id="confirm-reject-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-          Reject Claim
-        </button>
-      </div>
+        <div class="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
+          <button type="button" onclick="closeRejectModal()"
+            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
+            Cancel
+          </button>
+          <button type="submit" id="confirm-reject-btn"
+            class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+            Reject Claim
+          </button>
+        </div>
+      </form>
     </div>
   </div>
   <!-- END: Reject Modal -->
 
   <script>
-    // Auto-refresh claims every 3 seconds
-    const AUTO_REFRESH_INTERVAL = 3000;
-    let currentRejectingClaimId = null;
-
-    async function fetchPendingClaims() {
-      try {
-        const response = await fetch('/api/pending-claims');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const claims = await response.json();
-        renderClaims(claims);
-      } catch (error) {
-        console.error('Error fetching claims:', error);
-      }
-    }
-
-    function renderClaims(claims) {
-      const container = document.getElementById('claims-container');
-      const countBadge = document.getElementById('claim-count');
-
-      // Update count
-      countBadge.textContent = claims.length;
-
-      // Show empty state if no claims
-      if (claims.length === 0) {
-        container.innerHTML = `
-          <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
-            <span class="material-icons text-5xl mb-4 text-gray-300 block">inbox</span>
-            <h3 class="text-lg font-medium text-gray-900 mb-1">No pending claims</h3>
-            <p class="text-sm text-gray-500">All claims have been processed. Come back when students submit new requests.</p>
-          </div>
-        `;
-        return;
-      }
-
-      // Render claims
-      container.innerHTML = claims.map(claim => `
-        <div class="bg-white rounded-lg shadow-sm border border-orange-200 bg-orange-50 p-6" data-claim-id="${claim._id}">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Left side: Found Item Details -->
-            <div>
-              <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Found Item Details</h3>
-              <div class="space-y-3">
-                <div>
-                  <p class="text-sm text-gray-600">Item Name</p>
-                  <p class="text-lg font-bold text-gray-900">${claim.item_name}</p>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-600">Description</p>
-                  <p class="text-sm text-gray-700">${claim.item_description || 'N/A'}</p>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-600">Category</p>
-                  <p class="text-sm text-gray-700 capitalize">${claim.category || 'N/A'}</p>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-600">Location Found</p>
-                  <p class="text-sm text-gray-700">${claim.location || 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right side: Student Request Details -->
-            <div>
-              <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Student Claim Details</h3>
-              <div class="space-y-3">
-                <div>
-                  <p class="text-sm text-gray-600">Roll Number (ID)</p>
-                  <p class="text-lg font-bold text-orange-700 bg-white px-3 py-2 rounded inline-block border border-orange-300">${claim.roll_no}</p>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-600">Student Name</p>
-                  <p class="text-sm text-gray-700">${claim.student_name}</p>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-600">What They Lost</p>
-                  <p class="text-sm text-gray-700">${claim.description_lost || 'Not specified'}</p>
-                </div>
-                <div>
-                  <p class="text-sm text-gray-600">Requested On</p>
-                  <p class="text-sm text-gray-700">${new Date(claim.created_at).toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="mt-6 flex gap-3 border-t border-orange-200 pt-4 flex-wrap">
-            <button class="approve-btn flex-1 min-w-[150px] bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition" data-claim-id="${claim._id}">
-              <span class="material-icons mr-1" style="font-size: 16px; vertical-align: -2px;">check_circle</span>
-              Approve & Return
-            </button>
-            <button class="reject-btn flex-1 min-w-[150px] bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition" data-claim-id="${claim._id}">
-              <span class="material-icons mr-1" style="font-size: 16px; vertical-align: -2px;">cancel</span>
-              Reject
-            </button>
-            <a href="/items?item_id=${claim.item_id}" class="flex-1 min-w-[150px] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition text-center inline-flex items-center justify-center">
-              <span class="material-icons mr-1" style="font-size: 16px;">info</span>
-              View Item
-            </a>
-          </div>
-        </div>
-      `).join('');
-
-      // Attach event listeners
-      document.querySelectorAll('.approve-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => processClaim(e.target.closest('button').dataset.claimId, 'returned'));
-      });
-
-      document.querySelectorAll('.reject-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => openRejectModal(e.target.closest('button').dataset.claimId));
-      });
-    }
-
-    function openRejectModal(claimId) {
-      currentRejectingClaimId = claimId;
-      document.getElementById('reject-modal').classList.remove('hidden');
-      document.getElementById('flag-student-checkbox').checked = false;
-      document.getElementById('rejection-reason').value = '';
-      document.getElementById('reason-field').classList.add('hidden');
-      document.getElementById('warning-message').classList.add('hidden');
-    }
-
-    function closeRejectModal() {
-      document.getElementById('reject-modal').classList.add('hidden');
-      currentRejectingClaimId = null;
-    }
-
-    function confirmReject() {
-      const isFalseClaim = document.getElementById('flag-student-checkbox').checked;
-      const reason = document.getElementById('rejection-reason').value.trim();
-
-      if (isFalseClaim && !reason) {
-        alert('Please provide a reason for flagging this as a false claim.');
-        return;
-      }
-
-      processClaim(currentRejectingClaimId, 'rejected', isFalseClaim, reason);
-      closeRejectModal();
-    }
-
-    async function processClaim(claimId, status, isFalseClaim = false, reason = '') {
-      if (status === 'returned' && !confirm('Are you sure you want to approve and return this claim?')) {
-        return;
-      }
-
-      try {
-        const payload = { 
-          status,
-          reason: isFalseClaim ? reason : undefined
-        };
-
-        const response = await fetch(`/api/claim/${claimId}/status`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const result = await response.json();
-        console.log('Claim processed:', result);
-
-        // Show success message
-        if (isFalseClaim) {
-          alert(`Claim rejected and student account flagged with reason: "${reason}"`);
-        } else if (status === 'rejected') {
-          alert('Claim rejected successfully.');
-        } else {
-          alert('Claim approved and item marked as returned.');
-        }
-
-        // Refresh the claims list
-        await fetchPendingClaims();
-      } catch (error) {
-        console.error('Error processing claim:', error);
-        alert('Error processing claim. Please try again.');
-      }
-    }
-
-    // Toggle reason field visibility
     document.addEventListener('DOMContentLoaded', () => {
       const flagCheckbox = document.getElementById('flag-student-checkbox');
       const reasonField = document.getElementById('reason-field');
@@ -341,9 +243,23 @@
         });
       }
 
-      fetchPendingClaims();
-      setInterval(fetchPendingClaims, AUTO_REFRESH_INTERVAL);
+      // Reject buttons open modal and set form action
+      document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const claimId = btn.dataset.claimId;
+          document.getElementById('reject-form').action = `/reject-claim/${claimId}`;
+          document.getElementById('reject-modal').classList.remove('hidden');
+          document.getElementById('flag-student-checkbox').checked = false;
+          document.getElementById('rejection-reason').value = '';
+          reasonField.classList.add('hidden');
+          warningMessage.classList.add('hidden');
+        });
+      });
     });
+
+    function closeRejectModal() {
+      document.getElementById('reject-modal').classList.add('hidden');
+    }
   </script>
 </body>
 

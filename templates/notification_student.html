@@ -67,19 +67,72 @@
           <p class="text-sm text-gray-500">Stay updated on claim requests and returned items</p>
         </div>
       </div>
-      <div class="text-sm font-medium bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
-        <span id="unread-count">0</span> unread
+      <div class="flex items-center gap-3">
+        {% set unread_count = notifications | selectattr('read', 'false') | list | length %}
+        <div class="text-sm font-medium bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
+          {{ unread_count }} unread
+        </div>
+        {% if unread_count > 0 %}
+        <form action="/mark-all-read" method="POST">
+          <button type="submit" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition">
+            Mark all read
+          </button>
+        </form>
+        {% endif %}
       </div>
     </section>
     <!-- END: SectionTitle -->
 
     <!-- BEGIN: NotificationsList -->
     <div id="notifications-container" class="space-y-3" data-purpose="notification-feed">
+      {% if notifications | length == 0 %}
       <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
         <span class="material-icons text-5xl mb-4 text-gray-300 block">notifications_none</span>
         <h3 class="text-lg font-medium text-gray-900 mb-1">No notifications yet</h3>
         <p class="text-sm text-gray-500">When staff approves claims or returns items, you'll be notified here.</p>
       </div>
+      {% endif %}
+
+      {% for notif in notifications %}
+      {% if notif.type == 'returned' or notif.type == 'claim_approved' %}
+        {% set border_color = 'border-green-200' %}
+        {% set type_label = '✓ Item Returned' %}
+      {% elif notif.type == 'claim_rejected' %}
+        {% set border_color = 'border-red-200' %}
+        {% set type_label = '✗ Claim Rejected' %}
+      {% elif notif.type == 'account_flagged' %}
+        {% set border_color = 'border-red-300' %}
+        {% set type_label = '⚠ Account Flagged' %}
+      {% else %}
+        {% set border_color = 'border-blue-200' %}
+        {% set type_label = 'ℹ Update' %}
+      {% endif %}
+
+      <div class="notification-card {{ 'read' if notif.read else '' }} {{ 'ring-2 ring-red-300' if notif.type == 'account_flagged' else '' }} bg-white rounded-lg shadow-sm border {{ border_color }} p-4 flex items-start">
+        <div class="read-indicator mr-4"></div>
+        <div class="flex-grow">
+          <div class="flex items-start justify-between mb-2">
+            <h3 class="font-semibold {{ 'text-red-900' if notif.type == 'account_flagged' else 'text-gray-900' }}">{{ type_label }}</h3>
+            <span class="text-xs text-gray-500 ml-2">{{ notif.created_at.strftime('%d %b %Y, %I:%M %p') if notif.created_at else '' }}</span>
+          </div>
+          <p class="text-sm {{ 'text-red-700' if notif.type == 'account_flagged' else 'text-gray-700' }} mb-2">{{ notif.message }}</p>
+        </div>
+        <div class="flex flex-col gap-1 ml-2">
+          {% if not notif.read %}
+          <form action="/mark-read/{{ notif._id }}" method="POST">
+            <button type="submit" class="text-blue-400 hover:text-blue-600 transition" title="Mark as read">
+              <span class="material-icons text-sm">done</span>
+            </button>
+          </form>
+          {% endif %}
+          <form action="/dismiss-notification/{{ notif._id }}" method="POST">
+            <button type="submit" class="text-gray-400 hover:text-gray-600 transition" title="Dismiss">
+              <span class="material-icons text-sm">close</span>
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
     </div>
     <!-- END: NotificationsList -->
   </main>
@@ -90,154 +143,6 @@
     <p>© 2026 CampusFind PDEU. All Rights Reserved.</p>
   </footer>
   <!-- END: Footer -->
-
-  <script>
-    // Auto-refresh notifications every 2 seconds
-    const AUTO_REFRESH_INTERVAL = 2000;
-
-    async function fetchNotifications() {
-      try {
-        const response = await fetch('/api/notifications/student');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const notifications = await response.json();
-        renderNotifications(notifications);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      }
-    }
-
-    function renderNotifications(notifications) {
-      const container = document.getElementById('notifications-container');
-      const unreadCountBadge = document.getElementById('unread-count');
-
-      // Calculate unread count
-      const unreadCount = notifications.filter(n => !n.read).length;
-      unreadCountBadge.textContent = unreadCount;
-
-      // Show empty state if no notifications
-      if (notifications.length === 0) {
-        container.innerHTML = `
-          <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center text-gray-500">
-            <span class="material-icons text-5xl mb-4 text-gray-300 block">notifications_none</span>
-            <h3 class="text-lg font-medium text-gray-900 mb-1">No notifications yet</h3>
-            <p class="text-sm text-gray-500">When staff approves claims or returns items, you'll be notified here.</p>
-          </div>
-        `;
-        return;
-      }
-
-      // Render notifications - sort by date (newest first)
-      const sortedNotifications = [...notifications].sort((a, b) => 
-        new Date(b.created_at) - new Date(a.created_at)
-      );
-
-      container.innerHTML = sortedNotifications.map(notif => {
-        const createdDate = new Date(notif.created_at).toLocaleString();
-        const isRead = notif.read;
-        
-        // Determine icon and color based on notification type
-        let iconName, bgColor, borderColor, typeLabel;
-        
-        if (notif.type === 'returned') {
-          iconName = 'done_all';
-          bgColor = 'bg-green-50';
-          borderColor = 'border-green-200';
-          typeLabel = '✓ Item Returned';
-        } else if (notif.type === 'claim_approved') {
-          iconName = 'check_circle';
-          bgColor = 'bg-green-50';
-          borderColor = 'border-green-200';
-          typeLabel = '✓ Claim Approved';
-        } else if (notif.type === 'claim_rejected') {
-          iconName = 'cancel';
-          bgColor = 'bg-red-50';
-          borderColor = 'border-red-200';
-          typeLabel = '✗ Claim Rejected';
-        } else if (notif.type === 'account_flagged') {
-          iconName = 'warning';
-          bgColor = 'bg-red-50';
-          borderColor = 'border-red-300';
-          typeLabel = '⚠ Account Flagged';
-        } else {
-          iconName = 'info';
-          bgColor = 'bg-blue-50';
-          borderColor = 'border-blue-200';
-          typeLabel = 'ℹ Update';
-        }
-
-        return `
-          <div class="notification-card ${isRead ? 'read' : ''} ${notif.type === 'account_flagged' ? 'ring-2 ring-red-300' : ''} bg-white rounded-lg shadow-sm border ${borderColor} p-4 cursor-pointer hover:shadow-md transition flex items-start" data-notification-id="${notif._id}">
-            <div class="read-indicator mr-4"></div>
-            <div class="flex-grow">
-              <div class="flex items-start justify-between mb-2">
-                <h3 class="font-semibold ${notif.type === 'account_flagged' ? 'text-red-900' : 'text-gray-900'}">${notif.title || typeLabel}</h3>
-                <span class="text-xs text-gray-500 ml-2">${createdDate}</span>
-              </div>
-              <p class="text-sm ${notif.type === 'account_flagged' ? 'text-red-700' : 'text-gray-700'} mb-2">${notif.message}</p>
-              ${notif.reason ? `<p class="text-sm ${notif.type === 'account_flagged' ? 'bg-red-100 text-red-800 p-2 rounded border border-red-300 mt-2' : 'text-gray-600'}">Reason: ${notif.reason}</p>` : ''}
-              ${notif.item_name ? `<p class="text-sm font-medium text-gray-600">📦 Item: <span class="text-gray-900">${notif.item_name}</span></p>` : ''}
-            </div>
-            <button class="dismiss-btn ml-2 text-gray-400 hover:text-gray-600 transition" title="Dismiss">
-              <span class="material-icons">close</span>
-            </button>
-          </div>
-        `;
-      }).join('');
-
-      // Attach event listeners
-      document.querySelectorAll('.notification-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-          if (!e.target.closest('.dismiss-btn')) {
-            markAsRead(card.dataset.notificationId);
-          }
-        });
-      });
-
-      document.querySelectorAll('.dismiss-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          dismissNotification(btn.closest('.notification-card').dataset.notificationId);
-        });
-      });
-    }
-
-    async function markAsRead(notificationId) {
-      try {
-        const response = await fetch(`/api/notifications/${notificationId}/read`, {
-          method: 'POST'
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        // Refresh notifications
-        await fetchNotifications();
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
-      }
-    }
-
-    async function dismissNotification(notificationId) {
-      try {
-        const response = await fetch(`/api/notifications/${notificationId}/dismiss`, {
-          method: 'POST'
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        // Refresh notifications
-        await fetchNotifications();
-      } catch (error) {
-        console.error('Error dismissing notification:', error);
-      }
-    }
-
-    // Initial load and auto-refresh
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchNotifications();
-      setInterval(fetchNotifications, AUTO_REFRESH_INTERVAL);
-    });
-  </script>
 </body>
 
 </html>
