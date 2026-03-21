@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lost & Found Chatbot</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+    }
+
+    .chat-container {
+      width: 350px;
+      margin: 50px auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .chat-box {
+      height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 80%;
+    }
+
+    .user {
+      background: #dcf8c6;
+      margin-left: auto;
+    }
+
+    .bot {
+      background: #eee;
+    }
+
+    .input-area {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">Help Chatbot 🤖</div>
+  
+  <div class="chat-box" id="chatBox"></div>
+
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Ask something..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+function addMessage(message, className) {
+  const chatBox = document.getElementById("chatBox");
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "message " + className;
+  msgDiv.innerText = message;
+  chatBox.appendChild(msgDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function getBotResponse(input) {
+  input = input.toLowerCase();
+
+  if (input.includes("login")) {
+    return "You can find the login button on the top right corner of the homepage.";
+  }
+  else if (input.includes("lost item")) {
+    return "Go to the report section and select 'Lost Item', then fill the form.";
+  }
+  else if (input.includes("found item")) {
+    return "Go to the report section and select 'Found Item', then submit the details.";
+  }
+  else if (input.includes("view") || input.includes("found items")) {
+    return "You can view found items in the 'Found Items' section on the website.";
+  }
+  else if (input.includes("match")) {
+    return "The system matches lost and found items based on item details like name, color, and location.";
+  }
+  else {
+    return "Sorry, I didn't understand. Please try asking in a different way.";
+  }
+}
+
+function sendMessage() {
+  const inputField = document.getElementById("userInput");
+  const userText = inputField.value.trim();
+
+  if (userText === "") return;
+
+  addMessage(userText, "user");
+
+  const botReply = getBotResponse(userText);
+
+  setTimeout(() => {
+    addMessage(botReply, "bot");
+  }, 500);
+
+  inputField.value = "";
+}
+</script>
+
+</body>
+</html>
