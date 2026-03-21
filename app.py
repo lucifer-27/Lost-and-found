@@ -46,10 +46,9 @@ UPLOAD_FOLDER = os.path.join(basedir, "upload")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ---------------- MONGODB ----------------
-# Keep the old Atlas URI as a last-resort default so existing setups still work,
-# but prefer environment variables for local/dev/prod configuration.
-DEFAULT_MONGO_URI = "mongodb+srv://vivanpandya15_db_user:Vivan123@cluster0.lg5y6u3.mongodb.net/?appName=Cluster0"
-MONGO_URI = os.environ.get("MONGO_URI", DEFAULT_MONGO_URI)
+# Use environment-provided Mongo settings only. Hardcoding Atlas credentials
+# makes local failures harder to debug and is unsafe to keep in source.
+MONGO_URI = os.environ.get("MONGO_URI", "").strip()
 MONGO_DIRECT_URI = os.environ.get("MONGO_DIRECT_URI", "").strip()
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "lost_found_db")
 
@@ -72,14 +71,28 @@ def _connect_mongo(uri):
 def create_mongo_client():
     tried = []
 
-    for label, uri in (("MONGO_URI", MONGO_URI), ("MONGO_DIRECT_URI", MONGO_DIRECT_URI)):
+    connection_options = []
+    if MONGO_DIRECT_URI:
+        connection_options.append(("MONGO_DIRECT_URI", MONGO_DIRECT_URI))
+    if MONGO_URI:
+        connection_options.append(("MONGO_URI", MONGO_URI))
+
+    if not connection_options:
+        print("\nERROR: MongoDB is not configured.")
+        print("Set either MONGO_DIRECT_URI or MONGO_URI in your environment or .env file, then restart the app.")
+        print("Tip: if your network blocks SRV DNS lookups, prefer MONGO_DIRECT_URI with explicit Atlas hosts.")
+        sys.exit(1)
+
+    for label, uri in connection_options:
         if not uri or uri in tried:
             continue
         tried.append(uri)
         try:
             return _connect_mongo(uri)
         except Exception as exc:
-            if label == "MONGO_URI" and uri.startswith("mongodb+srv://") and MONGO_DIRECT_URI:
+            if label == "MONGO_DIRECT_URI" and MONGO_URI:
+                print(f"WARNING: {label} failed, trying MONGO_URI fallback.")
+            elif label == "MONGO_URI" and uri.startswith("mongodb+srv://") and MONGO_DIRECT_URI:
                 print(f"WARNING: {label} failed, trying MONGO_DIRECT_URI fallback.")
             else:
                 print(f"WARNING: {label} failed.")
