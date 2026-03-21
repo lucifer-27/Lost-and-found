@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-
+from gridfs import GridFS
 # ---------------- APP SETUP ----------------
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -114,6 +114,8 @@ def create_mongo_client():
 
 client = create_mongo_client()
 db = client[MONGO_DB_NAME]
+
+fs = GridFS(db)
 
 users_collection = db["users"]
 items_collection = db["items"]
@@ -948,7 +950,7 @@ def report_found():
         date_combined = f"{date} {time_found}" if time_found else date
 
         # camera image (if captured)
-        filename = request.form.get("uploaded_image")
+        image_id = session.get("uploaded_image_id")
 
         # file upload image
         image = request.files.get("image")
@@ -968,7 +970,7 @@ def report_found():
             "date": date_combined,
             "location": location,
             "description": description,
-            "image": filename,
+            "image": ObjectId(image_id) if image_id else None,
             "status": "active",
             "reported_by": session["user_id"],
             "created_at": datetime.utcnow()
@@ -1065,15 +1067,10 @@ def upload():
         image_data = image_data.split(",")[1]
         image_bytes = base64.b64decode(image_data)
 
-        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-
-        filename = secure_filename(f"camera_{datetime.now().timestamp()}.png")
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-
-        with open(filepath, "wb") as f:
-            f.write(image_bytes)
-
-        session["uploaded_image"] = filename
+        # 🔥 Store image in MongoDB GridFS
+        file_id = fs.put(image_bytes, content_type="image/png")
+        # Store image reference in session
+        session["uploaded_image_id"] = str(file_id)
 
         next_url = request.args.get("next") or url_for("report_found")
         return redirect(next_url)
