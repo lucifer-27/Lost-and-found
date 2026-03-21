@@ -3,7 +3,7 @@ import re
 import sys
 import base64
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, flash, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, flash, make_response,Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
@@ -1053,11 +1053,9 @@ def report_found():
         image = request.files.get("image")
 
         if image and image.filename != "":
-            filename = secure_filename(image.filename)
-
-            os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-
-            image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            image_bytes = image.read()
+            file_id = fs.put(image_bytes, content_type=image.content_type)
+            image_id = str(file_id)
 
         # MongoDB item document
         item = {
@@ -1067,7 +1065,7 @@ def report_found():
             "date": date_combined,
             "location": location,
             "description": description,
-            "image": ObjectId(image_id) if image_id else None,
+            "image_id": ObjectId(image_id) if image_id else None,
             "status": "active",
             "reported_by": session["user_id"],
             "created_at": datetime.utcnow()
@@ -1075,17 +1073,17 @@ def report_found():
 
         items_collection.insert_one(item)
 
-        session.pop("uploaded_image", None)
+        session.pop("uploaded_image_id", None)
         session.pop("visited_report_found", None)
 
         session["report_success"] = True
         return redirect(url_for("staff"))
 
-    uploaded_image = session.get("uploaded_image")
+    uploaded_image = session.get("uploaded_image_id")
 
     # Remove image if page reload happens
     if request.method == "GET" and session.get("visited_report_found"):
-        session.pop("uploaded_image", None)
+        session.pop("uploaded_image_id", None)
 
     session["visited_report_found"] = True
 
@@ -1155,27 +1153,42 @@ def uploaded_file(filename):
 def upload():
 
     if request.method == "POST":
+        file_id = None
 
-        image_data = request.form.get("image")
+    # 🔹 Camera (base64)
+    image_data = request.form.get("image")
 
-        if not image_data:
-            return "No image received"
+    if image_data:
+        if not image_data.startswith("data:image"):
+            return "Invalid image"
 
-        image_data = image_data.split(",")[1]
-        image_bytes = base64.b64decode(image_data)
-
-        # 🔥 Store image in MongoDB GridFS
+        image_bytes = base64.b64decode(image_data.split(",")[1])
         file_id = fs.put(image_bytes, content_type="image/png")
-        # Store image reference in session
-        session["uploaded_image_id"] = str(file_id)
 
-        next_url = request.args.get("next") or url_for("report_found")
-        return redirect(next_url)
+    # 🔹 File upload
+    elif "image" in request.files:
+        image = request.files["image"]
 
-    return render_template("camera.html", return_url=url_for("report_found"))
+        if image and image.filename != "":
+            image_bytes = image.read()
+            file_id = fs.put(image_bytes, content_type=image.content_type)
+
+    else:
+        return "No image received"
+
+    session["uploaded_image_id"] = str(file_id)
+
+    next_url = request.args.get("next") or url_for("report_found")
+    return redirect(next_url)
 
 
-
+@app.route("/image/<file_id>")
+def get_image(file_id):
+    try:
+        file = fs.get(ObjectId(file_id))
+        return Response(file.read(), mimetype=file.content_type)
+    except:
+        return "Image not found", 404
 
 
 # ---------------- PREVIOUS ITEMS (STAFF) ----------------
