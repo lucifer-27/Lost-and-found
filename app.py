@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, s
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 from bson.objectid import ObjectId
 
 # ---------------- APP SETUP ----------------
@@ -147,6 +148,32 @@ def create_notification(user_id, role, message, notif_type="general"):
         "created_at": datetime.utcnow()
     })
 
+
+def get_user_display_fields(user_doc):
+    if not user_doc:
+        return {
+            "name": "Unknown User",
+            "roll_no": "--",
+            "email": "",
+        }
+
+    email = user_doc.get("email", "")
+    return {
+        "name": user_doc.get("name") or user_doc.get("full_name") or "Unknown User",
+        "roll_no": email.split("@")[0] if "@" in email else (email or "--"),
+        "email": email,
+    }
+
+
+def find_user_by_id(user_id):
+    if not user_id:
+        return None
+
+    try:
+        return users_collection.find_one({"_id": ObjectId(str(user_id))})
+    except:
+        return users_collection.find_one({"_id": user_id})
+
 # ---------------- HOME ----------------
 @app.route("/")
 def home():
@@ -162,12 +189,16 @@ def register():
 
     if request.method == "POST":
 
+        full_name = " ".join((request.form.get("full_name", "") or "").split())
         email = request.form.get("email")
         role = request.form.get("role")
         password = request.form.get("password")
         confirm = request.form.get("confirm_password")
         admin_code = request.form.get("admin_code")
         staff_code = request.form.get("staff_code")
+
+        if not full_name:
+            return render_template("register.html", error="Full name is required")
 
         if password != confirm:
             return render_template("register.html", error="Passwords do not match")
@@ -193,9 +224,12 @@ def register():
         hashed = generate_password_hash(password)
 
         users_collection.insert_one({
+            "name": full_name,
+            "full_name": full_name,
             "email": email,
             "role": role,
-            "password_hash": hashed
+            "password_hash": hashed,
+            "account_flagged": False
         })
 
         return render_template("register.html", success="Registration successful! Please login.")
@@ -346,12 +380,33 @@ def admin():
     # Pending Reports (Items with/without claims)
     pending_reports = list(items_collection.find({"status":"active"}).sort("created_at",-1).limit(10))
     for report in pending_reports:
-        has_claim = claims_collection.find_one({"item_id": report["_id"], "status": "pending"})
+        has_claim = claims_collection.find_one(
+            {"item_id": report["_id"], "status": "pending"},
+            sort=[("requested_at", -1)]
+        )
         if has_claim:
             report["has_claim"] = True
             report["claim_id"] = has_claim["_id"]
+
+            claimant_fields = get_user_display_fields(find_user_by_id(has_claim.get("requested_by")))
+            report["student_display_name"] = (
+                has_claim.get("student_name")
+                or has_claim.get("claimed_by_name")
+                or claimant_fields["name"]
+                or "Unknown User"
+            )
+            report["student_roll_no"] = (
+                has_claim.get("roll_no")
+                or has_claim.get("claimed_by_roll_no")
+                or claimant_fields["roll_no"]
+                or "--"
+            )
         else:
             report["has_claim"] = False
+
+            reporter_fields = get_user_display_fields(find_user_by_id(report.get("reported_by")))
+            report["student_display_name"] = reporter_fields["name"]
+            report["student_roll_no"] = reporter_fields["roll_no"]
 
     return render_template(
         "admin.html",
@@ -425,6 +480,11 @@ def admin_item_status(item_id):
     if not item:
         flash("Item not found.", "error")
         return redirect(url_for("admin"))
+
+    reporter_fields = get_user_display_fields(find_user_by_id(item.get("reported_by")))
+    item["reporter_name"] = reporter_fields["name"]
+    item["reporter_roll_no"] = reporter_fields["roll_no"]
+    item["reporter_email"] = reporter_fields["email"]
     
     # Get all claims for this item
     try:
@@ -804,29 +864,44 @@ def request_claim():
     if "user" not in session or session.get("role") != "student":
         return redirect(url_for("login"))
 
-    item_id = request.form.get("item_id")
-    student_name = request.form.get("student_name")
-    description_lost = request.form.get("description_lost")
+    item_id = (request.form.get("item_id") or "").strip()
+    student_name = (request.form.get("student_name") or "").strip()
+    description_lost = (request.form.get("description_lost") or "").strip()
 
     if not item_id:
         return redirect(url_for("items"))
 
+    if not student_name or not description_lost:
+        session["claim_error"] = "Please fill in your name and item description before submitting."
+        return redirect(url_for("items"))
+
+    try:
+        item_object_id = ObjectId(item_id)
+    except:
+        session["claim_error"] = "Invalid item selected."
+        return redirect(url_for("items"))
+
     # Get student email
     user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+    if not user:
+        session["claim_error"] = "Your account could not be verified. Please log in again."
+        return redirect(url_for("login"))
+
     student_email = user["email"]
 
     # Extract roll number
     roll_no = student_email.split("@")[0]
 
     # Get item info
-    item = items_collection.find_one({"_id": ObjectId(item_id)})
+    item = items_collection.find_one({"_id": item_object_id})
 
     if not item:
+        session["claim_error"] = "This item is no longer available for claim."
         return redirect(url_for("items"))
 
-    # Prevent duplicate claim
+    # Prevent duplicate pending claim by the same user for the same item.
     existing = claims_collection.find_one({
-        "item_id": ObjectId(item_id),
+        "item_id": item_object_id,
         "requested_by": session["user_id"],
         "status": "pending"
     })
@@ -835,9 +910,21 @@ def request_claim():
         session["claim_error"] = "You already submitted a claim for this item."
         return redirect(url_for("items"))
 
+    # Collect previous pending claimants for staff context, excluding the current user.
+    previous_claims = list(
+        claims_collection.find(
+            {
+                "item_id": item_object_id,
+                "status": "pending",
+                "requested_by": {"$ne": session["user_id"]}
+            },
+            {"student_name": 1, "roll_no": 1}
+        )
+    )
+
     # Create claim record
     claim_record = {
-        "item_id": ObjectId(item_id),
+        "item_id": item_object_id,
         "item_name": item["name"],
         "item_description": item.get("description", ""),
         "category": item.get("category", ""),
@@ -851,8 +938,30 @@ def request_claim():
         "requested_by": session["user_id"]
     }
 
-    claims_collection.insert_one(claim_record)
+    try:
+        # Insert a fresh dict so PyMongo's injected _id is never reused accidentally.
+        claims_collection.insert_one(dict(claim_record))
+    except DuplicateKeyError:
+        existing = claims_collection.find_one({
+            "item_id": item_object_id,
+            "requested_by": session["user_id"],
+            "status": "pending"
+        })
+        if existing:
+            session["claim_error"] = "You already submitted a claim for this item."
+        else:
+            session["claim_error"] = "This claim could not be submitted right now. Please try again."
+        return redirect(url_for("items"))
 
+    prior_claimant_labels = []
+    for previous_claim in previous_claims:
+        previous_name = previous_claim.get("student_name") or "Unknown User"
+        previous_roll_no = previous_claim.get("roll_no") or "--"
+        prior_claimant_labels.append(f"{previous_name} ({previous_roll_no})")
+
+    attention_note = ""
+    if prior_claimant_labels:
+        attention_note = " Extra attention: pending claim already exists from " + ", ".join(prior_claimant_labels) + "."
 
     # Notify ALL staff users about the new claim
     staff_users = list(users_collection.find({"role": "staff"}))
@@ -860,21 +969,9 @@ def request_claim():
         create_notification(
             str(staff["_id"]),
             "staff",
-            f"New claim request from {roll_no} ({student_name}) for '{item['name']}'. Description: {description_lost}",
+            f"New claim request from {student_name} ({roll_no}) for '{item['name']}'. Description: {description_lost}.{attention_note}",
             "claim_submitted"
         )
-
-        result = claims_collection.insert_one(claim_record)
-        # notify staff about new claim
-        staff_users = users_collection.find({"role": "staff"})
-
-        for staff in staff_users:
-            create_notification(
-                staff["_id"],
-                "staff",
-                f"New claim request for '{item['name']}' received.",
-                "new_claim"
-                )
 
     session["claim_success"] = True
     return redirect(url_for("items"))
@@ -1174,4 +1271,4 @@ def mark_all_read():
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(debug=True, port=5001, use_reloader=False)
+    app.run(debug=True, port=5001, use_reloader=True)
