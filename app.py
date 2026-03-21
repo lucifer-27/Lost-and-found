@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import base64
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, flash, make_response
@@ -10,6 +11,27 @@ from bson.objectid import ObjectId
 
 # ---------------- APP SETUP ----------------
 basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+def load_local_env(env_path):
+    if not os.path.exists(env_path):
+        return
+
+    with open(env_path, "r", encoding="utf-8") as env_file:
+        for raw_line in env_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+load_local_env(os.path.join(basedir, ".env"))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key")
@@ -24,9 +46,61 @@ UPLOAD_FOLDER = os.path.join(basedir, "upload")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ---------------- MONGODB ----------------
-from pymongo import MongoClient
-client = MongoClient("mongodb+srv://vivanpandya15_db_user:Vivan123@cluster0.lg5y6u3.mongodb.net/?appName=Cluster0")
-db = client["lost_found_db"]
+# Keep the old Atlas URI as a last-resort default so existing setups still work,
+# but prefer environment variables for local/dev/prod configuration.
+DEFAULT_MONGO_URI = "mongodb+srv://vivanpandya15_db_user:Vivan123@cluster0.lg5y6u3.mongodb.net/?appName=Cluster0"
+MONGO_URI = os.environ.get("MONGO_URI", DEFAULT_MONGO_URI)
+MONGO_DIRECT_URI = os.environ.get("MONGO_DIRECT_URI", "").strip()
+MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "lost_found_db")
+
+
+def _redact_mongo_uri(uri):
+    return re.sub(r"(mongodb(?:\+srv)?://[^:]+:)[^@]+@", r"\1***@", uri)
+
+
+def _connect_mongo(uri):
+    client = MongoClient(
+        uri,
+        serverSelectionTimeoutMS=10000,
+        connectTimeoutMS=10000,
+        socketTimeoutMS=10000,
+    )
+    client.admin.command("ping")
+    return client
+
+
+def create_mongo_client():
+    tried = []
+
+    for label, uri in (("MONGO_URI", MONGO_URI), ("MONGO_DIRECT_URI", MONGO_DIRECT_URI)):
+        if not uri or uri in tried:
+            continue
+        tried.append(uri)
+        try:
+            return _connect_mongo(uri)
+        except Exception as exc:
+            if label == "MONGO_URI" and uri.startswith("mongodb+srv://") and MONGO_DIRECT_URI:
+                print(f"WARNING: {label} failed, trying MONGO_DIRECT_URI fallback.")
+            else:
+                print(f"WARNING: {label} failed.")
+            print(f"URI: {_redact_mongo_uri(uri)}")
+            print("Reason:", repr(exc))
+
+    print("\nERROR: Failed to connect to MongoDB.")
+    print("Tried these URIs:")
+    for uri in tried:
+        print(" -", _redact_mongo_uri(uri))
+    print("\nCommon causes: network/DNS blocking SRV lookups, incorrect URI, or missing dnspython package.")
+    print("Suggested fixes:")
+    print(" - If SRV DNS is blocked, set MONGO_DIRECT_URI to the standard 'mongodb://' Atlas connection string with explicit hosts")
+    print(" - Set MONGO_URI or MONGO_DIRECT_URI in your environment, then restart the app")
+    print(" - Ensure your machine can resolve the Atlas host: nslookup cluster0.lg5y6u3.mongodb.net")
+    print(" - Ensure 'dnspython' is installed: pip install dnspython")
+    sys.exit(1)
+
+
+client = create_mongo_client()
+db = client[MONGO_DB_NAME]
 
 users_collection = db["users"]
 items_collection = db["items"]
@@ -930,6 +1004,29 @@ def items():
         # Students can see both lost and found active items
         items = list(items_collection.find({"status":"active"}).sort("created_at",-1).limit(50))
         return render_template("items_student.html", items=items, claim_success=claim_success, claim_error=claim_error)
+
+
+# ---------------- API ENDPOINTS ----------------
+@app.route('/api/items/staff')
+def api_items_staff():
+    # Return JSON list of items for staff dashboard polling
+    if "user" not in session or session.get("role") != "staff":
+        return jsonify({"error": "unauthorized"}), 401
+
+    items = list(items_collection.find().sort("created_at", -1).limit(200))
+
+    def serialize(it):
+        return {
+            "_id": str(it.get("_id")),
+            "name": it.get("name", ""),
+            "type": it.get("type", ""),
+            "category": it.get("category", ""),
+            "status": it.get("status", ""),
+            "date": it.get("date", ""),
+            "location": it.get("location", ""),
+        }
+
+    return jsonify({"items": [serialize(i) for i in items]})
 
 # ---------------- CAMERA ----------------
 @app.route("/camera")
