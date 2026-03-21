@@ -226,8 +226,7 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="text-xs uppercase text-gray-500 font-semibold border-b border-gray-100 bg-white">
-                <th class="px-6 py-4">Report ID</th>
-                <th class="px-6 py-4">Student Reporter ID</th>
+                <th class="px-6 py-4">Student Name</th>
                 <th class="px-6 py-4">Item</th>
                 <th class="px-6 py-4">Category</th>
                 <th class="px-6 py-4">Date</th>
@@ -238,8 +237,10 @@
             <tbody class="text-sm divide-y divide-gray-100">
               {% for report in pending_reports %}
               <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-6 py-4 font-mono text-xs text-blue-600 font-bold">#ITEM-{{ report.id }}</td>
-                <td class="px-6 py-4 font-medium text-gray-700">User ID: {{ report.reported_by }}</td>
+                <td class="px-6 py-4">
+                  <div class="font-bold text-gray-900">{{ report.student_display_name or "Unknown User" }}</div>
+                  <div class="text-xs text-gray-500 font-mono">{{ report.student_roll_no or "--" }}</div>
+                </td>
                 <td class="px-6 py-4 font-bold text-gray-900">{{ report.name }}</td>
                 <td class="px-6 py-4">
                   <span class="px-2 py-1 rounded bg-gray-100 text-gray-600 text-xs font-semibold uppercase">{{
@@ -265,7 +266,7 @@
               </tr>
               {% else %}
               <tr>
-                <td colspan="7" class="px-6 py-8 text-center text-gray-500 text-lg font-medium">No active reports
+                <td colspan="6" class="px-6 py-8 text-center text-gray-500 text-lg font-medium">No active reports
                   pending verification.</td>
               </tr>
               {% endfor %}
@@ -283,7 +284,7 @@
         <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
             <span class="material-icons text-blue-600">manage_accounts</span>
-            User Analytics & Management
+            User Management
           </h2>
           <div class="flex items-center gap-4">
             <div class="relative">
@@ -298,6 +299,7 @@
             </a>
           </div>
         </div>
+        
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
@@ -317,10 +319,10 @@
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
                     <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-sm shadow-sm">
-                      {{ (user.name or user.email)[0] | upper }}
+                      {{ (user.name or user.full_name or user.email)[0] | upper }}
                     </div>
                     <div>
-                      <div class="font-bold text-gray-900 group-hover:text-blue-700">{{ user.name or "Unknown User" }}</div>
+                      <div class="font-bold text-gray-900 group-hover:text-blue-700">{{ user.name or user.full_name or "Unknown User" }}</div>
                       <div class="text-xs text-gray-500 font-mono">{{ user.email.split('@')[0] if '@' in user.email else user.email }}</div>
                     </div>
                   </div>

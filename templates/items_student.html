@@ -305,6 +305,7 @@
             const closeModalBtn = document.getElementById("closeModalBtn");
             const cancelClaimBtn = document.getElementById("cancelClaimBtn");
             const claimForm = document.getElementById("claimForm");
+            const claimSubmitBtn = claimForm.querySelector('button[type="submit"]');
             const itemIdField = document.getElementById("itemIdField");
             const itemNameField = document.getElementById("itemNameField");
             const requestClaimBtns = document.querySelectorAll(".request-claim-btn");
@@ -374,6 +375,8 @@
             function closeModal() {
                 claimModal.classList.add("hidden");
                 claimForm.reset();
+                claimSubmitBtn.disabled = false;
+                claimSubmitBtn.textContent = "Submit Claim";
             }
 
             // Request claim button listeners
@@ -390,6 +393,11 @@
             cancelClaimBtn.addEventListener("click", closeModal);
             claimModal.addEventListener("click", function (e) {
                 if (e.target === claimModal) closeModal();
+            });
+
+            claimForm.addEventListener("submit", function () {
+                claimSubmitBtn.disabled = true;
+                claimSubmitBtn.textContent = "Submitting...";
             });
         });
     </script>

@@ -138,7 +138,10 @@
             </div>
             <div class="space-y-1 mt-2">
               <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Reported By</p>
-              <p class="font-medium text-blue-600">User #{{ item.reported_by|string|truncate(8, True, '') }}</p>
+              <div>
+                <p class="font-semibold text-blue-600">{{ item.reporter_name }}</p>
+                <p class="text-xs text-gray-500 font-mono mt-1">{{ item.reporter_roll_no }}</p>
+              </div>
             </div>
             <div class="space-y-1 mt-2">
               <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Found</p>
@@ -254,4 +257,3 @@
 </body>
 
 </html>
-
