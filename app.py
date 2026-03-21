@@ -34,6 +34,20 @@ archived_items_collection = db["archived_items"]
 claims_collection = db["claims"]
 notifications_collection = db["notifications"]   
 
+# ---------------- CATEGORIES ----------------
+categories = [
+    "Electronics",
+    "Clothing",
+    "Wallets & Purses",
+    "ID Cards & Documents",
+    "Keys",
+    "Books & Stationery",
+    "Bags & Backpacks",
+    "Accessories",
+    "Water Bottles & Containers",
+    "Other",
+]
+
 # ---------------- NOTIFICATION FUNCTION ----------------
 def create_notification(user_id, role, message, notif_type="general"):
 
@@ -823,7 +837,7 @@ def report_lost():
             session["report_success"] = True
             return redirect(url_for("student"))
 
-    return render_template("report_lost.html")
+    return render_template("report_lost.html", categories=categories)
 
 # ---------------- REPORT FOUND ITEM ----------------
 @app.route("/report-found", methods=["GET","POST"])
@@ -889,7 +903,7 @@ def report_found():
 
     session["visited_report_found"] = True
 
-    return render_template("report_found.html", uploaded_image=uploaded_image)
+    return render_template("report_found.html", uploaded_image=uploaded_image, categories=categories)
     
     response = make_response(render_template("report_found.html", uploaded_image=uploaded_image))
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"

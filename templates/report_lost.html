@@ -115,26 +115,12 @@
             <div id="category-options"
               class="custom-dropdown-options absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
               <ul class="py-1">
+                {% for cat in categories %}
                 <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
-                  onclick="selectOption('electronics', 'Electronics')">
-                  Electronics
+                  onclick='selectOption({{ cat|tojson }}, {{ cat|tojson }}, this)'>
+                  {{ cat }}
                 </li>
-                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
-                  onclick="selectOption('documents', 'Documents')">
-                  Documents
-                </li>
-                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
-                  onclick="selectOption('accessories', 'Accessories')">
-                  Accessories
-                </li>
-                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
-                  onclick="selectOption('keys', 'Keys')">
-                  Keys
-                </li>
-                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700 transition-colors"
-                  onclick="selectOption('others', 'Others')">
-                  Others
-                </li>
+                {% endfor %}
               </ul>
             </div>
           </div>
@@ -196,15 +182,15 @@
       chevronEl.classList.toggle('open', isOpen);
     }
 
-    function selectOption(value, text) {
+    function selectOption(value, text, el) {
       inputEl.value = value;
       labelEl.textContent = text;
       labelEl.classList.remove('text-gray-500');
       labelEl.classList.add('text-gray-900');
 
       // Mark selected visually
-      document.querySelectorAll('.dropdown-option').forEach(el => el.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
+      document.querySelectorAll('.dropdown-option').forEach(e => e.classList.remove('selected'));
+      if (el) el.classList.add('selected');
 
       // Close dropdown
       optionsEl.classList.remove('open');
