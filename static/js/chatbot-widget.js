@@ -192,6 +192,9 @@
     if (text.includes("found item")) {
       return "Go to the report section and select 'Found Item', then submit the details.";
     }
+    if (text.includes("report") || text.includes("report items") || text.includes("report lost") || text.includes("report found")) {
+      return "To report items, use the 'Report Lost' or 'Report Found' option from the homepage or your dashboard, then fill in the form details.";
+    }
     if (text.includes("view") || text.includes("found items")) {
       return "You can view found items in the 'Found Items' section on the website.";
     }
