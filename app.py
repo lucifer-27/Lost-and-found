@@ -1279,6 +1279,11 @@ def mark_all_read():
     else:
         return redirect(url_for("notification_student"))
 
+# to access the chatbot from templates
+@app.route("/chatbot")
+def chatbot_page():
+    return render_template("Chatbot-1.html")
+
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True, port=5001, use_reloader=True)

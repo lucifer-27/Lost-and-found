@@ -12,6 +12,23 @@
   font-family: Arial, sans-serif;
 }
 
+#cf-chatbot-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 9998;
+}
+
+#cf-chatbot-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 #cf-chatbot-toggle {
   width: 54px;
   height: 54px;
@@ -33,8 +50,8 @@
   position: absolute;
   right: 0;
   bottom: 70px;
-  width: 320px;
-  height: 420px;
+  width: 380px;
+  height: 520px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 16px 50px rgba(0,0,0,0.25);
@@ -119,11 +136,15 @@
   #cf-chatbot-panel {
     width: calc(100vw - 32px);
     right: 16px;
-    height: 70vh;
+    height: 75vh;
   }
 }
   `.trim();
   document.head.appendChild(style);
+
+  const overlay = document.createElement("div");
+  overlay.id = "cf-chatbot-overlay";
+  document.body.appendChild(overlay);
 
   const root = document.createElement("div");
   root.id = ROOT_ID;
@@ -149,6 +170,7 @@
   document.body.appendChild(root);
 
   const panel = document.getElementById("cf-chatbot-panel");
+  const overlayEl = document.getElementById("cf-chatbot-overlay");
   const toggle = document.getElementById("cf-chatbot-toggle");
   const closeBtn = document.getElementById("cf-chatbot-close");
   const body = document.getElementById("cf-chatbot-body");
@@ -157,12 +179,14 @@
 
   const openPanel = () => {
     panel.classList.add("is-open");
+    overlayEl.classList.add("is-open");
     toggle.setAttribute("aria-expanded", "true");
     input.focus();
   };
 
   const closePanel = () => {
     panel.classList.remove("is-open");
+    overlayEl.classList.remove("is-open");
     toggle.setAttribute("aria-expanded", "false");
   };
 
@@ -172,6 +196,7 @@
   });
 
   closeBtn.addEventListener("click", closePanel);
+  overlayEl.addEventListener("click", closePanel);
 
   const addMessage = (message, className) => {
     const msgDiv = document.createElement("div");
@@ -185,6 +210,17 @@
     const text = inputText.toLowerCase();
     if (text.includes("login")) {
       return "You can find the login button on the top right corner of the homepage.";
+    }
+    if (
+      text.includes("hello") ||
+      text.includes("hi") ||
+      text.includes("hey") ||
+      text.includes("hii") ||
+      text.includes("hiii") ||
+      text.includes("hry") ||
+      text.includes("hey there")
+    ) {
+      return "Hello! How can I help you today?";
     }
     if (text.includes("lost item")) {
       return "Go to the report section and select 'Lost Item', then fill the form.";
