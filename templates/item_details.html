@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Item Details - CampusFind</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          borderRadius: { 'card': '12px' },
+          colors: {
+            campus: {
+              primary: '#2563eb',
+              secondary: '#64748b',
+              accent: '#f8fafc'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+    }
+
+    .material-icons {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <span class="text-2xl font-bold text-blue-600 flex items-center">
+            <span class="material-icons mr-2">search</span>
+            CampusFind
+          </span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="{{ back_url }}" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">{{ back_label }}</a>
+          <span class="text-gray-300">|</span>
+          <span class="text-sm font-bold text-gray-700">Item Details</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8 flex items-center">
+      <a href="{{ back_url }}" class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all shadow-sm">
+        <span class="material-icons">arrow_back</span>
+      </a>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Item Detail View</h1>
+        <p class="text-sm text-gray-500">Tracking record #{{ item._id|string|truncate(8, True, '') }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-card border border-gray-100 shadow-sm overflow-hidden mb-8">
+      <div class="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-start">
+        {% if item.image_src %}
+        <div class="w-full md:w-48 h-48 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 shadow-inner">
+          <img src="{{ item.image_src }}" alt="{{ item.name }}" class="w-full h-full object-cover">
+        </div>
+        {% else %}
+        <div class="w-full md:w-48 h-48 rounded-xl bg-gray-50 flex items-center justify-center text-gray-300 flex-shrink-0 border-2 border-dashed border-gray-200">
+          <span class="material-icons text-5xl">inventory_2</span>
+        </div>
+        {% endif %}
+
+        <div class="flex-1">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+            <div>
+              <h2 class="text-3xl font-black text-gray-900 mb-2">{{ item.name }}</h2>
+              <div class="flex flex-wrap gap-2">
+                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {% if item.type == 'lost' %}bg-red-100 text-red-700{% else %}bg-orange-100 text-orange-700{% endif %}">
+                  {{ item.type }}
+                </span>
+                <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {% if item.status == 'active' %}bg-green-100 text-green-700{% elif item.status == 'returned' %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                  {{ item.status }}
+                </span>
+              </div>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider {{ item.claim_status_classes }}">
+              {{ item.claim_status_label }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div class="space-y-1">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Category</p>
+              <p class="font-semibold text-gray-700">{{ item.category or 'N/A' }}</p>
+            </div>
+            <div class="space-y-1">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Location</p>
+              <p class="font-semibold text-gray-700">{{ item.location or 'Not specified' }}</p>
+            </div>
+            <div class="space-y-1">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Reported By</p>
+              <div>
+                <p class="font-semibold text-blue-600">{{ item.reporter_name }}</p>
+                <p class="text-xs text-gray-500 font-mono mt-1">{{ item.reporter_roll_no }}</p>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ item.date_label }}</p>
+              <p class="font-medium text-gray-700">{{ item.date or 'Not specified' }}</p>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Description</p>
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p class="text-sm text-gray-700 leading-relaxed">{{ item.description or 'No description provided.' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-card border border-gray-100 shadow-sm p-8 md:p-12 mb-8">
+      <h3 class="text-lg font-bold text-gray-800 mb-10 flex items-center gap-2">
+        <span class="material-icons text-campus-primary">track_changes</span>
+        Journey Timeline
+      </h3>
+
+      <div class="relative pl-10 md:pl-0 flex flex-col md:flex-row md:justify-between items-start md:items-center">
+        <div class="md:hidden absolute left-[15px] top-6 bottom-6 w-0.5 bg-gray-200 z-0"></div>
+        <div class="hidden md:block absolute left-0 right-0 top-[26px] h-0.5 bg-gray-100 z-0"></div>
+
+        {% for step in steps %}
+        <div class="relative z-10 flex md:flex-col items-center mb-8 md:mb-0 md:w-1/5">
+          {% if loop.index < steps|length and steps[loop.index0].completed and steps[loop.index].completed %}
+          <div class="hidden md:block absolute left-1/2 w-full top-[26px] h-0.5 bg-green-500 -z-10"></div>
+          {% endif %}
+
+          <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 {% if step.completed %}bg-green-500 text-white shadow-lg shadow-green-200{% else %}bg-gray-100 text-gray-400{% endif %}">
+            <span class="material-icons text-sm">{% if step.completed %}check{% else %}radio_button_unchecked{% endif %}</span>
+          </div>
+
+          <div class="ml-4 md:ml-0 md:mt-4 text-left md:text-center">
+            <p class="text-sm font-bold {% if step.completed %}text-gray-900{% else %}text-gray-400{% endif %}">
+              {{ step.name }}
+            </p>
+            <p class="text-[10px] md:text-xs text-gray-400 font-medium mt-1">
+              {% if step.date %}
+                {{ step.date.strftime('%b %d, %H:%M') }}
+              {% else %}
+                Pending
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if role == 'student' %}
+      {% if user_claim %}
+      <div class="bg-white rounded-card border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+          <h3 class="font-bold text-gray-800 flex items-center gap-2">
+            <span class="material-icons text-blue-600">assignment</span>
+            Your Claim Status
+          </h3>
+        </div>
+        <div class="p-6">
+          <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+            <div>
+              <p class="font-bold text-gray-900">{{ user_claim.student_name or 'Submitted Claim' }}</p>
+              <p class="text-xs text-gray-500 font-mono mt-1">{{ user_claim.roll_no or '--' }}</p>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {{ user_claim.claim_badge.classes }}">
+                {{ user_claim.claim_badge.label }}
+              </span>
+              <p class="text-xs text-gray-400 font-mono">{{ user_claim.requested_at.strftime('%Y-%m-%d %H:%M') if user_claim.requested_at else 'N/A' }}</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Submitted Description</p>
+            <p class="text-sm text-gray-700 italic">"{{ user_claim.description_lost or 'No description provided' }}"</p>
+          </div>
+          {% if user_claim.rejection_reason %}
+          <p class="mt-4 text-sm text-red-700"><strong>Reason:</strong> {{ user_claim.rejection_reason }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% elif item.type == 'found' %}
+      <div class="bg-white rounded-card border border-gray-100 shadow-sm p-6">
+        <div class="flex items-start gap-3">
+          <span class="material-icons text-gray-400">info</span>
+          <div>
+            <h3 class="font-bold text-gray-800">Claim Status</h3>
+            <p class="text-sm text-gray-600 mt-1">You have not submitted a claim for this item.</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% elif claims %}
+    <div class="bg-white rounded-card border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <h3 class="font-bold text-gray-800 flex items-center gap-2">
+          <span class="material-icons text-purple-600">history</span>
+          Associated Claim Requests
+        </h3>
+      </div>
+      <div class="divide-y divide-gray-100">
+        {% for claim in claims %}
+        <div class="p-6">
+          <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                {{ claim.student_email[0]|upper if claim.student_email else 'U' }}
+              </div>
+              <div>
+                <p class="font-bold text-gray-900">{{ claim.student_email }}</p>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Claimant Account</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {{ claim.claim_badge.classes }}">
+                {{ claim.claim_badge.label }}
+              </span>
+              <p class="text-xs text-gray-400 font-mono">{{ claim.requested_at.strftime('%Y-%m-%d %H:%M') if claim.requested_at else 'N/A' }}</p>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Claim Description</p>
+            <p class="text-sm text-gray-700 italic">"{{ claim.description_lost or 'No description provided' }}"</p>
+          </div>
+
+          {% if claim.status == 'returned' and claim.staff_email %}
+          <div class="mt-4 flex items-center gap-2 text-xs text-green-600 font-bold">
+            <span class="material-icons text-sm">verified</span>
+            Verified and Processed by: <span class="bg-green-50 px-2 py-0.5 rounded border border-green-100">{{ claim.staff_email }}</span>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </main>
+
+  <footer class="py-10 text-center text-xs text-gray-400 font-medium">
+    CampusFind Administration System - Security Oversight Portal
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/chatbot-widget.js') }}"></script>
+</body>
+
+</html>

@@ -3,12 +3,12 @@ import re
 import sys
 import base64
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, flash, make_response,Response
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, Response
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from bson.objectid import ObjectId
+from bson.binary import Binary
 from gridfs import GridFS
 # ---------------- APP SETUP ----------------
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -42,9 +42,6 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.permanent_session_lifetime = timedelta(days=30)
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-
-UPLOAD_FOLDER = os.path.join(basedir, "upload")
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ---------------- MONGODB ----------------
 # Use environment-provided Mongo settings only. Hardcoding Atlas credentials
@@ -123,6 +120,8 @@ items_collection = db["items"]
 archived_items_collection = db["archived_items"]
 claims_collection = db["claims"]
 notifications_collection = db["notifications"]   
+temp_uploads_collection = db["temp_uploads"]
+temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
 
 # ---------------- CATEGORIES ----------------
 categories = [
@@ -137,6 +136,253 @@ categories = [
     "Water Bottles & Containers",
     "Other",
 ]
+
+DEFAULT_IMAGE_CONTENT_TYPE = "image/jpeg"
+ITEM_LIST_PROJECTION = {
+    "image": 0,
+    "image_content_type": 0,
+    "image_filename": 0,
+}
+
+
+def _normalize_image_content_type(content_type):
+    if content_type and content_type.startswith("image/"):
+        return content_type
+    return DEFAULT_IMAGE_CONTENT_TYPE
+
+
+def _build_item_image_fields(image_bytes=None, content_type=None, filename=None):
+    if not image_bytes:
+        return {
+            "image": None,
+            "image_content_type": None,
+            "image_filename": None,
+        }
+
+    return {
+        "image": Binary(image_bytes),
+        "image_content_type": _normalize_image_content_type(content_type),
+        "image_filename": filename or None,
+    }
+
+
+def _build_data_image_src(image_bytes, content_type):
+    if not image_bytes:
+        return None
+
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    return f"data:{_normalize_image_content_type(content_type)};base64,{encoded}"
+
+
+def _extract_item_image_src(item):
+    image_value = item.get("image")
+    content_type = item.get("image_content_type") or DEFAULT_IMAGE_CONTENT_TYPE
+
+    if isinstance(image_value, (bytes, bytearray, Binary)):
+        return _build_data_image_src(bytes(image_value), content_type)
+
+    if isinstance(image_value, str):
+        if image_value.startswith("data:image"):
+            return image_value
+        return f"data:{content_type};base64,{image_value}"
+
+    legacy_image_id = item.get("image_id")
+    if legacy_image_id:
+        try:
+            legacy_file = fs.get(legacy_image_id if isinstance(legacy_image_id, ObjectId) else ObjectId(legacy_image_id))
+            return _build_data_image_src(legacy_file.read(), getattr(legacy_file, "content_type", None))
+        except Exception:
+            return None
+
+    return None
+
+
+def _store_temp_upload(image_bytes, content_type, filename=None):
+    upload = {
+        "image": Binary(image_bytes),
+        "image_content_type": _normalize_image_content_type(content_type),
+        "image_filename": filename or None,
+        "created_at": datetime.utcnow(),
+    }
+    return str(temp_uploads_collection.insert_one(upload).inserted_id)
+
+
+def _get_temp_upload(upload_id):
+    if not upload_id:
+        return None
+
+    try:
+        return temp_uploads_collection.find_one({"_id": ObjectId(upload_id)})
+    except Exception:
+        return None
+
+
+def _delete_temp_upload(upload_id):
+    if not upload_id:
+        return
+
+    try:
+        temp_uploads_collection.delete_one({"_id": ObjectId(upload_id)})
+    except Exception:
+        pass
+
+
+def _clear_uploaded_image_session():
+    upload_id = session.pop("uploaded_image_id", None)
+    if upload_id:
+        _delete_temp_upload(upload_id)
+
+
+def _consume_temp_upload(upload_id):
+    upload = _get_temp_upload(upload_id)
+    if not upload:
+        return None, None, None
+
+    _delete_temp_upload(upload_id)
+    return (
+        bytes(upload.get("image") or b""),
+        upload.get("image_content_type"),
+        upload.get("image_filename"),
+    )
+
+
+def _build_claim_status_badge(status):
+    normalized = (status or "").lower()
+    if normalized == "returned":
+        return {
+            "label": "Returned",
+            "classes": "bg-green-100 text-green-700",
+        }
+    if normalized == "approved":
+        return {
+            "label": "Approved",
+            "classes": "bg-blue-100 text-blue-700",
+        }
+    if normalized == "rejected":
+        return {
+            "label": "Rejected",
+            "classes": "bg-red-100 text-red-700",
+        }
+    if normalized == "pending":
+        return {
+            "label": "Pending",
+            "classes": "bg-amber-100 text-amber-700",
+        }
+    return {
+        "label": "No Claims",
+        "classes": "bg-gray-100 text-gray-700",
+    }
+
+
+def _build_item_timeline(item, claims):
+    reported_label = "Reported Found" if item.get("type") == "found" else "Reported Lost"
+    steps = [
+        {"name": reported_label, "completed": True, "date": item.get("created_at")},
+        {"name": "Claim Requested", "completed": False, "date": None},
+        {"name": "Claim Approved", "completed": False, "date": None},
+        {"name": "Ready for Pickup", "completed": False, "date": None},
+        {"name": "Item Returned", "completed": False, "date": None},
+    ]
+
+    if claims:
+        ordered_claims = sorted(
+            claims,
+            key=lambda claim: claim.get("requested_at") or datetime.min,
+        )
+        steps[1]["completed"] = True
+        steps[1]["date"] = ordered_claims[0].get("requested_at")
+
+        final_claim = next(
+            (claim for claim in claims if claim.get("status") in ["approved", "returned"]),
+            None,
+        )
+        if final_claim:
+            processed_at = final_claim.get("processed_at")
+            steps[2]["completed"] = True
+            steps[2]["date"] = processed_at
+            steps[3]["completed"] = True
+            steps[3]["date"] = processed_at
+
+            if item.get("status") == "returned":
+                steps[4]["completed"] = True
+                steps[4]["date"] = processed_at
+
+    return steps
+
+
+def _enrich_claim_records(claims):
+    for claim in claims:
+        try:
+            student = users_collection.find_one({"_id": ObjectId(claim["requested_by"])}) if claim.get("requested_by") else None
+            claim["student_email"] = student["email"] if student else claim.get("student_email", "Unknown")
+        except Exception:
+            claim["student_email"] = claim.get("student_email", "Unknown")
+
+        claim["claim_badge"] = _build_claim_status_badge(claim.get("status"))
+
+        if claim.get("processed_by"):
+            try:
+                staff = users_collection.find_one({"_id": ObjectId(claim["processed_by"])})
+                claim["staff_email"] = staff["email"] if staff else "Unknown Staff"
+            except Exception:
+                claim["staff_email"] = "Unknown Staff"
+    return claims
+
+
+def _find_item_for_detail(item_id):
+    try:
+        item_object_id = ObjectId(item_id)
+    except Exception:
+        return None, None
+
+    item = items_collection.find_one({"_id": item_object_id})
+    if item:
+        return item, item["_id"]
+
+    archived_item = archived_items_collection.find_one({"_id": item_object_id})
+    if archived_item:
+        return archived_item, archived_item.get("original_item_id") or archived_item["_id"]
+
+    archived_item = archived_items_collection.find_one({"original_item_id": item_object_id})
+    if archived_item:
+        return archived_item, archived_item.get("original_item_id") or archived_item["_id"]
+
+    return None, None
+
+
+def _prepare_item_detail_context(item_id, role, user_id=None):
+    item, claim_item_id = _find_item_for_detail(item_id)
+    if not item:
+        return None
+
+    reporter_fields = get_user_display_fields(find_user_by_id(item.get("reported_by")))
+    item["reporter_name"] = reporter_fields["name"]
+    item["reporter_roll_no"] = reporter_fields["roll_no"]
+    item["reporter_email"] = reporter_fields["email"]
+    item["image_src"] = _extract_item_image_src(item)
+
+    claims = []
+    if claim_item_id:
+        claims = list(claims_collection.find({"item_id": claim_item_id}).sort("requested_at", -1))
+        claims = _enrich_claim_records(claims)
+
+    user_claim = None
+    if role == "student" and user_id and claim_item_id:
+        user_claim = next((claim for claim in claims if str(claim.get("requested_by", "")) == str(user_id)), None)
+
+    claim_status_source = user_claim or (claims[0] if claims else None)
+    claim_status = _build_claim_status_badge(claim_status_source.get("status") if claim_status_source else None)
+
+    item["claim_status_label"] = claim_status["label"]
+    item["claim_status_classes"] = claim_status["classes"]
+    item["date_label"] = "Found Date" if item.get("type") == "found" else "Lost Date"
+
+    return {
+        "item": item,
+        "claims": claims,
+        "user_claim": user_claim,
+        "steps": _build_item_timeline(item, claims),
+    }
 
 # ---------------- NOTIFICATION FUNCTION ----------------
 def create_notification(user_id, role, message, notif_type="general"):
@@ -179,7 +425,7 @@ def find_user_by_id(user_id):
 # ---------------- HOME ----------------
 @app.route("/")
 def home():
-    items = list(items_collection.find({"status":"active"}).sort("created_at",-1).limit(4))
+    items = list(items_collection.find({"status":"active"}, ITEM_LIST_PROJECTION).sort("created_at",-1).limit(4))
     return render_template("index.html", recent_items=items)
 
 # ---------------- REGISTER ----------------
@@ -380,7 +626,7 @@ def admin():
         claim["item_name"] = item["name"] if item else "Unknown Item"
 
     # Pending Reports (Items with/without claims)
-    pending_reports = list(items_collection.find({"status":"active"}).sort("created_at",-1).limit(10))
+    pending_reports = list(items_collection.find({"status":"active"}, ITEM_LIST_PROJECTION).sort("created_at",-1).limit(10))
     for report in pending_reports:
         has_claim = claims_collection.find_one(
             {"item_id": report["_id"], "status": "pending"},
@@ -442,7 +688,7 @@ def admin_user_details(user_id):
         flash("User not found.", "error")
         return redirect(url_for("admin"))
         
-    user_items = list(items_collection.find({"reported_by": user_id})) + list(archived_items_collection.find({"reported_by": user_id}))
+    user_items = list(items_collection.find({"reported_by": user_id}, ITEM_LIST_PROJECTION)) + list(archived_items_collection.find({"reported_by": user_id}, ITEM_LIST_PROJECTION))
     user_items.sort(key=lambda x: x.get("created_at") or datetime.min, reverse=True)
     
     user_claims = list(claims_collection.find({"requested_by": user_id}).sort("requested_at", -1))
@@ -473,68 +719,23 @@ def admin_user_details(user_id):
 def admin_item_status(item_id):
     if "user" not in session or session.get("role") != "admin":
         return redirect(url_for("login"))
-    
-    try:
-        item = items_collection.find_one({"_id": ObjectId(item_id)}) or archived_items_collection.find_one({"_id": ObjectId(item_id)})
-    except:
-        item = None
-    
-    if not item:
+
+    context = _prepare_item_detail_context(item_id, "admin", session.get("user_id"))
+    if not context:
         flash("Item not found.", "error")
         return redirect(url_for("admin"))
 
-    reporter_fields = get_user_display_fields(find_user_by_id(item.get("reported_by")))
-    item["reporter_name"] = reporter_fields["name"]
-    item["reporter_roll_no"] = reporter_fields["roll_no"]
-    item["reporter_email"] = reporter_fields["email"]
-    
-    # Get all claims for this item
-    try:
-        claims = list(claims_collection.find({"item_id": ObjectId(item_id)}).sort("requested_at", -1))
-    except:
-        claims = []
-    
-    # Enrich claims with student and staff info
-    for claim in claims:
-        try:
-            student = users_collection.find_one({"_id": ObjectId(claim["requested_by"])}) if claim.get("requested_by") else None
-            claim["student_email"] = student["email"] if student else "Unknown"
-        except:
-            claim["student_email"] = "Unknown"
-        
-        if claim.get("processed_by"):
-            try:
-                staff = users_collection.find_one({"_id": ObjectId(claim["processed_by"])})
-                claim["staff_email"] = staff["email"] if staff else "Unknown Staff"
-            except:
-                claim["staff_email"] = "Unknown Staff"
-
-    # Define steps for timeline
-    steps = [
-        {"name": "Reported Found", "completed": True, "date": item.get("created_at")},
-        {"name": "Claim Requested", "completed": False, "date": None},
-        {"name": "Claim Approved", "completed": False, "date": None},
-        {"name": "Ready for Pickup", "completed": False, "date": None},
-        {"name": "Item Returned", "completed": False, "date": None}
-    ]
-    
-    if claims:
-        steps[1]["completed"] = True
-        steps[1]["date"] = claims[-1]["requested_at"] # First claim date
-        
-        # Check for approved/returned claim
-        final_claim = next((c for c in claims if c.get("status") in ["approved", "returned"]), None)
-        if final_claim:
-            steps[2]["completed"] = True
-            steps[2]["date"] = final_claim.get("processed_at")
-            steps[3]["completed"] = True
-            steps[3]["date"] = final_claim.get("processed_at")
-            
-            if item.get("status") == "returned":
-                steps[4]["completed"] = True
-                steps[4]["date"] = final_claim.get("processed_at")
-
-    return render_template("admin_item_status.html", item=item, claims=claims, steps=steps)
+    return render_template(
+        "item_details.html",
+        item=context["item"],
+        claims=context["claims"],
+        user_claim=context["user_claim"],
+        steps=context["steps"],
+        view_mode="admin",
+        role="admin",
+        back_url=url_for("admin"),
+        back_label="Admin Dashboard",
+    )
 
 @app.route("/admin/flagged-users")
 def flagged_users():
@@ -678,7 +879,10 @@ def process_claim(claim_id):
                 "date": item.get("date", ""),
                 "location": item.get("location", ""),
                 "description": item.get("description", ""),
-                "image": item.get("image", ""),
+                "image": item.get("image"),
+                "image_content_type": item.get("image_content_type"),
+                "image_filename": item.get("image_filename"),
+                "image_id": item.get("image_id"),
                 "reported_by": item.get("reported_by", ""),
                 "claimed_by_name": claim.get("student_name", ""),
                 "claimed_by_email": claim.get("student_email", ""),
@@ -757,7 +961,10 @@ def claim():
                     "date": item.get("date", ""),
                     "location": item.get("location", ""),
                     "description": item.get("description", ""),
-                    "image": item.get("image", ""),
+                    "image": item.get("image"),
+                    "image_content_type": item.get("image_content_type"),
+                    "image_filename": item.get("image_filename"),
+                    "image_id": item.get("image_id"),
                     "reported_by": item.get("reported_by", ""),
                     "claimed_by_name": student_name,
                     "claimed_by_email": student_email,
@@ -993,8 +1200,18 @@ def report_lost():
         date = request.form.get("date_lost")
         location = request.form.get("location")
         description = request.form.get("description","")
+        image = request.files.get("image")
+        image_fields = _build_item_image_fields()
 
-        items_collection.insert_one({
+        if image and image.filename:
+            image_bytes = image.read()
+            image_fields = _build_item_image_fields(
+                image_bytes=image_bytes,
+                content_type=image.content_type,
+                filename=image.filename,
+            )
+
+        item_document = {
             "name": name,
             "category": category,
             "type": "lost",
@@ -1004,7 +1221,10 @@ def report_lost():
             "status": "active",
             "reported_by": session["user_id"],
             "created_at": datetime.utcnow()
-        })
+        }
+        item_document.update(image_fields)
+
+        items_collection.insert_one(item_document)
 
         # If admin submitted the report, notify all staff members
         if session.get("role") == "admin":
@@ -1046,16 +1266,25 @@ def report_found():
         # combine date + time
         date_combined = f"{date} {time_found}" if time_found else date
 
-        # camera image (if captured)
-        image_id = session.get("uploaded_image_id")
-
-        # file upload image
         image = request.files.get("image")
+        image_fields = _build_item_image_fields()
 
-        if image and image.filename != "":
+        if image and image.filename:
             image_bytes = image.read()
-            file_id = fs.put(image_bytes, content_type=image.content_type)
-            image_id = str(file_id)
+            image_fields = _build_item_image_fields(
+                image_bytes=image_bytes,
+                content_type=image.content_type,
+                filename=image.filename,
+            )
+        else:
+            temp_upload_id = (request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip()
+            image_bytes, content_type, filename = _consume_temp_upload(temp_upload_id)
+            if image_bytes:
+                image_fields = _build_item_image_fields(
+                    image_bytes=image_bytes,
+                    content_type=content_type,
+                    filename=filename,
+                )
 
         # MongoDB item document
         item = {
@@ -1065,15 +1294,15 @@ def report_found():
             "date": date_combined,
             "location": location,
             "description": description,
-            "image_id": ObjectId(image_id) if image_id else None,
             "status": "active",
             "reported_by": session["user_id"],
             "created_at": datetime.utcnow()
         }
+        item.update(image_fields)
 
         items_collection.insert_one(item)
 
-        session.pop("uploaded_image_id", None)
+        _clear_uploaded_image_session()
         session.pop("visited_report_found", None)
 
         session["report_success"] = True
@@ -1083,17 +1312,12 @@ def report_found():
 
     # Remove image if page reload happens
     if request.method == "GET" and session.get("visited_report_found"):
-        session.pop("uploaded_image_id", None)
+        _clear_uploaded_image_session()
+        uploaded_image = None
 
     session["visited_report_found"] = True
 
     return render_template("report_found.html", uploaded_image=uploaded_image, categories=categories)
-    
-    response = make_response(render_template("report_found.html", uploaded_image=uploaded_image))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
 
 # ---------------- ITEMS ----------------
 @app.route("/items")
@@ -1107,13 +1331,41 @@ def items():
     claim_error = session.pop("claim_error", "")
 
     if role == "staff":
-        items = list(items_collection.find().sort("created_at",-1).limit(50))
+        items = list(items_collection.find({}, ITEM_LIST_PROJECTION).sort("created_at",-1).limit(50))
         return render_template("items_staff.html", items=items)
 
     else:
         # Students can see both lost and found active items
-        items = list(items_collection.find({"status":"active"}).sort("created_at",-1).limit(50))
+        items = list(items_collection.find({"status":"active"}, ITEM_LIST_PROJECTION).sort("created_at",-1).limit(50))
         return render_template("items_student.html", items=items, claim_success=claim_success, claim_error=claim_error)
+
+
+@app.route("/item/<item_id>")
+def item_details(item_id):
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    role = session.get("role")
+    context = _prepare_item_detail_context(item_id, role, session.get("user_id"))
+    if not context:
+        flash("Item not found.", "error")
+        fallback = "admin" if role == "admin" else "items"
+        return redirect(url_for(fallback))
+
+    back_url = url_for("admin") if role == "admin" else url_for("items")
+    back_label = "Admin Dashboard" if role == "admin" else "Items"
+
+    return render_template(
+        "item_details.html",
+        item=context["item"],
+        claims=context["claims"],
+        user_claim=context["user_claim"],
+        steps=context["steps"],
+        view_mode="general",
+        role=role,
+        back_url=back_url,
+        back_label=back_label,
+    )
 
 
 # ---------------- API ENDPOINTS ----------------
@@ -1123,7 +1375,7 @@ def api_items_staff():
     if "user" not in session or session.get("role") != "staff":
         return jsonify({"error": "unauthorized"}), 401
 
-    items = list(items_collection.find().sort("created_at", -1).limit(200))
+    items = list(items_collection.find({}, ITEM_LIST_PROJECTION).sort("created_at", -1).limit(200))
 
     def serialize(it):
         return {
@@ -1144,16 +1396,14 @@ def camera():
     return_url = request.args.get("next", url_for("report_found"))
     return render_template("camera.html", return_url=return_url)
 
-@app.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-
 # ---------------- UPLOAD ----------------
 @app.route("/upload", methods=["GET","POST"])
 def upload():
 
-    if request.method == "POST":
-        file_id = None
+    if request.method != "POST":
+        return render_template("upload.html")
+
+    file_id = None
 
     # 🔹 Camera (base64)
     image_data = request.form.get("image")
@@ -1162,20 +1412,25 @@ def upload():
         if not image_data.startswith("data:image"):
             return "Invalid image"
 
-        image_bytes = base64.b64decode(image_data.split(",")[1])
-        file_id = fs.put(image_bytes, content_type="image/png")
+        header, encoded_data = image_data.split(",", 1)
+        content_type = header.split(";")[0].split(":", 1)[1] if ":" in header else "image/png"
+        image_bytes = base64.b64decode(encoded_data)
+        file_id = _store_temp_upload(image_bytes, content_type)
 
     # 🔹 File upload
     elif "image" in request.files:
         image = request.files["image"]
 
-        if image and image.filename != "":
+        if image and image.filename:
             image_bytes = image.read()
-            file_id = fs.put(image_bytes, content_type=image.content_type)
+            file_id = _store_temp_upload(image_bytes, image.content_type, image.filename)
+        else:
+            return "No image received"
 
     else:
         return "No image received"
 
+    _clear_uploaded_image_session()
     session["uploaded_image_id"] = str(file_id)
 
     next_url = request.args.get("next") or url_for("report_found")
@@ -1184,10 +1439,17 @@ def upload():
 
 @app.route("/image/<file_id>")
 def get_image(file_id):
+    temp_upload = _get_temp_upload(file_id)
+    if temp_upload:
+        return Response(
+            bytes(temp_upload.get("image") or b""),
+            mimetype=temp_upload.get("image_content_type") or DEFAULT_IMAGE_CONTENT_TYPE,
+        )
+
     try:
         file = fs.get(ObjectId(file_id))
         return Response(file.read(), mimetype=file.content_type)
-    except:
+    except Exception:
         return "Image not found", 404
 
 
@@ -1197,7 +1459,7 @@ def previous_items():
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("login"))
 
-    items = list(archived_items_collection.find().sort("archived_at", -1).limit(50))
+    items = list(archived_items_collection.find({}, ITEM_LIST_PROJECTION).sort("archived_at", -1).limit(50))
     return render_template("previous-items.html", items=items)
 
 # ---------------- STUDENT HISTORY ----------------
@@ -1214,7 +1476,7 @@ def student_history():
     student_claims = list(claims_collection.find({"requested_by": user_id}).sort("requested_at", -1))
 
     # Get archived items for this student
-    archived = list(archived_items_collection.find({"claimed_by_email": student_email}).sort("archived_at", -1))
+    archived = list(archived_items_collection.find({"claimed_by_email": student_email}, ITEM_LIST_PROJECTION).sort("archived_at", -1))
 
     # Check if student is flagged
     is_flagged = user.get("account_flagged", False)
