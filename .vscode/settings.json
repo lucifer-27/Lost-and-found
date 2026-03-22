@@ -1,3 +1,7 @@
+// Development environment configuration for Python (VS Code)
+// Defines virtual environment interpreter, dependency paths, and environment variables 
+// to ensure consistent execution, analysis, and project isolation across the CampusFind application.
+
 {
     "python.defaultInterpreterPath": ".\\venv\\Scripts\\python.exe",
     "python.analysis.extraPaths": [

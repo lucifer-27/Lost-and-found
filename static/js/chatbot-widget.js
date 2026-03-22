@@ -1,3 +1,7 @@
+// CampusFind Chatbot Widget (Vanilla JavaScript)
+// Implements a modular, self-invoking chatbot component that injects UI elements,
+// manages state and user interactions, and delivers rule-based automated responses.
+
 (() => {
   const ROOT_ID = "cf-chatbot-root";
   if (document.getElementById(ROOT_ID)) return;

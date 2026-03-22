@@ -1,3 +1,7 @@
+# CampusFind Backend Application (Flask + MongoDB)
+# This application manages lost and found items in a campus environment,
+# Including user roles (student, staff, admin), item tracking, claim handling, and notifications.
+
 import os
 import re
 import sys
