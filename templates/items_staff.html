@@ -1,3 +1,7 @@
+<!-- CampusFind Item Management & Filtering Module
+     Provides a dynamic interface for staff to monitor, filter, and manage items,
+     with client-side filtering logic and persistent filter state using localStorage. -->
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -153,12 +157,14 @@
                     </thead>
                     <tbody id="items-tbody" class="divide-y divide-gray-200">
                         {% for item in items %}
-                        <tr class="hover:bg-blue-50 transition item-row"
+                        <tr class="hover:bg-blue-50 transition item-row cursor-pointer"
                             data-name="{{ item.name | default('') | lower }}"
                             data-type="{{ item.type | default('') | lower }}"
                             data-category="{{ item.category | default('') | lower }}"
                             data-status="{% if item.status == 'returned' %}returned{% else %}active{% endif %}"
-                            data-item-id="{{ item._id }}">
+                            data-item-id="{{ item._id }}"
+                            data-item-url="{{ url_for('item_details', item_id=item._id) }}"
+                            tabindex="0">
                             <td class="px-6 py-4 text-sm font-medium text-gray-900">
                                 {{ item.name }}
                             </td>
@@ -239,6 +245,7 @@
             const clearFiltersBtn = document.getElementById("clear-filters-btn");
             const noResultsMsg = document.getElementById("no-results-msg");
             const itemsTbody = document.getElementById("items-tbody");
+            const interactiveSelector = "button, a, input, select, textarea, form, label";
 
             function saveFilters() {
                 const filters = {
@@ -332,6 +339,27 @@
 
             restoreFilters();
             applyFilters();
+
+            document.querySelectorAll(".item-row").forEach(row => {
+                const itemUrl = row.getAttribute("data-item-url");
+                if (!itemUrl) {
+                    return;
+                }
+
+                row.addEventListener("click", function (event) {
+                    if (event.target.closest(interactiveSelector)) {
+                        return;
+                    }
+                    window.location.href = itemUrl;
+                });
+
+                row.addEventListener("keydown", function (event) {
+                    if ((event.key === "Enter" || event.key === " ") && !event.target.closest(interactiveSelector)) {
+                        event.preventDefault();
+                        window.location.href = itemUrl;
+                    }
+                });
+            });
 
         });
     </script>

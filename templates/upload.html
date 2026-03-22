@@ -1,17 +1,16 @@
-{% extends "base.html" %}
+<!-- CampusFind File Upload Module
+     Implements a form-based image upload system with multipart encoding,
+     enabling server-side processing and storage of user-provided images. -->
 
+{% extends "base.html" %}
 {% block content %}
 
 <h2>Upload Image</h2>
 
 <form method="POST" action="/upload" enctype="multipart/form-data">
-
     <input type="file" name="image" required>
-
     <br><br>
-
     <button type="submit">Upload</button>
-
 </form>
 
 {% endblock %}

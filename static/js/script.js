@@ -1,3 +1,6 @@
+// CampusFind Frontend Utility Script
+// Provides core interactive functionalities including camera integration, image processing, form validation, UI behavior control, and search filtering
+// to support seamless user interaction within the application.
 
 // =============================
 // CampusFind Main JavaScript

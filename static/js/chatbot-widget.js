@@ -1,4 +1,8 @@
-﻿(() => {
+// CampusFind Chatbot Widget (Vanilla JavaScript)
+// Implements a modular, self-invoking chatbot component that injects UI elements,
+// manages state and user interactions, and delivers rule-based automated responses.
+
+(() => {
   // ============================================================
   //  GUARD: only inject once
   // ============================================================
