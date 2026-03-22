@@ -1,3 +1,7 @@
+# CampusFind Backend Application (Flask + MongoDB)
+# This application manages lost and found items in a campus environment,
+# Including user roles (student, staff, admin), item tracking, claim handling, and notifications.
+
 import os
 import re
 import sys
@@ -1540,6 +1544,11 @@ def mark_all_read():
         return redirect(url_for("notifications"))
     else:
         return redirect(url_for("notification_student"))
+
+# to access the chatbot from templates
+@app.route("/chatbot")
+def chatbot_page():
+    return render_template("Chatbot-1.html")
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
