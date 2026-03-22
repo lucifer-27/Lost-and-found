@@ -236,7 +236,7 @@
 
                         <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                             <!-- Camera button -->
-                            <a href="/camera"
+                            <a href="/camera" id="camera-upload-link"
                                 class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 shadow-sm transition-colors">
                                 <span class="material-icons mr-2 text-sm">photo_camera</span>
                                 Use Camera
@@ -245,7 +245,7 @@
                             <span class="text-sm text-gray-400 hidden sm:block">or</span>
 
                             <!-- Select File button — triggers hidden input -->
-                            <button type="button" onclick="document.getElementById('upload_image_input').click()"
+                            <button type="button" onclick="openFilePicker()"
                                 class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-gray-50 hover:border-blue-400 shadow-sm transition-colors">
                                 <span class="material-icons mr-2 text-sm">upload_file</span>
                                 Select File
@@ -258,13 +258,20 @@
 
                         <!-- File selected preview -->
                         <div id="file-preview"
-                            class="hidden mt-3 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5">
-                            <span class="material-icons text-blue-500 text-sm">image</span>
-                            <span id="file-name-label" class="text-sm text-blue-700 font-medium truncate"></span>
-                            <button type="button" onclick="clearFile()"
-                                class="ml-auto text-blue-400 hover:text-red-500 transition-colors">
-                                <span class="material-icons text-sm">close</span>
-                            </button>
+                            class="hidden mt-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
+                            <div class="flex items-start gap-4">
+                                <img id="file-preview-image" alt="Selected image preview"
+                                    class="w-24 h-24 rounded-md border border-blue-200 object-cover bg-white" />
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-semibold text-blue-800">Selected image</p>
+                                    <p id="file-name-label" class="text-sm text-blue-700 font-medium truncate mt-1">
+                                    </p>
+                                </div>
+                                <button type="button" onclick="clearFile()"
+                                    class="text-blue-400 hover:text-red-500 transition-colors">
+                                    <span class="material-icons text-sm">close</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Validation error message -->
@@ -340,24 +347,66 @@
     });
 
     // File picker preview
+    function showExclusiveImageSourceAlert() {
+        alert('Please use either the camera or file upload, not both.');
+    }
+
+    function openFilePicker() {
+        if (cameraImageAttached) {
+            showExclusiveImageSourceAlert();
+            return;
+        }
+
+        document.getElementById('upload_image_input').click();
+    }
+
     function showFileName(input) {
         const preview = document.getElementById('file-preview');
+        const imagePreview = document.getElementById('file-preview-image');
         const label = document.getElementById('file-name-label');
+
+        if (cameraImageAttached) {
+            input.value = '';
+            showExclusiveImageSourceAlert();
+            return;
+        }
+
         if (input.files && input.files[0]) {
+            if (imagePreview.src && imagePreview.src.startsWith('blob:')) {
+                URL.revokeObjectURL(imagePreview.src);
+            }
+            imagePreview.src = URL.createObjectURL(input.files[0]);
             label.textContent = input.files[0].name;
             preview.classList.remove('hidden');
+        } else {
+            clearFile();
         }
     }
 
     function clearFile() {
         const input = document.getElementById('upload_image_input');
         const preview = document.getElementById('file-preview');
+        const imagePreview = document.getElementById('file-preview-image');
         input.value = '';
+        if (imagePreview.src && imagePreview.src.startsWith('blob:')) {
+            URL.revokeObjectURL(imagePreview.src);
+        }
+        imagePreview.removeAttribute('src');
+        document.getElementById('file-name-label').textContent = '';
         preview.classList.add('hidden');
     }
 
     // Whether a camera image was already captured (Jinja passes this)
     const cameraImageAttached = "{{ 'true' if uploaded_image else 'false' }}" === 'true';
+    const cameraUploadLink = document.getElementById('camera-upload-link');
+
+    cameraUploadLink.addEventListener('click', function (event) {
+        const fileInput = document.getElementById('upload_image_input');
+        if (fileInput.files && fileInput.files.length > 0) {
+            event.preventDefault();
+            showExclusiveImageSourceAlert();
+        }
+    });
 
     function validateAndSubmit() {
         const fileInput = document.getElementById('upload_image_input');
