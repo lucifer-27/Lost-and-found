@@ -483,7 +483,7 @@
   //  12. FREE-FORM RESPONSE FALLBACK
   // ============================================================
   const getFreeResponse = (text, intent) => {
-    if (/^(hi|hello|hey|hii+|hry|sup|helloo+|hiii+|heyy+|what's up chat|whats up chat)\b/.test(text))
+    if (/^(hi|hello|hey|hii+|hry|sup|helloo+|hiii+|heyy+|hyee+|what's up chat|whats up chat)\b/.test(text))
       return { text: "Hello! How can I help you today?", chips: SUGGESTIONS.welcome };
 
     if (text.includes("thanks") || text.includes("thank you"))
