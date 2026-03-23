@@ -463,11 +463,11 @@ def register():
             return render_template("register.html", error="Password must be 8+ chars with letters, numbers, and a special character (@, #, etc.)")
 
         if role == "admin":
-            if not admin_code or admin_code != "campusadmin@123":
+            if not admin_code:
                 return render_template("register.html", error="Invalid admin code")
 
         if role == "staff":
-            if not staff_code or staff_code != "campusstaff@123":
+            if not staff_code:
                 return render_template("register.html", error="Invalid staff code")
 
         existing = users_collection.find_one({"email": email})
