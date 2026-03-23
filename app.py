@@ -232,6 +232,7 @@ def _delete_temp_upload(upload_id):
 
 
 def _clear_uploaded_image_session():
+    session.pop("show_uploaded_image_preview_once", None)
     upload_id = session.pop("uploaded_image_id", None)
     if upload_id:
         _delete_temp_upload(upload_id)
@@ -1307,19 +1308,16 @@ def report_found():
         items_collection.insert_one(item)
 
         _clear_uploaded_image_session()
-        session.pop("visited_report_found", None)
 
         session["report_success"] = True
         return redirect(url_for("staff"))
 
-    uploaded_image = session.get("uploaded_image_id")
+    show_uploaded_image_preview = session.pop("show_uploaded_image_preview_once", False)
+    uploaded_image = session.get("uploaded_image_id") if show_uploaded_image_preview else None
 
-    # Remove image if page reload happens
-    if request.method == "GET" and session.get("visited_report_found"):
+    # Any leftover temp upload should be cleared once the user refreshes or revisits the page.
+    if not show_uploaded_image_preview and session.get("uploaded_image_id"):
         _clear_uploaded_image_session()
-        uploaded_image = None
-
-    session["visited_report_found"] = True
 
     return render_template("report_found.html", uploaded_image=uploaded_image, categories=categories)
 
@@ -1438,6 +1436,7 @@ def upload():
 
     _clear_uploaded_image_session()
     session["uploaded_image_id"] = str(file_id)
+    session["show_uploaded_image_preview_once"] = True
 
     next_url = request.args.get("next") or url_for("report_found")
     return redirect(next_url)
