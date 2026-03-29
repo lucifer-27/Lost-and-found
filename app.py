@@ -1,8 +1,10 @@
 # CampusFind Backend Application (Flask + MongoDB)
 # This application manages lost and found items in a campus environment,
 # Including user roles (student, staff, admin), item tracking, claim handling, and notifications.
-# Key features:
+
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import re
 import sys
 import base64
@@ -14,6 +16,7 @@ from pymongo.errors import DuplicateKeyError
 from bson.objectid import ObjectId
 from bson.binary import Binary
 from gridfs import GridFS
+
 # ---------------- APP SETUP ----------------
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -426,6 +429,34 @@ def find_user_by_id(user_id):
         return users_collection.find_one({"_id": ObjectId(str(user_id))})
     except:
         return users_collection.find_one({"_id": user_id})
+    
+# ---------------- EMAIL (OTP SYSTEM) ----------------
+import smtplib
+from email.mime.text import MIMEText
+import random
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+
+def send_otp_email(to_email, otp):
+    sender_email = os.environ.get("EMAIL")
+    sender_password = os.environ.get("EMAIL_PASS")
+
+    msg = MIMEText(f"Your OTP is: {otp}")
+    msg["Subject"] = "CampusFind Password Reset OTP"
+    msg["From"] = sender_email
+    msg["To"] = to_email
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+        print("OTP sent!")
+    except Exception as e:
+        print("Error:", e)
 
 # ---------------- HOME ----------------
 @app.route("/")
@@ -525,6 +556,63 @@ def login():
         return render_template("login.html", error="Invalid email or password")
 
     return render_template("login.html")
+
+# ---------------- FORGOT PASSWORD ----------------
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+        email = request.form.get("email")
+
+        user = users_collection.find_one({"email": email})
+
+        if not user:
+            return render_template("forgot_password.html", error="Email not found")
+
+        otp = generate_otp()
+
+        session["reset_email"] = email
+        session["otp"] = otp
+
+        send_otp_email(email, otp)
+
+        return redirect(url_for("verify_otp"))
+
+    return render_template("forgot_password.html")
+
+# ---------------- VERIFY OTP ----------------
+@app.route("/verify-otp", methods=["GET", "POST"])
+def verify_otp():
+
+    if request.method == "POST":
+        user_otp = request.form.get("otp")
+
+        if user_otp == session.get("otp"):
+            return redirect(url_for("reset_password"))
+        else:
+            return render_template("verify_otp.html", error="Invalid OTP")
+
+    return render_template("verify_otp.html")
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+
+    if request.method == "POST":
+        new_password = request.form.get("password")
+
+        email = session.get("reset_email")
+
+        hashed = generate_password_hash(new_password)
+
+        users_collection.update_one(
+            {"email": email},
+            {"$set": {"password_hash": hashed}}
+        )
+
+        return redirect(url_for("login"))
+
+    return render_template("Reset_password.html")
+
 
 # ---------------- LOGOUT ----------------
 @app.route("/logout")
