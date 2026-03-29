@@ -609,6 +609,10 @@ def reset_password():
             {"$set": {"password_hash": hashed}}
         )
 
+        flash("Password changed successfully. Please login.", "success")
+        session.pop("reset_email", None)
+        session.pop("otp", None)
+
         return redirect(url_for("login"))
 
     return render_template("Reset_password.html")
