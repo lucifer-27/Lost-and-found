@@ -616,7 +616,7 @@ def reset_password():
 
         return redirect(url_for("login"))
 
-    return render_template("Reset_password.html")
+    return render_template("reset_password.html")
 
 
 # ---------------- LOGOUT ----------------
