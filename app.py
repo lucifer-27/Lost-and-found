@@ -255,6 +255,16 @@ def _consume_temp_upload(upload_id):
     )
 
 
+def _parse_submitted_date(date_value):
+    if not date_value:
+        return None
+
+    try:
+        return datetime.strptime(date_value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
 def _build_claim_status_badge(status):
     normalized = (status or "").lower()
     if normalized == "returned":
@@ -1295,6 +1305,9 @@ def report_lost():
     if "user" not in session:
         return redirect(url_for("login"))
 
+    today = datetime.now().date()
+    today_str = today.isoformat()
+
     if request.method == "POST":
 
         name = request.form.get("item_name")
@@ -1304,6 +1317,23 @@ def report_lost():
         description = request.form.get("description","")
         image = request.files.get("image")
         image_fields = _build_item_image_fields()
+        selected_date = _parse_submitted_date(date)
+
+        if not selected_date:
+            return render_template(
+                "report_lost.html",
+                categories=categories,
+                today=today_str,
+                error="Please select a valid lost date.",
+            )
+
+        if selected_date > today:
+            return render_template(
+                "report_lost.html",
+                categories=categories,
+                today=today_str,
+                error="Lost date cannot be in the future.",
+            )
 
         if image and image.filename:
             image_bytes = image.read()
@@ -1345,7 +1375,7 @@ def report_lost():
             session["report_success"] = True
             return redirect(url_for("student"))
 
-    return render_template("report_lost.html", categories=categories)
+    return render_template("report_lost.html", categories=categories, today=today_str)
 
 # ---------------- REPORT FOUND ITEM ----------------
 @app.route("/report-found", methods=["GET","POST"])
@@ -1353,6 +1383,9 @@ def report_found():
 
     if "user" not in session:
         return redirect(url_for("login"))
+
+    today = datetime.now().date()
+    today_str = today.isoformat()
 
     if request.method == "POST":
 
@@ -1362,6 +1395,25 @@ def report_found():
         time_found = request.form.get("time_found")
         location = request.form.get("location")
         description = request.form.get("description")
+        selected_date = _parse_submitted_date(date)
+
+        if not selected_date:
+            return render_template(
+                "report_found.html",
+                uploaded_image=(request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip() or None,
+                categories=categories,
+                today=today_str,
+                error="Please select a valid found date.",
+            )
+
+        if selected_date > today:
+            return render_template(
+                "report_found.html",
+                uploaded_image=(request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip() or None,
+                categories=categories,
+                today=today_str,
+                error="Found date cannot be in the future.",
+            )
 
         type_ = "found"
 
@@ -1416,7 +1468,7 @@ def report_found():
     if not show_uploaded_image_preview and session.get("uploaded_image_id"):
         _clear_uploaded_image_session()
 
-    return render_template("report_found.html", uploaded_image=uploaded_image, categories=categories)
+    return render_template("report_found.html", uploaded_image=uploaded_image, categories=categories, today=today_str)
 
 # ---------------- ITEMS ----------------
 @app.route("/items")
