@@ -30,7 +30,7 @@
         </div>
 
         <!-- Upload -->
-        <form method="POST" action="{{ url_for('upload', next=return_url) }}" class="mt-4">
+        <form method="POST" action="{{ url_for('general.upload', next=return_url) }}" class="mt-4">
             <input type="hidden" name="image" id="image_data">
 
             <button type="submit" class="btn btn-success px-4">

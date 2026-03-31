@@ -176,7 +176,7 @@
                             data-type="{{ item.type | default('') | lower }}"
                             data-date="{{ item.date | default('') }}"
                             data-item-id="{{ item._id }}"
-                            data-item-url="{{ url_for('item_details', item_id=item._id) }}"
+                            data-item-url="{{ url_for('items.item_details', item_id=item._id) }}"
                             tabindex="0"
                             data-item-description="{{ item.description | default('') }}">
                             <td class="px-6 py-4 text-sm font-medium text-gray-900">
