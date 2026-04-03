@@ -24,18 +24,11 @@
             </div>
             {% endif %}
 
-<<<<<<< HEAD
             {% if error %}
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
                 {{ error }}
             </div>
             {% endif %}
-=======
-        <form method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-            <input type="text" name="otp" class="form-control mb-3" placeholder="Enter OTP" required>
->>>>>>> 04ea753 (Updated High Proirity Features)
 
             {% if success %}
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
@@ -44,6 +37,7 @@
             {% endif %}
 
             <form method="POST" class="space-y-5">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="otp">OTP Code</label>
                     <input id="otp" name="otp" type="text" placeholder="Enter 6-digit OTP" maxlength="6" required
@@ -61,6 +55,7 @@
 
             <div class="mt-5">
                 <form method="POST" action="{{ url_for('auth.resend_otp') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                         class="w-full border border-primary text-primary font-semibold py-3 px-4 rounded-lg bg-white hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50"
                         {% if resend_wait_seconds > 0 %}disabled{% endif %}>

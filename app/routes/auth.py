@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo.errors import DuplicateKeyError
-from ..extensions import users_collection
+from ..extensions import users_collection, limiter
 from ..services.email_service import send_otp_email
 from ..services.verification_service import (
     clear_email_verification,
@@ -18,6 +18,9 @@ from ..services.verification_service import (
 )
 
 auth_bp = Blueprint("auth", __name__)
+
+ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "")
+STAFF_SECRET = os.environ.get("STAFF_SECRET", "")
 
 
 def _set_login_session(user):

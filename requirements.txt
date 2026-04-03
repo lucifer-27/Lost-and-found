@@ -4,3 +4,5 @@ python-dotenv
 dnspython
 gunicorn
 requests
+flask-wtf
+flask-limiter
