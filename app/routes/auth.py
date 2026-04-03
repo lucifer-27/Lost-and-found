@@ -112,8 +112,8 @@ def register():
 
         # Staff check
         if role == "staff":
-            if staff_code != STAFF_SECRET:
-                return render_template("register.html", error="Invalid staff access code")
+            if not re.match(r"^[a-zA-Z]+@[0-9]+$", staff_code):
+                return render_template("register.html", error="Invalid staff access code. Code must be in format 'name@number' (e.g. staffniraj@123)")
 
         if users_collection.find_one({"email": email}):
             return render_template("register.html", error="Email already registered")
