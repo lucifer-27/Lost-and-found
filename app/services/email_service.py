@@ -67,76 +67,88 @@ def _send_via_resend(to_email, subject, text_body, html_body):
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
     from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
     if not api_key or not from_email:
-        print("RESEND CONFIG MISSING")
+        print("RESEND CONFIG MISSING: RESEND_API_KEY or RESEND_FROM_EMAIL not set")
         return False
 
     payload = {
-        "from": _build_sender(from_email),
+        "from": f"{os.environ.get('EMAIL_FROM_NAME', 'CampusFind')} <{from_email}>",
         "to": [to_email],
         "subject": subject,
         "text": text_body,
         "html": html_body,
     }
-    request = Request(
-        RESEND_API_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
 
     try:
-        with urlopen(request, timeout=15) as response:
-            if 200 <= response.status < 300:
-                print("OTP email sent successfully via Resend")
-                return True
-            print("RESEND ERROR: unexpected status", response.status)
-    except HTTPError as exc:
-        details = exc.read().decode("utf-8", errors="ignore")
-        print("RESEND ERROR:", exc.code, details)
-    except URLError as exc:
-        print("RESEND NETWORK ERROR:", exc)
-    except Exception as exc:
-        print("RESEND ERROR:", exc)
-    return False
+        import requests
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=15)
+
+        if response.status_code in [200, 201]:
+            print(f"✅ OTP email sent successfully via Resend to {to_email}")
+            return True
+        else:
+            print(f"❌ RESEND ERROR: {response.status_code} - {response.text}")
+            return False
+
+    except requests.exceptions.RequestException as e:
+        print(f"❌ RESEND NETWORK ERROR: {str(e)}")
+        return False
+    except Exception as e:
+        print(f"❌ RESEND UNEXPECTED ERROR: {str(e)}")
+        return False
 
 
 def _send_via_smtp(to_email, subject, text_body):
     smtp_host, smtp_port, smtp_username, smtp_password, from_email = _smtp_settings()
     if not smtp_host or not smtp_username or not smtp_password or not from_email:
-        print("SMTP CONFIG MISSING")
+        print("SMTP CONFIG MISSING: Missing SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, or SMTP_FROM_EMAIL")
         return False
 
     msg = MIMEText(text_body)
     msg["Subject"] = subject
-    msg["From"] = _build_sender(from_email)
+    msg["From"] = f"{os.environ.get('EMAIL_FROM_NAME', 'CampusFind')} <{from_email}>"
     msg["To"] = to_email
 
     try:
-        server = smtplib.SMTP(smtp_host, smtp_port)
+        server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
         server.starttls()
         server.login(smtp_username, smtp_password)
         server.send_message(msg)
         server.quit()
-        print("OTP email sent successfully via SMTP")
+        print(f"✅ OTP email sent successfully via SMTP to {to_email}")
         return True
-    except Exception as exc:
-        print("SMTP ERROR:", exc)
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ SMTP AUTH ERROR: {str(e)} - Check credentials")
+        return False
+    except smtplib.SMTPConnectError as e:
+        print(f"❌ SMTP CONNECT ERROR: {str(e)} - Check SMTP host/port")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"❌ SMTP ERROR: {str(e)}")
+        return False
+    except Exception as e:
+        print(f"❌ SMTP UNEXPECTED ERROR: {str(e)}")
         return False
 
 
 def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
     provider = os.environ.get("EMAIL_PROVIDER", "auto").strip().lower()
-    if provider == "smtp":
-        return _send_via_smtp(to_email, subject, text_body)
-    if provider == "resend":
-        return _send_via_resend(to_email, subject, text_body, html_body)
-    if _has_resend_config():
-        return _send_via_resend(to_email, subject, text_body, html_body)
-    if _has_smtp_config():
-        return _send_via_smtp(to_email, subject, text_body)
-    print("EMAIL CONFIG MISSING")
+
+    # Try Resend first (more reliable in production)
+    if provider in ["auto", "resend"] and _has_resend_config():
+        success = _send_via_resend(to_email, subject, text_body, html_body)
+        if success:
+            return True
+
+    # Fallback to SMTP
+    if provider in ["auto", "smtp"] and _has_smtp_config():
+        success = _send_via_smtp(to_email, subject, text_body)
+        if success:
+            return True
+
+    print("EMAIL CONFIG MISSING - No email provider configured")
     return False
