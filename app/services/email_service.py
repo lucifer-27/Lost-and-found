@@ -141,13 +141,16 @@ def send_otp_email(to_email, otp, purpose="verification"):
     print(f"DEBUG OTP for {to_email}: {otp}")
 
     # Try Resend first (more reliable in production)
+    # Try Resend first (more reliable in production)
     if provider in ["auto", "resend"] and _has_resend_config():
         success = _send_via_resend(to_email, subject, text_body, html_body)
         if success:
             return True
+            
+        print("[WARNING] Resend delivery failed. Attempting SMTP fallback...")
 
-    # Fallback to SMTP
-    if provider in ["auto", "smtp"] and _has_smtp_config():
+    # Fallback to SMTP regardless of provider setting if Resend failed or was skipped
+    if _has_smtp_config():
         success = _send_via_smtp(to_email, subject, text_body)
         if success:
             return True
