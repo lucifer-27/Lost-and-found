@@ -87,17 +87,17 @@ def _send_via_resend(to_email, subject, text_body, html_body):
         response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=15)
 
         if response.status_code in [200, 201]:
-            print(f"✅ OTP email sent successfully via Resend to {to_email}")
+            print(f"[SUCCESS] OTP email sent successfully via Resend to {to_email}")
             return True
         else:
-            print(f"❌ RESEND ERROR: {response.status_code} - {response.text}")
+            print(f"[ERROR] RESEND ERROR: {response.status_code} - {response.text}")
             return False
 
     except requests.exceptions.RequestException as e:
-        print(f"❌ RESEND NETWORK ERROR: {str(e)}")
+        print(f"[ERROR] RESEND NETWORK ERROR: {str(e)}")
         return False
     except Exception as e:
-        print(f"❌ RESEND UNEXPECTED ERROR: {str(e)}")
+        print(f"[ERROR] RESEND UNEXPECTED ERROR: {str(e)}")
         return False
 
 
@@ -118,19 +118,19 @@ def _send_via_smtp(to_email, subject, text_body):
         server.login(smtp_username, smtp_password)
         server.send_message(msg)
         server.quit()
-        print(f"✅ OTP email sent successfully via SMTP to {to_email}")
+        print(f"[SUCCESS] OTP email sent successfully via SMTP to {to_email}")
         return True
     except smtplib.SMTPAuthenticationError as e:
-        print(f"❌ SMTP AUTH ERROR: {str(e)} - Check credentials")
+        print(f"[ERROR] SMTP AUTH ERROR: {str(e)} - Check credentials")
         return False
     except smtplib.SMTPConnectError as e:
-        print(f"❌ SMTP CONNECT ERROR: {str(e)} - Check SMTP host/port")
+        print(f"[ERROR] SMTP CONNECT ERROR: {str(e)} - Check SMTP host/port")
         return False
     except smtplib.SMTPException as e:
-        print(f"❌ SMTP ERROR: {str(e)}")
+        print(f"[ERROR] SMTP ERROR: {str(e)}")
         return False
     except Exception as e:
-        print(f"❌ SMTP UNEXPECTED ERROR: {str(e)}")
+        print(f"[ERROR] SMTP UNEXPECTED ERROR: {str(e)}")
         return False
 
 

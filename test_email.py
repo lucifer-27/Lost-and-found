@@ -19,8 +19,8 @@ def test_email_config():
     resend_from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
 
     print("📧 Resend Configuration:")
-    print(f"  API Key: {'✅ Set' if resend_api_key else '❌ Missing'}")
-    print(f"  From Email: {resend_from_email if resend_from_email else '❌ Missing'}")
+    print(f"  API Key: {'[SET]' if resend_api_key else '[MISSING]'}")
+    print(f"  From Email: {resend_from_email if resend_from_email else '[MISSING]'}")
 
     # Check SMTP config
     smtp_host = os.environ.get("SMTP_HOST", "").strip()
@@ -29,10 +29,10 @@ def test_email_config():
     smtp_from_email = os.environ.get("SMTP_FROM_EMAIL", "").strip()
 
     print("\n📬 SMTP Configuration:")
-    print(f"  Host: {smtp_host if smtp_host else '❌ Missing'}")
-    print(f"  Username: {'✅ Set' if smtp_username else '❌ Missing'}")
-    print(f"  Password: {'✅ Set' if smtp_password else '❌ Missing'}")
-    print(f"  From Email: {smtp_from_email if smtp_from_email else '❌ Missing'}")
+    print(f"  Host: {smtp_host if smtp_host else '[MISSING]'}")
+    print(f"  Username: {'[SET]' if smtp_username else '[MISSING]'}")
+    print(f"  Password: {'[SET]' if smtp_password else '[MISSING]'}")
+    print(f"  From Email: {smtp_from_email if smtp_from_email else '[MISSING]'}")
 
     # Test email sending
     print("\n🚀 Testing Email Sending...")
@@ -41,19 +41,19 @@ def test_email_config():
         test_email = os.environ.get("TEST_EMAIL", "").strip()
 
         if not test_email:
-            print("❌ Set TEST_EMAIL environment variable to test email sending")
+            print("[ERROR] Set TEST_EMAIL environment variable to test email sending")
             return
 
         print(f"📤 Sending test OTP to: {test_email}")
         success = send_otp_email(test_email, "123456", "test")
 
         if success:
-            print("✅ Test email sent successfully!")
+            print("[SUCCESS] Test email sent successfully!")
         else:
-            print("❌ Failed to send test email")
+            print("[ERROR] Failed to send test email")
 
     except Exception as e:
-        print(f"❌ Error testing email: {str(e)}")
+        print(f"[ERROR] Error testing email: {str(e)}")
 
 if __name__ == "__main__":
     test_email_config()
