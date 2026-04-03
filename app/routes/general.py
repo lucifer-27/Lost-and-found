@@ -1,4 +1,7 @@
 import base64
+import smtplib
+import os
+from email.mime.text import MIMEText
 from flask import Blueprint, render_template, request, redirect, url_for, session, Response
 from bson.objectid import ObjectId
 from ..extensions import items_collection, notifications_collection
@@ -8,6 +11,36 @@ from ..services.image_service import (
     delete_temp_upload,
 )
 
+
+def send_contact_email(to_email, subject, body):
+    """Send contact form emails"""
+    try:
+        smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
+        smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+        smtp_username = os.environ.get("SMTP_USERNAME", "").strip() or os.environ.get("EMAIL", "").strip()
+        smtp_password = os.environ.get("SMTP_PASSWORD", "").strip() or os.environ.get("EMAIL_PASS", "").strip()
+        from_email = os.environ.get("SMTP_FROM_EMAIL", "").strip() or smtp_username
+        
+        if not all([smtp_host, smtp_username, smtp_password, from_email]):
+            print("Email configuration missing")
+            return False
+            
+        msg = MIMEText(body)
+        msg["Subject"] = subject
+        msg["From"] = from_email
+        msg["To"] = to_email
+        
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            server.send_message(msg)
+        
+        print(f"Contact email sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        print(f"Error sending contact email: {str(e)}")
+        return False
+
 general_bp = Blueprint("general", __name__)
 
 
@@ -15,6 +48,60 @@ general_bp = Blueprint("general", __name__)
 def home():
     items = list(items_collection.find({"status": "active"}, ITEM_LIST_PROJECTION).sort("created_at", -1).limit(4))
     return render_template("index.html", recent_items=items)
+
+
+@general_bp.route("/contact", methods=["GET", "POST"])
+@general_bp.route("/contact-us", methods=["GET", "POST"])
+@general_bp.route("/support", methods=["GET", "POST"])
+def contact():
+    """Handle contact form submissions - accessible to all users"""
+    success_message = None
+    error_message = None
+    
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        subject = request.form.get("subject", "").strip()
+        message = request.form.get("message", "").strip()
+
+        # Validate inputs
+        if not all([name, email, subject, message]):
+            error_message = "All fields are required."
+        elif len(message) < 10:
+            error_message = "Message must be at least 10 characters long."
+        else:
+            try:
+                # Send email to support
+                email_subject = f"CampusFind Support: {subject}"
+                send_email_body = f"""
+New message from CampusFind Contact Form:
+
+Name: {name}
+Email: {email}
+Subject: {subject}
+
+Message:
+{message}
+
+---
+Reply to: {email}
+                """
+
+                if send_contact_email(
+                    to_email="campusfind.lnf@gmail.com",
+                    subject=email_subject,
+                    body=send_email_body,
+                ):
+                    success_message = "Your message has been sent successfully! We'll get back to you soon."
+                else:
+                    error_message = "Failed to send message. Please try again or email us directly at campusfind.lnf@gmail.com"
+                name = email = subject = message = ""  # Clear form
+
+            except Exception as e:
+                print(f"Error sending contact email: {str(e)}")
+                error_message = "Failed to send message. Please try again or email us directly at campusfind.lnf@gmail.com"
+
+    return render_template("contact.html", success_message=success_message, error_message=error_message)
 
 
 # ---------- NOTIFICATIONS ----------

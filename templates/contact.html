@@ -1,0 +1,152 @@
+<!-- Contact/Support Form for CampusFind -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Contact Us | CampusFind</title>
+
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans">
+
+    <!-- NAVBAR -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <span class="material-icons text-blue-600 text-3xl">search</span>
+                    <span class="text-2xl font-bold tracking-tight text-blue-600">CampusFind</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    {% if session.get('user') %}
+                    <a href="/" class="text-slate-600 hover:text-blue-600 px-3 py-2 rounded font-semibold text-sm transition-colors">
+                        Home
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}"
+                        class="bg-red-500 text-white px-6 py-2 rounded font-semibold text-sm hover:bg-red-600 transition-colors">
+                        Logout
+                    </a>
+                    {% else %}
+                    <a href="/login" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold text-sm hover:bg-blue-700 transition-colors">
+                        Login
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-gradient py-12 text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl font-bold mb-4">Contact Us</h1>
+                <p class="text-lg opacity-90">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+            </div>
+        </section>
+
+        <!-- Contact Form Section -->
+        <section class="py-16">
+            <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    {% if success_message %}
+                    <div class="mb-6 p-4 bg-green-100 text-green-700 rounded-lg flex items-center gap-3">
+                        <span class="material-icons">check_circle</span>
+                        <span>{{ success_message }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if error_message %}
+                    <div class="mb-6 p-4 bg-red-100 text-red-700 rounded-lg flex items-center gap-3">
+                        <span class="material-icons">error</span>
+                        <span>{{ error_message }}</span>
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" class="space-y-6">
+                        <!-- Name Field -->
+                        <div>
+                            <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+                            <input type="text" id="name" name="name" required
+                                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                placeholder="Your full name"
+                                value="{{ request.form.get('name', '') }}">
+                        </div>
+
+                        <!-- Email Field -->
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+                            <input type="email" id="email" name="email" required
+                                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                placeholder="your.email@pdeu.ac.in"
+                                value="{{ request.form.get('email', '') }}">
+                        </div>
+
+                        <!-- Subject Field -->
+                        <div>
+                            <label for="subject" class="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
+                            <input type="text" id="subject" name="subject" required
+                                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                placeholder="What is this about?"
+                                value="{{ request.form.get('subject', '') }}">
+                        </div>
+
+                        <!-- Message Field -->
+                        <div>
+                            <label for="message" class="block text-sm font-semibold text-slate-700 mb-2">Message</label>
+                            <textarea id="message" name="message" rows="6" required
+                                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none"
+                                placeholder="Tell us how we can help...">{{ request.form.get('message', '') }}</textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="flex gap-4">
+                            <button type="submit"
+                                class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                <span class="material-icons">send</span>
+                                Send Message
+                            </button>
+                            <a href="/"
+                                class="flex-1 bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-semibold hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
+                                <span class="material-icons">arrow_back</span>
+                                Go Back
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Support Email Info -->
+                    <div class="mt-8 pt-8 border-t border-slate-200">
+                        <p class="text-slate-600 text-sm text-center">
+                            Or email us directly at: <a href="mailto:campusfind.lnf@gmail.com" class="text-blue-600 font-semibold hover:underline">campusfind.lnf@gmail.com</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm">© 2026 CampusFind PDEU. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

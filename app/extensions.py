@@ -1,7 +1,29 @@
 import sys
+import dns.resolver
 from pymongo import MongoClient
 from gridfs import GridFS
-from .config import MONGO_URI, MONGO_DIRECT_URI, MONGO_DB_NAME, redact_mongo_uri
+from .config import (
+    MONGO_URI,
+    MONGO_DIRECT_URI,
+    MONGO_DB_NAME,
+    MONGO_DNS_RESOLVERS,
+    MONGO_DNS_TIMEOUT_SECONDS,
+    redact_mongo_uri,
+)
+
+
+def _configure_srv_dns_resolver():
+    if not MONGO_URI.startswith("mongodb+srv://"):
+        return
+    if not MONGO_DNS_RESOLVERS:
+        return
+
+    resolver = dns.resolver.Resolver(configure=False)
+    resolver.nameservers = MONGO_DNS_RESOLVERS
+    resolver.timeout = MONGO_DNS_TIMEOUT_SECONDS
+    resolver.lifetime = max(MONGO_DNS_TIMEOUT_SECONDS * 2, 10)
+    dns.resolver.default_resolver = resolver
+    print(f"INFO: Using custom DNS resolvers for MongoDB SRV lookups: {', '.join(MONGO_DNS_RESOLVERS)}")
 
 
 def _connect_mongo(uri):
@@ -53,6 +75,7 @@ def create_mongo_client():
 
 
 # Initialize on import
+_configure_srv_dns_resolver()
 client = create_mongo_client()
 db = client[MONGO_DB_NAME]
 fs = GridFS(db)
@@ -64,4 +87,7 @@ archived_items_collection = db["archived_items"]
 claims_collection = db["claims"]
 notifications_collection = db["notifications"]
 temp_uploads_collection = db["temp_uploads"]
+email_verifications_collection = db["email_verifications"]
 temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
+email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
+email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)

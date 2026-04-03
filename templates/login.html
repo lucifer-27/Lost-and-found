@@ -81,13 +81,19 @@
             </div>
             {% endif %}
 
+            {% if success %}
+            <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
+                {{ success }}
+            </div>
+            {% endif %}
+
             <form action="/login" method="POST" class="space-y-5">
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="role">Select Role</label>
                     <select id="role" name="role" required
                         class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white">
-                        <option value="">-- Select Role --</option>
+                        <option value="" disabled selected hidden> Select Role </option>
                         <option value="student">Student</option>
                         <option value="staff">Security Staff</option>
                         <option value="admin">Admin</option>
@@ -96,7 +102,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="email">Email Address</label>
-                    <input id="email" name="email" type="email" placeholder="24bcp001@sot.pdpu.ac.in"
+                    <input id="email" name="email" type="email" placeholder="e.g. 24bcp001@sot.pdpu.ac.in"
                         pattern="[a-zA-Z0-9]+@[a-zA-Z0-9]+\.pdpu\.ac\.in" required
                         class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                 </div>

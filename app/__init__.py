@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from flask import Flask
+from flask import Flask, session
 from .config import SECRET_KEY, project_root
 
 
@@ -15,6 +15,11 @@ def create_app():
     app.permanent_session_lifetime = timedelta(days=30)
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+    @app.before_request
+    def keep_logged_in_users_signed_in():
+        if "user" in session:
+            session.permanent = True
 
     # Register blueprints
     from .routes.auth import auth_bp

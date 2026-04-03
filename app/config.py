@@ -30,6 +30,8 @@ load_local_env(os.path.join(basedir, ".env"))
 MONGO_URI = os.environ.get("MONGO_URI", "").strip()
 MONGO_DIRECT_URI = os.environ.get("MONGO_DIRECT_URI", "").strip()
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "lost_found_db")
+MONGO_DNS_RESOLVERS = [resolver.strip() for resolver in os.environ.get("MONGO_DNS_RESOLVERS", "1.1.1.1,8.8.8.8").split(",") if resolver.strip()]
+MONGO_DNS_TIMEOUT_SECONDS = float(os.environ.get("MONGO_DNS_TIMEOUT_SECONDS", "5"))
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev_secret_key")
 
 

@@ -1,5 +1,5 @@
-import random
+import secrets
 
 
 def generate_otp():
-    return str(random.randint(100000, 999999))
+    return "".join(str(secrets.randbelow(10)) for _ in range(6))
