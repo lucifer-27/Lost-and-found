@@ -119,19 +119,23 @@ def _send_via_smtp(to_email, subject, text_body):
         server.send_message(msg)
         server.quit()
         print(f"[SUCCESS] OTP email sent successfully via SMTP to {to_email}")
-        return True
+        return True, ""
     except smtplib.SMTPAuthenticationError as e:
-        print(f"[ERROR] SMTP AUTH ERROR: {str(e)} - Check credentials")
-        return False
+        err = f"SMTP AUTH ERROR: {str(e)} - Check credentials"
+        print(f"[ERROR] {err}")
+        return False, err
     except smtplib.SMTPConnectError as e:
-        print(f"[ERROR] SMTP CONNECT ERROR: {str(e)} - Check SMTP host/port")
-        return False
+        err = f"SMTP CONNECT ERROR: {str(e)} - Check SMTP host/port"
+        print(f"[ERROR] {err}")
+        return False, err
     except smtplib.SMTPException as e:
-        print(f"[ERROR] SMTP ERROR: {str(e)}")
-        return False
+        err = f"SMTP ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
     except Exception as e:
-        print(f"[ERROR] SMTP UNEXPECTED ERROR: {str(e)}")
-        return False
+        err = f"SMTP UNEXPECTED ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
 
 
 def send_otp_email(to_email, otp, purpose="verification"):
@@ -151,9 +155,11 @@ def send_otp_email(to_email, otp, purpose="verification"):
 
     # Fallback to SMTP regardless of provider setting if Resend failed or was skipped
     if _has_smtp_config():
-        success = _send_via_smtp(to_email, subject, text_body)
+        success, error_msg = _send_via_smtp(to_email, subject, text_body)
         if success:
-            return True
+            return True, ""
+        return False, f"SMTP Delivery Failed: {error_msg}"
 
-    print("EMAIL CONFIG MISSING - No email provider configured")
-    return False
+    msg = "EMAIL CONFIG MISSING - No email provider configured or fallback failed"
+    print(msg)
+    return False, msg

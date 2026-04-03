@@ -43,9 +43,10 @@ def _start_email_verification(email, purpose, payload=None):
     otp, error = create_email_verification(email, purpose, payload=payload)
     if error:
         return False, error
-    if not send_otp_email(email, otp, purpose=purpose):
+    success, err_msg = send_otp_email(email, otp, purpose=purpose)
+    if not success:
         clear_email_verification(email, purpose)
-        return False, "We could not send the verification email. Please try again."
+        return False, f"We could not send the verification email. Error: {err_msg}"
     session["verification_email"] = email
     session["verification_purpose"] = purpose
     return True, None
