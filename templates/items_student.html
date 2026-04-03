@@ -240,6 +240,7 @@
                 </button>
             </div>
             <form id="claimForm" action="/request-claim" method="POST" class="p-6 space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" id="itemIdField" name="item_id" />
                 
                 <div>

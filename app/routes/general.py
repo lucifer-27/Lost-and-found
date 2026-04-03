@@ -138,8 +138,11 @@ def mark_read(notification_id):
     if "user" not in session:
         return redirect(url_for("auth.login"))
     notifications_collection.update_one(
-        {"_id": ObjectId(notification_id)},
-        {"$set": {"read": True}}
+    {
+        "_id": ObjectId(notification_id),
+        "user_id": str(session["user_id"])
+    },
+    {"$set": {"read": True}}
     )
     role = session.get("role")
     if role == "staff":
@@ -152,7 +155,10 @@ def mark_read(notification_id):
 def dismiss_notification(notification_id):
     if "user" not in session:
         return redirect(url_for("auth.login"))
-    notifications_collection.delete_one({"_id": ObjectId(notification_id)})
+    notifications_collection.delete_one({
+    "_id": ObjectId(notification_id),
+    "user_id": str(session["user_id"])
+    })
     role = session.get("role")
     if role == "staff":
         return redirect(url_for("general.notifications"))

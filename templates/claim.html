@@ -81,6 +81,7 @@
       </div>
 
       <form action="{% if claim %}/process-claim/{{ claim._id }}{% else %}/claim{% endif %}" method="POST" class="p-6 space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         {% if not claim %}
           <input type="hidden" name="item_id" value="{{ selected_item_id or '' }}">

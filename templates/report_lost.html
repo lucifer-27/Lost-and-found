@@ -92,6 +92,7 @@
     <section class="bg-white shadow-lg rounded-xl w-full overflow-hidden border border-gray-100">
 
       <form action="/report-lost" method="POST" enctype="multipart/form-data" class="p-6 md:p-8 space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         {% if error %}
         <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

@@ -1,39 +1,61 @@
 import os
-from datetime import timedelta
-from flask import Flask, session
-from .config import SECRET_KEY, project_root
+from flask import Flask
+from flask_wtf import CSRFProtect
+from app.extensions import limiter
 
+csrf = CSRFProtect()
 
 def create_app():
+    # Base directory (app folder)
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+    # Project root (one level up)
+    PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
+
+    # Correct paths (your case: templates outside app)
+    TEMPLATE_DIR = os.path.join(PROJECT_ROOT, "templates")
+    STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
+
+    # Debug (safe)
+    print("PROJECT_ROOT:", PROJECT_ROOT)
+    print("TEMPLATE_DIR:", TEMPLATE_DIR)
+
+    if os.path.exists(TEMPLATE_DIR):
+        print("FILES:", os.listdir(TEMPLATE_DIR))
+    else:
+        print("ERROR: TEMPLATE_DIR not found")
+
+    # Create Flask app
     app = Flask(
         __name__,
-        template_folder=os.path.join(project_root, "templates"),
-        static_folder=os.path.join(project_root, "static"),
+        template_folder=TEMPLATE_DIR,
+        static_folder=STATIC_DIR
     )
-    app.secret_key = SECRET_KEY
-    app.config["TEMPLATES_AUTO_RELOAD"] = True
-    app.permanent_session_lifetime = timedelta(days=30)
+
+    print("FINAL TEMPLATE PATH:", app.template_folder)
+
+    # Config
+    app.config["SECRET_KEY"] = "test_secret"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = False
 
-    @app.before_request
-    def keep_logged_in_users_signed_in():
-        if "user" in session:
-            session.permanent = True
+    csrf.init_app(app)
+    limiter.init_app(app)
 
-    # Register blueprints
-    from .routes.auth import auth_bp
-    from .routes.student import student_bp
-    from .routes.staff import staff_bp
-    from .routes.admin import admin_bp
-    from .routes.items import items_bp
-    from .routes.general import general_bp
+    # Import and register blueprints
+    from app.routes.auth import auth_bp
+    from app.routes.general import general_bp
+    from app.routes.items import items_bp
+    from app.routes.admin import admin_bp
+    from app.routes.staff import staff_bp
+    from app.routes.student import student_bp
 
     app.register_blueprint(auth_bp)
-    app.register_blueprint(student_bp)
-    app.register_blueprint(staff_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(items_bp)
     app.register_blueprint(general_bp)
+    app.register_blueprint(items_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(staff_bp)
+    app.register_blueprint(student_bp)
 
     return app

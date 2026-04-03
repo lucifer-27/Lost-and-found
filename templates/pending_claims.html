@@ -172,6 +172,7 @@
         </button>
       </div>
       <form id="reject-form" method="POST" action="" onsubmit="return validateRejectionReason()">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="p-6 space-y-4">
           <p class="text-sm text-gray-600">Are you sure you want to reject this claim?</p>
 

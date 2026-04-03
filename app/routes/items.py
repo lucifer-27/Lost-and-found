@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
+from app.extensions import limiter
 from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from ..extensions import users_collection, items_collection, claims_collection, archived_items_collection
@@ -222,6 +223,7 @@ def report_lost():
 
 
 @items_bp.route("/report-found", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def report_found():
     if "user" not in session:
         return redirect(url_for("auth.login"))

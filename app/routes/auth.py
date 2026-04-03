@@ -1,7 +1,9 @@
+import os
 import re
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+from pymongo.errors import DuplicateKeyError
 from ..extensions import users_collection
 from ..services.email_service import send_otp_email
 from ..services.verification_service import (
@@ -77,6 +79,7 @@ def _render_verification_page(error=None, success=None):
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
+@limiter.limit("3 per minute")
 def register():
     if "user" in session:
         return redirect(url_for("general.home"))
@@ -97,10 +100,16 @@ def register():
             return render_template("register.html", error="Use college email: 24bcp001@sot.pdpu.ac.in")
         if len(password) < 8 or not re.search(r"[a-zA-Z]", password) or not re.search(r"[0-9]", password) or not re.search(r"[@#$%^&+=_!\-]", password):
             return render_template("register.html", error="Password must be 8+ chars with letters, numbers, and a special character (@, #, etc.)")
-        if role == "admin" and not admin_code:
-            return render_template("register.html", error="Invalid admin code")
-        if role == "staff" and not staff_code:
-            return render_template("register.html", error="Invalid staff code")
+       
+        # Admin check
+        if role == "admin":
+            if admin_code != ADMIN_SECRET:
+                return render_template("register.html", error="Invalid admin access code")
+
+        # Staff check
+        if role == "staff":
+            if staff_code != STAFF_SECRET:
+                return render_template("register.html", error="Invalid staff access code")
 
         if users_collection.find_one({"email": email}):
             return render_template("register.html", error="Email already registered")
@@ -122,6 +131,7 @@ def register():
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def login():
     if "user" in session:
         return redirect(url_for("general.home"))
@@ -156,6 +166,7 @@ def login():
 
 
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("2 per minute")
 def forgot_password():
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
@@ -170,6 +181,7 @@ def forgot_password():
 
 
 @auth_bp.route("/verify-otp", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def verify_otp():
     verification_email = session.get("verification_email")
     verification_purpose = session.get("verification_purpose")
@@ -238,6 +250,7 @@ def resend_otp():
 
 
 @auth_bp.route("/reset-password", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def reset_password():
     verified_email = session.get("password_reset_verified_email")
     if not verified_email:
