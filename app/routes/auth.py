@@ -133,6 +133,20 @@ def login():
         if user and check_password_hash(user["password_hash"], password):
             if user["role"] != role:
                 return render_template("login.html", error="Wrong role selected")
+
+            # Check if there's already an active login verification for this email
+            existing_verification = get_email_verification(email, "login")
+            if existing_verification and existing_verification.get("expires_at") and existing_verification["expires_at"] > datetime.utcnow():
+                # Reuse existing OTP if it's still valid and not in cooldown
+                wait_seconds = get_resend_wait_seconds(email, "login")
+                if wait_seconds <= 0:
+                    session["verification_email"] = email
+                    session["verification_purpose"] = "login"
+                    return redirect(url_for("auth.verify_otp"))
+                else:
+                    return render_template("login.html", error=f"You already have an active login request. Please wait {wait_seconds} seconds before trying again, or check your email for the existing OTP.")
+
+            # Create new verification if none exists or expired
             started, error = _start_email_verification(email, "login", payload={"role": role})
             if not started:
                 return render_template("login.html", error=error)
