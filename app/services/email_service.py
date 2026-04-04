@@ -92,25 +92,29 @@ def _send_via_resend(to_email, subject, text_body, html_body):
 
         if response.status_code in [200, 201]:
             print(f"[SUCCESS] OTP email sent successfully via Resend to {to_email}")
-            return True
+            return True, ""
         else:
-            print(f"[ERROR] RESEND ERROR: {response.status_code} - {response.text}")
-            return False
+            err = f"RESEND ERROR: {response.status_code} - {response.text}"
+            print(f"[ERROR] {err}")
+            return False, err
 
     except requests.exceptions.RequestException as e:
-        print(f"[ERROR] RESEND NETWORK ERROR: {str(e)}")
-        return False
+        err = f"RESEND NETWORK ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
     except Exception as e:
-        print(f"[ERROR] RESEND UNEXPECTED ERROR: {str(e)}")
-        return False
+        err = f"RESEND UNEXPECTED ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
 
 
 def _send_via_brevo(to_email, subject, text_body, html_body):
     api_key = os.environ.get("BREVO_API_KEY", "").strip()
     from_email = os.environ.get("BREVO_FROM_EMAIL", "").strip()
     if not api_key or not from_email:
-        print("BREVO CONFIG MISSING: BREVO_API_KEY or BREVO_FROM_EMAIL not set")
-        return False
+        err = "BREVO CONFIG MISSING: BREVO_API_KEY or BREVO_FROM_EMAIL not set"
+        print(err)
+        return False, err
 
     sender_name = os.environ.get('EMAIL_FROM_NAME', 'CampusFind').strip()
     payload = {
@@ -131,17 +135,20 @@ def _send_via_brevo(to_email, subject, text_body, html_body):
 
         if response.status_code in [200, 201]:
             print(f"[SUCCESS] OTP email sent successfully via Brevo to {to_email}")
-            return True
+            return True, ""
         else:
-            print(f"[ERROR] BREVO ERROR: {response.status_code} - {response.text}")
-            return False
+            err = f"BREVO ERROR: {response.status_code} - {response.text}"
+            print(f"[ERROR] {err}")
+            return False, err
 
     except requests.exceptions.RequestException as e:
-        print(f"[ERROR] BREVO NETWORK ERROR: {str(e)}")
-        return False
+        err = f"BREVO NETWORK ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
     except Exception as e:
-        print(f"[ERROR] BREVO UNEXPECTED ERROR: {str(e)}")
-        return False
+        err = f"BREVO UNEXPECTED ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
 
 
 
@@ -188,22 +195,31 @@ def send_otp_email(to_email, otp, purpose="verification"):
 
     print(f"DEBUG OTP for {to_email}: {otp}")
 
-    # Try Brevo first if configured
-    if provider in ["auto", "brevo"] and _has_brevo_config():
-        success = _send_via_brevo(to_email, subject, text_body, html_body)
-        if success:
-            return True, ""
-        print("[WARNING] Brevo delivery failed. Proceeding to fallback...")
+    # Try Brevo
+    if provider in ["auto", "brevo"]:
+        if _has_brevo_config():
+            success, error_msg = _send_via_brevo(to_email, subject, text_body, html_body)
+            if success:
+                return True, ""
+            if provider == "brevo":
+                return False, f"Brevo API Failed: {error_msg}"
+            print("[WARNING] Brevo delivery failed. Proceeding to fallback...")
+        elif provider == "brevo":
+            return False, "Brevo configuration is missing."
 
-    # Try Resend next
-    if provider in ["auto", "resend"] and _has_resend_config():
-        success = _send_via_resend(to_email, subject, text_body, html_body)
-        if success:
-            return True, ""
-            
-        print("[WARNING] Resend delivery failed. Attempting SMTP fallback...")
+    # Try Resend
+    if provider in ["auto", "resend"]:
+        if _has_resend_config():
+            success, error_msg = _send_via_resend(to_email, subject, text_body, html_body)
+            if success:
+                return True, ""
+            if provider == "resend":
+                return False, f"Resend API Failed: {error_msg}"
+            print("[WARNING] Resend delivery failed. Attempting SMTP fallback...")
+        elif provider == "resend":
+            return False, "Resend configuration is missing."
 
-    # Fallback to SMTP regardless of provider setting if others failed or were skipped
+    # Fallback to SMTP 
     if _has_smtp_config():
         success, error_msg = _send_via_smtp(to_email, subject, text_body)
         if success:
