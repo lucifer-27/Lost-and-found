@@ -1,5 +1,7 @@
 import os
 import smtplib
+import json
+import urllib.request
 from email.mime.text import MIMEText
 
 def _build_sender(from_email):
@@ -105,16 +107,57 @@ def _send_via_smtp(to_email, subject, text_body):
         print(f"[ERROR] {err}")
         return False, err
 
+def _send_via_resend(to_email, subject, html_body):
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
+    sender_name = os.environ.get("EMAIL_FROM_NAME", "CampusFind").strip()
+    
+    if not api_key or not from_email:
+        err = "RESEND CONFIG MISSING: Missing RESEND_API_KEY or RESEND_FROM_EMAIL"
+        print(f"[ERROR] {err}")
+        return False, err
+        
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "from": f"{sender_name} <{from_email}>",
+        "to": [to_email],
+        "subject": subject,
+        "html": html_body
+    }
+    
+    try:
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=15) as response:
+            response.read()
+            print(f"[SUCCESS] Email sent successfully via Resend to {to_email}")
+            return True, ""
+    except Exception as e:
+        err = f"RESEND HTTP ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
 
 def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
     print(f"DEBUG OTP for {to_email}: {otp}")
 
+    provider = os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower()
+
+    if provider == "resend":
+        success, error_msg = _send_via_resend(to_email, subject, html_body)
+        if success:
+            return True, ""
+        print(f"[WARNING] Local Resend failed, falling back to SMTP: {error_msg}")
+
     if _has_smtp_config():
         success, error_msg = _send_via_smtp(to_email, subject, text_body)
         if success:
             return True, ""
-        return False, f"SMTP Delivery Failed: {error_msg}"
+        return False, f"Email Delivery Failed: {error_msg}"
 
     msg = "EMAIL CONFIG MISSING - No email provider configured"
     print(msg)

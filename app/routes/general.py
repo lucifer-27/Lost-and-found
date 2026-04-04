@@ -30,10 +30,23 @@ def send_contact_email(to_email, subject, body):
         msg["From"] = from_email
         msg["To"] = to_email
         
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_username, smtp_password)
-            server.send_message(msg)
+        # Patch socket.getaddrinfo temporarily to force IPv4
+        # This prevents the "[Errno 101] Network is unreachable" when IPv6 is selected
+        import socket
+        orig_getaddrinfo = socket.getaddrinfo
+        def ipv4_getaddrinfo(*args, **kwargs):
+            res = orig_getaddrinfo(*args, **kwargs)
+            return [r for r in res if r[0] == socket.AF_INET]
+            
+        socket.getaddrinfo = ipv4_getaddrinfo
+        
+        try:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_username, smtp_password)
+                server.send_message(msg)
+        finally:
+            socket.getaddrinfo = orig_getaddrinfo
         
         print(f"Contact email sent successfully to {to_email}")
         return True
