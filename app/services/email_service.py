@@ -151,9 +151,12 @@ def send_otp_email(to_email, otp, purpose="verification"):
             print(f"[SUCCESS] OTP email sent successfully via Resend API to {to_email}")
             return True, ""
         else:
-            print(f"[WARNING] Resend API failed: {error_msg}. Falling back to SMTP...")
+            print(f"[ERROR] Resend API failed: {error_msg}")
+            # Do NOT fall back to SMTP if Resend throws an error (like 403 Forbidden). 
+            # Otherwise, the real error gets masked by a generic SMTP timeout.
+            return False, f"Resend API Failed: {error_msg}"
 
-    # 2. Fallback to SMTP
+    # 2. Fallback to SMTP (only if Resend is not configured at all)
     if _has_smtp_config():
         success, error_msg = _send_via_smtp(to_email, subject, text_body)
         if success:
