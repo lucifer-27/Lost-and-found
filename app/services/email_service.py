@@ -175,6 +175,15 @@ def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
     print(f"DEBUG OTP for {to_email}: {otp}")
 
+    provider = os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower()
+
+    if provider == "resend":
+        success, error_msg = _send_via_resend(to_email, subject, html_body)
+        if success:
+            return True, ""
+        print(f"[WARNING] Local Resend failed, falling back to SMTP: {error_msg}")
+
+    # Fallback to SMTP
     if _has_smtp_config():
         success, error_msg = _send_via_smtp(to_email, subject, text_body)
         if success:
