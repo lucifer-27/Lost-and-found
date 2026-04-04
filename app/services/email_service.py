@@ -55,11 +55,41 @@ def _build_otp_message(otp, purpose):
     return subject, text, html
 
 
+def _send_via_resend(to_email, subject, html_body):
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
+    
+    if not api_key or not from_email:
+        return False, "Resend API key or From Email is missing"
+
+    sender_name = os.environ.get("EMAIL_FROM_NAME", "CampusFind").strip()
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "from": f"{sender_name} <{from_email}>",
+        "to": [to_email],
+        "subject": subject,
+        "html": html_body
+    }
+
+    try:
+        req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status in (200, 201):
+                return True, ""
+            return False, f"HTTP Error: {response.status}"
+    except Exception as e:
+        return False, f"API Exception: {str(e)}"
+
+
 def _send_via_smtp(to_email, subject, text_body):
     smtp_host, smtp_port, smtp_username, smtp_password, from_email = _smtp_settings()
     if not smtp_host or not smtp_username or not smtp_password or not from_email:
         print("SMTP CONFIG MISSING: Missing SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, or SMTP_FROM_EMAIL")
-        return False
+        return False, "Missing SMTP configs"
 
     msg = MIMEText(text_body)
     msg["Subject"] = subject
@@ -145,14 +175,6 @@ def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
     print(f"DEBUG OTP for {to_email}: {otp}")
 
-    provider = os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower()
-
-    if provider == "resend":
-        success, error_msg = _send_via_resend(to_email, subject, html_body)
-        if success:
-            return True, ""
-        print(f"[WARNING] Local Resend failed, falling back to SMTP: {error_msg}")
-
     if _has_smtp_config():
         success, error_msg = _send_via_smtp(to_email, subject, text_body)
         if success:
@@ -162,3 +184,4 @@ def send_otp_email(to_email, otp, purpose="verification"):
     msg = "EMAIL CONFIG MISSING - No email provider configured"
     print(msg)
     return False, msg
+
