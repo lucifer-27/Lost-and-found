@@ -56,14 +56,16 @@
             <div class="mt-5">
                 <form method="POST" action="{{ url_for('auth.resend_otp') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit"
+                    <button type="submit" id="resend-btn"
                         class="w-full border border-primary text-primary font-semibold py-3 px-4 rounded-lg bg-white hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:bg-gray-50"
-                        {% if resend_wait_seconds > 0 %}disabled{% endif %}>
+                        {% if resend_wait_seconds > 0 %}disabled data-time="{{ resend_wait_seconds }}"{% endif %}>
+                        <span id="resend-text">
                         {% if resend_wait_seconds > 0 %}
-                        Resend OTP in {{ resend_wait_seconds }}s
+                        Resend OTP in <span id="resend-timer">{{ resend_wait_seconds }}</span>s
                         {% else %}
                         Resend OTP
                         {% endif %}
+                        </span>
                     </button>
                 </form>
             </div>
@@ -78,4 +80,32 @@
         </section>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const resendBtn = document.getElementById('resend-btn');
+    if (!resendBtn) return;
+    
+    let waitTime = parseInt(resendBtn.getAttribute('data-time'), 10);
+    
+    if (waitTime > 0 && resendBtn.disabled) {
+        const timerSpan = document.getElementById('resend-timer');
+        const textSpan = document.getElementById('resend-text');
+        
+        const interval = setInterval(function() {
+            waitTime--;
+            if (waitTime <= 0) {
+                clearInterval(interval);
+                resendBtn.disabled = false;
+                resendBtn.removeAttribute('data-time');
+                textSpan.innerText = "Resend OTP";
+            } else {
+                if (timerSpan) {
+                    timerSpan.innerText = waitTime;
+                }
+            }
+        }, 1000);
+    }
+});
+</script>
 {% endblock %}
