@@ -65,11 +65,27 @@ def _send_via_smtp(to_email, subject, text_body):
     msg["To"] = to_email
 
     try:
-        server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
-        server.starttls()
-        server.login(smtp_username, smtp_password)
-        server.send_message(msg)
-        server.quit()
+        # Patch socket.getaddrinfo temporarily to force IPv4
+        # This prevents the "[Errno 101] Network is unreachable" when IPv6 is selected
+        import socket
+        orig_getaddrinfo = socket.getaddrinfo
+        def ipv4_getaddrinfo(*args, **kwargs):
+            res = orig_getaddrinfo(*args, **kwargs)
+            # Filter the records to only keep IPv4 (AF_INET)
+            return [r for r in res if r[0] == socket.AF_INET]
+            
+        socket.getaddrinfo = ipv4_getaddrinfo
+        
+        try:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            server.send_message(msg)
+            server.quit()
+        finally:
+            # Restore the original getaddrinfo
+            socket.getaddrinfo = orig_getaddrinfo
+            
         print(f"[SUCCESS] OTP email sent successfully via SMTP to {to_email}")
         return True, ""
     except smtplib.SMTPAuthenticationError as e:
