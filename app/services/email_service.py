@@ -1,12 +1,6 @@
-import json
 import os
 import smtplib
 from email.mime.text import MIMEText
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
-
-RESEND_API_URL = "https://api.resend.com/emails"
-
 
 def _build_sender(from_email):
     sender_name = os.environ.get("EMAIL_FROM_NAME", "CampusFind").strip() or "CampusFind"
@@ -26,14 +20,6 @@ def _smtp_settings():
         smtp_host = "smtp.gmail.com"
     smtp_port = int(os.environ.get("SMTP_PORT", "587"))
     return smtp_host, smtp_port, smtp_username, smtp_password, from_email
-
-
-def _has_resend_config():
-    return bool(os.environ.get("RESEND_API_KEY", "").strip() and os.environ.get("RESEND_FROM_EMAIL", "").strip())
-
-
-def _has_brevo_config():
-    return bool(os.environ.get("BREVO_API_KEY", "").strip() and os.environ.get("BREVO_FROM_EMAIL", "").strip())
 
 
 def _has_smtp_config():
@@ -65,91 +51,6 @@ def _build_otp_message(otp, purpose):
     </div>
     """
     return subject, text, html
-
-
-def _send_via_resend(to_email, subject, text_body, html_body):
-    api_key = os.environ.get("RESEND_API_KEY", "").strip()
-    from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
-    if not api_key or not from_email:
-        print("RESEND CONFIG MISSING: RESEND_API_KEY or RESEND_FROM_EMAIL not set")
-        return False
-
-    payload = {
-        "from": f"{os.environ.get('EMAIL_FROM_NAME', 'CampusFind')} <{from_email}>",
-        "to": [to_email],
-        "subject": subject,
-        "text": text_body,
-        "html": html_body,
-    }
-
-    try:
-        import requests
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=15)
-
-        if response.status_code in [200, 201]:
-            print(f"[SUCCESS] OTP email sent successfully via Resend to {to_email}")
-            return True, ""
-        else:
-            err = f"RESEND ERROR: {response.status_code} - {response.text}"
-            print(f"[ERROR] {err}")
-            return False, err
-
-    except requests.exceptions.RequestException as e:
-        err = f"RESEND NETWORK ERROR: {str(e)}"
-        print(f"[ERROR] {err}")
-        return False, err
-    except Exception as e:
-        err = f"RESEND UNEXPECTED ERROR: {str(e)}"
-        print(f"[ERROR] {err}")
-        return False, err
-
-
-def _send_via_brevo(to_email, subject, text_body, html_body):
-    api_key = os.environ.get("BREVO_API_KEY", "").strip()
-    from_email = os.environ.get("BREVO_FROM_EMAIL", "").strip()
-    if not api_key or not from_email:
-        err = "BREVO CONFIG MISSING: BREVO_API_KEY or BREVO_FROM_EMAIL not set"
-        print(err)
-        return False, err
-
-    sender_name = os.environ.get('EMAIL_FROM_NAME', 'CampusFind').strip()
-    payload = {
-        "sender": {"name": sender_name, "email": from_email},
-        "to": [{"email": to_email}],
-        "subject": subject,
-        "textContent": text_body,
-        "htmlContent": html_body,
-    }
-
-    try:
-        import requests
-        headers = {
-            "api-key": api_key,
-            "Content-Type": "application/json",
-        }
-        response = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers, timeout=15)
-
-        if response.status_code in [200, 201]:
-            print(f"[SUCCESS] OTP email sent successfully via Brevo to {to_email}")
-            return True, ""
-        else:
-            err = f"BREVO ERROR: {response.status_code} - {response.text}"
-            print(f"[ERROR] {err}")
-            return False, err
-
-    except requests.exceptions.RequestException as e:
-        err = f"BREVO NETWORK ERROR: {str(e)}"
-        print(f"[ERROR] {err}")
-        return False, err
-    except Exception as e:
-        err = f"BREVO UNEXPECTED ERROR: {str(e)}"
-        print(f"[ERROR] {err}")
-        return False, err
-
 
 
 def _send_via_smtp(to_email, subject, text_body):
@@ -191,41 +92,14 @@ def _send_via_smtp(to_email, subject, text_body):
 
 def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
-    provider = os.environ.get("EMAIL_PROVIDER", "auto").strip().lower()
-
     print(f"DEBUG OTP for {to_email}: {otp}")
 
-    # Try Brevo
-    if provider in ["auto", "brevo"]:
-        if _has_brevo_config():
-            success, error_msg = _send_via_brevo(to_email, subject, text_body, html_body)
-            if success:
-                return True, ""
-            if provider == "brevo":
-                return False, f"Brevo API Failed: {error_msg}"
-            print("[WARNING] Brevo delivery failed. Proceeding to fallback...")
-        elif provider == "brevo":
-            return False, "Brevo configuration is missing."
-
-    # Try Resend
-    if provider in ["auto", "resend"]:
-        if _has_resend_config():
-            success, error_msg = _send_via_resend(to_email, subject, text_body, html_body)
-            if success:
-                return True, ""
-            if provider == "resend":
-                return False, f"Resend API Failed: {error_msg}"
-            print("[WARNING] Resend delivery failed. Attempting SMTP fallback...")
-        elif provider == "resend":
-            return False, "Resend configuration is missing."
-
-    # Fallback to SMTP 
     if _has_smtp_config():
         success, error_msg = _send_via_smtp(to_email, subject, text_body)
         if success:
             return True, ""
         return False, f"SMTP Delivery Failed: {error_msg}"
 
-    msg = "EMAIL CONFIG MISSING - No email provider configured or fallback failed"
+    msg = "EMAIL CONFIG MISSING - No email provider configured"
     print(msg)
     return False, msg
