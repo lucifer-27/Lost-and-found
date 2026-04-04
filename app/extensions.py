@@ -95,8 +95,12 @@ claims_collection = db["claims"]
 notifications_collection = db["notifications"]
 temp_uploads_collection = db["temp_uploads"]
 email_verifications_collection = db["email_verifications"]
+item_reports_collection = db["item_reports"]
 temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
 users_collection.create_index("email", unique=True)
+item_reports_collection.create_index([("item_id", 1), ("reported_by", 1), ("status", 1)])
+item_reports_collection.create_index("created_at")
+items_collection.create_index([("dup_fingerprint", 1), ("status", 1)])
 
 email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
 email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)

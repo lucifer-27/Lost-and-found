@@ -1,8 +1,9 @@
 from datetime import datetime
 from bson.objectid import ObjectId
+import re
 from ..extensions import (
     users_collection, items_collection, archived_items_collection,
-    claims_collection, notifications_collection,
+    claims_collection, notifications_collection, item_reports_collection,
 )
 from ..services.image_service import extract_item_image_src
 
@@ -14,6 +15,17 @@ categories = [
     "Keys", "Books & Stationery", "Bags & Backpacks", "Accessories",
     "Water Bottles & Containers", "Other",
 ]
+
+REPORT_CATEGORIES = [
+    "Spam/Advertisement",
+    "Suspicious Activity",
+    "Duplicate Report",
+    "False or Misleading Info",
+    "Offensive Content",
+    "Other",
+]
+
+REPORT_RESOLUTION_STATUSES = ["open", "dismissed", "actioned"]
 
 
 def create_notification(user_id, role, message, notif_type="general"):
@@ -54,6 +66,36 @@ def parse_submitted_date(date_value):
         return datetime.strptime(date_value, "%Y-%m-%d").date()
     except ValueError:
         return None
+
+
+def _normalize_text(value):
+    if not value:
+        return ""
+    return re.sub(r"\s+", " ", str(value).strip().lower())
+
+
+def build_duplicate_fingerprint(name, category, location, item_type, date_str):
+    parts = [
+        _normalize_text(name),
+        _normalize_text(category),
+        _normalize_text(location),
+        _normalize_text(item_type),
+        _normalize_text(date_str),
+    ]
+    return "|".join(parts)
+
+
+def find_possible_duplicate(fingerprint, reporter_id):
+    if not fingerprint:
+        return None, False
+    existing = items_collection.find_one(
+        {"dup_fingerprint": fingerprint, "status": "active"},
+        {"reported_by": 1},
+    )
+    if not existing:
+        return None, False
+    same_reporter = str(existing.get("reported_by", "")) == str(reporter_id or "")
+    return existing, same_reporter
 
 
 def build_claim_status_badge(status):
@@ -150,4 +192,17 @@ def prepare_item_detail_context(item_id, role, user_id=None):
     item["claim_status_classes"] = cs["classes"]
     item["date_label"] = "Found Date" if item.get("type") == "found" else "Lost Date"
 
-    return {"item": item, "claims": claims, "user_claim": user_claim, "steps": build_item_timeline(item, claims)}
+    user_report = None
+    if user_id and claim_item_id:
+        user_report = item_reports_collection.find_one(
+            {"item_id": claim_item_id, "reported_by": str(user_id), "status": "open"}
+        )
+
+    return {
+        "item": item,
+        "claims": claims,
+        "user_claim": user_claim,
+        "steps": build_item_timeline(item, claims),
+        "report_target_id": claim_item_id,
+        "user_report": user_report,
+    }

@@ -1,10 +1,11 @@
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from bson.objectid import ObjectId
-from ..extensions import users_collection, items_collection, claims_collection, archived_items_collection
+from ..extensions import users_collection, items_collection, claims_collection, archived_items_collection, item_reports_collection
 from ..utils.helpers import (
     create_notification, get_user_display_fields, find_user_by_id,
     prepare_item_detail_context, ITEM_LIST_PROJECTION,
+    REPORT_CATEGORIES, REPORT_RESOLUTION_STATUSES,
 )
 
 admin_bp = Blueprint("admin", __name__)
@@ -196,6 +197,113 @@ def flagged_users():
 
     users = list(users_collection.find({"account_flagged": True}).sort("_id", -1))
     return render_template("flagged_users.html", users=users)
+
+
+@admin_bp.route("/admin/item-reports")
+def admin_item_reports():
+    if "user" not in session or session.get("role") != "admin":
+        return redirect(url_for("auth.login"))
+
+    status_filter = request.args.get("status", "open")
+    if status_filter not in REPORT_RESOLUTION_STATUSES:
+        status_filter = "open"
+
+    reports = list(
+        item_reports_collection.find({"status": status_filter}).sort("created_at", -1).limit(200)
+    )
+
+    for report in reports:
+        reporter_fields = get_user_display_fields(find_user_by_id(report.get("reported_by")))
+        report["reporter_name"] = reporter_fields["name"]
+        report["reporter_roll_no"] = reporter_fields["roll_no"]
+
+        item = None
+        item_id_value = report.get("item_id")
+        try:
+            item_obj_id = ObjectId(item_id_value)
+            item = items_collection.find_one({"_id": item_obj_id}) or archived_items_collection.find_one({"_id": item_obj_id})
+        except Exception:
+            item = None
+        report["item_status"] = item.get("status") if item else "unknown"
+
+    return render_template(
+        "admin_item_reports.html",
+        reports=reports,
+        status_filter=status_filter,
+        report_categories=REPORT_CATEGORIES,
+    )
+
+
+@admin_bp.route("/admin/item-reports/<report_id>/resolve", methods=["POST"])
+def resolve_item_report(report_id):
+    if "user" not in session or session.get("role") != "admin":
+        return redirect(url_for("auth.login"))
+
+    resolution_status = request.form.get("resolution_status", "dismissed")
+    resolution_note = (request.form.get("resolution_note") or "").strip()
+    mark_under_review = request.form.get("mark_under_review") == "on"
+    flag_reporter = request.form.get("flag_reporter") == "on"
+
+    if resolution_status not in REPORT_RESOLUTION_STATUSES:
+        resolution_status = "dismissed"
+
+    try:
+        report_obj_id = ObjectId(report_id)
+    except Exception:
+        return redirect(url_for("admin.admin_item_reports"))
+
+    report = item_reports_collection.find_one({"_id": report_obj_id})
+    if not report:
+        return redirect(url_for("admin.admin_item_reports"))
+
+    update_doc = {
+        "status": resolution_status,
+        "resolved_at": datetime.utcnow(),
+        "resolved_by": str(session.get("user_id")),
+        "resolution_note": resolution_note,
+    }
+    item_reports_collection.update_one({"_id": report_obj_id}, {"$set": update_doc})
+
+    item = None
+    try:
+        item = items_collection.find_one({"_id": ObjectId(report.get("item_id"))})
+    except Exception:
+        item = None
+
+    if mark_under_review and item:
+        items_collection.update_one(
+            {"_id": item["_id"]},
+            {"$set": {"status": "under_review"}}
+        )
+
+    if flag_reporter and item:
+        reporter_id = item.get("reported_by")
+        if reporter_id:
+            try:
+                reporter_obj_id = ObjectId(reporter_id)
+            except Exception:
+                reporter_obj_id = reporter_id
+            users_collection.update_one(
+                {"_id": reporter_obj_id},
+                {"$set": {"account_flagged": True}}
+            )
+            create_notification(
+                str(reporter_id),
+                "student",
+                "Your account has been flagged due to a reported item. Please contact the admin for details.",
+                "account_flagged"
+            )
+
+    reporter_id = report.get("reported_by")
+    if reporter_id:
+        create_notification(
+            str(reporter_id),
+            "student" if report.get("reporter_role") == "student" else "staff",
+            f"Your item report has been reviewed and marked as {resolution_status}.",
+            "item_report_reviewed",
+        )
+
+    return redirect(url_for("admin.admin_item_reports", status=resolution_status))
 
 
 @admin_bp.route("/admin/toggle-flag/<user_id>", methods=["POST"])

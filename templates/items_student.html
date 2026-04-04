@@ -192,6 +192,11 @@
                                     Found
                                 </span>
                                 {% endif %}
+                                {% if item.is_possible_duplicate %}
+                                <span class="ml-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                    Possible Duplicate
+                                </span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
                                 {{ item.description | default('No description') }}
