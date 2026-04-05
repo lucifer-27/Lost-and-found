@@ -171,13 +171,53 @@ def _send_via_resend(to_email, subject, html_body):
         print(f"[ERROR] {err}")
         return False, err
 
+def _send_via_brevo(to_email, subject, html_body):
+    api_key = os.environ.get("BREVO_API_KEY", "").strip()
+    from_email = os.environ.get("BREVO_FROM_EMAIL", "").strip()
+    sender_name = os.environ.get("EMAIL_FROM_NAME", "CampusFind").strip()
+    
+    if not api_key or not from_email:
+        err = "BREVO CONFIG MISSING: Missing BREVO_API_KEY or BREVO_FROM_EMAIL"
+        print(f"[ERROR] {err}")
+        return False, err
+        
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "api-key": api_key,
+        "accept": "application/json",
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "sender": {"name": sender_name, "email": from_email},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": html_body
+    }
+    
+    try:
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=15) as response:
+            response.read()
+            print(f"[SUCCESS] Email sent successfully via Brevo to {to_email}")
+            return True, ""
+    except Exception as e:
+        err = f"BREVO HTTP ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+
 def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
     print(f"DEBUG OTP for {to_email}: {otp}")
 
     provider = os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower()
 
-    if provider == "resend":
+    if provider == "brevo":
+        success, error_msg = _send_via_brevo(to_email, subject, html_body)
+        if success:
+            return True, ""
+        print(f"[WARNING] Local Brevo failed, falling back to SMTP: {error_msg}")
+    elif provider == "resend":
         success, error_msg = _send_via_resend(to_email, subject, html_body)
         if success:
             return True, ""
