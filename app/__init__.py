@@ -42,6 +42,9 @@ def create_app():
 
     csrf.init_app(app)
     limiter.init_app(app)
+    
+    from app.extensions import init_db
+    init_db()
 
     # Import and register blueprints
     from app.routes.auth import auth_bp

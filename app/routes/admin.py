@@ -23,7 +23,7 @@ def admin_dashboard():
     total_active_items = items_collection.count_documents({"status": "active"})
     total_items = items_collection.count_documents({})
     total_archived = archived_items_collection.count_documents({})
-    total_reports = total_items + total_archived
+    total_reports = total_items
 
     total_claims_submitted = claims_collection.count_documents({})
     pending_claims = claims_collection.count_documents({"status": "pending"})
@@ -33,8 +33,8 @@ def admin_dashboard():
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    monthly_reports = items_collection.count_documents({"created_at": {"$gte": month_start}}) + archived_items_collection.count_documents({"created_at": {"$gte": month_start}})
-    yearly_reports = items_collection.count_documents({"created_at": {"$gte": year_start}}) + archived_items_collection.count_documents({"created_at": {"$gte": year_start}})
+    monthly_reports = items_collection.count_documents({"created_at": {"$gte": month_start}})
+    yearly_reports = items_collection.count_documents({"created_at": {"$gte": year_start}})
 
     users_count = users_collection.count_documents({})
 
@@ -311,7 +311,14 @@ def toggle_flag(user_id):
     if "user" not in session or session.get("role") != "admin":
         return redirect(url_for("auth.login"))
 
-    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    try:
+        user_obj_id = ObjectId(user_id)
+    except Exception:
+        from flask import flash
+        flash("Invalid user ID format.", "error")
+        return redirect(request.referrer or url_for("admin.admin_dashboard"))
+
+    user = users_collection.find_one({"_id": user_obj_id})
     if user:
         if user.get("role") == "admin":
             session["flag_success"] = "Admin accounts cannot be flagged."

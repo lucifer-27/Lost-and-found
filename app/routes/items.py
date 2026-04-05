@@ -10,6 +10,7 @@ from ..utils.helpers import (
     REPORT_CATEGORIES, build_duplicate_fingerprint, find_possible_duplicate,
 )
 from ..services.image_service import build_item_image_fields, consume_temp_upload
+from ..models.item_model import new_item, new_claim
 
 items_bp = Blueprint("items", __name__)
 
@@ -129,6 +130,15 @@ def request_claim():
     if "user" not in session or session.get("role") != "student":
         return redirect(url_for("auth.login"))
 
+    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+    if not user:
+        session["claim_error"] = "Your account could not be verified. Please log in again."
+        return redirect(url_for("auth.login"))
+
+    if user.get("account_flagged", False):
+        session["claim_error"] = "Your account is flagged. You cannot submit new claims at this time."
+        return redirect(url_for("items.items_list"))
+
     item_id = (request.form.get("item_id") or "").strip()
     student_name = (request.form.get("student_name") or "").strip()
     description_lost = (request.form.get("description_lost") or "").strip()
@@ -146,10 +156,6 @@ def request_claim():
         session["claim_error"] = "Invalid item selected."
         return redirect(url_for("items.items_list"))
 
-    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
-    if not user:
-        session["claim_error"] = "Your account could not be verified. Please log in again."
-        return redirect(url_for("auth.login"))
 
     student_email = user["email"]
     roll_no = student_email.split("@")[0]
@@ -179,20 +185,15 @@ def request_claim():
         )
     )
 
-    claim_record = {
-        "item_id": item_object_id,
-        "item_name": item["name"],
-        "item_description": item.get("description", ""),
-        "category": item.get("category", ""),
-        "location": item.get("location", ""),
-        "student_name": student_name,
-        "student_email": student_email,
-        "roll_no": roll_no,
-        "description_lost": description_lost,
-        "status": "pending",
-        "requested_at": datetime.utcnow(),
-        "requested_by": session["user_id"]
-    }
+    claim_record = new_claim(
+        item_id=item_object_id,
+        item=item,
+        student_name=student_name,
+        student_email=student_email,
+        roll_no=roll_no,
+        description_lost=description_lost,
+        requested_by=session["user_id"]
+    )
 
     try:
         claims_collection.insert_one(dict(claim_record))
@@ -236,6 +237,11 @@ def report_lost():
     if "user" not in session:
         return redirect(url_for("auth.login"))
 
+    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+    if user and user.get("account_flagged", False):
+        flash("Your account is flagged. You cannot report lost items at this time.", "error")
+        return redirect(url_for("items.items_list"))
+
     today = datetime.now().date()
     today_str = today.isoformat()
 
@@ -269,19 +275,22 @@ def report_lost():
 
         if image and image.filename:
             image_bytes = image.read()
-            image_fields = build_item_image_fields(
-                image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
+            try:
+                image_fields = build_item_image_fields(
+                    image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
+            except ValueError as e:
+                return render_template("report_lost.html", categories=categories, today=today_str,
+                                       error=str(e))
 
-        item_document = {
-            "name": name, "category": category, "type": "lost",
-            "date": date, "location": location, "description": description,
-            "status": "active", "reported_by": session["user_id"],
-            "created_at": datetime.utcnow(),
-            "dup_fingerprint": dup_fingerprint,
-            "is_possible_duplicate": bool(existing),
-            "duplicate_of": existing["_id"] if existing else None,
-        }
-        item_document.update(image_fields)
+        item_document = new_item(
+            name=name, category=category, item_type="lost",
+            date=date, location=location, description=description,
+            reported_by=session["user_id"],
+            dup_fingerprint=dup_fingerprint,
+            is_possible_duplicate=bool(existing),
+            duplicate_of=existing["_id"] if existing else None,
+            image_fields=image_fields
+        )
         items_collection.insert_one(item_document)
 
         if existing:
@@ -316,6 +325,11 @@ def report_lost():
 def report_found():
     if "user" not in session:
         return redirect(url_for("auth.login"))
+
+    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+    if user and user.get("account_flagged", False):
+        flash("Your account is flagged. You cannot report found items at this time.", "error")
+        return redirect(url_for("items.items_list"))
 
     today = datetime.now().date()
     today_str = today.isoformat()
@@ -352,30 +366,31 @@ def report_found():
                 error="You already reported a very similar found item. If this is different, please add more specific details.",
             )
 
-        image = request.files.get("image")
-        image_fields = build_item_image_fields()
-
-        if image and image.filename:
-            image_bytes = image.read()
-            image_fields = build_item_image_fields(
-                image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
-        else:
-            temp_upload_id = (request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip()
-            image_bytes, content_type, filename = consume_temp_upload(temp_upload_id)
-            if image_bytes:
+        try:
+            if image and image.filename:
+                image_bytes = image.read()
                 image_fields = build_item_image_fields(
-                    image_bytes=image_bytes, content_type=content_type, filename=filename)
+                    image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
+            else:
+                temp_upload_id = (request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip()
+                image_bytes, content_type, filename = consume_temp_upload(temp_upload_id)
+                if image_bytes:
+                    image_fields = build_item_image_fields(
+                        image_bytes=image_bytes, content_type=content_type, filename=filename)
+        except ValueError as e:
+            return render_template("report_found.html",
+                uploaded_image=(request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip() or None,
+                categories=categories, today=today_str, error=str(e))
 
-        item = {
-            "name": name, "category": category, "type": "found",
-            "date": date_combined, "location": location, "description": description,
-            "status": "active", "reported_by": session["user_id"],
-            "created_at": datetime.utcnow(),
-            "dup_fingerprint": dup_fingerprint,
-            "is_possible_duplicate": bool(existing),
-            "duplicate_of": existing["_id"] if existing else None,
-        }
-        item.update(image_fields)
+        item = new_item(
+            name=name, category=category, item_type="found",
+            date=date_combined, location=location, description=description,
+            reported_by=session["user_id"],
+            dup_fingerprint=dup_fingerprint,
+            is_possible_duplicate=bool(existing),
+            duplicate_of=existing["_id"] if existing else None,
+            image_fields=image_fields
+        )
         items_collection.insert_one(item)
 
         if existing:

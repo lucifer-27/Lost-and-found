@@ -179,6 +179,7 @@ def login():
     return render_template("login.html")
 
 
+
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 @limiter.limit("2 per minute")
 def forgot_password():
@@ -186,7 +187,11 @@ def forgot_password():
         email = (request.form.get("email") or "").strip().lower()
         user = users_collection.find_one({"email": email})
         if not user:
-            return render_template("forgot_password.html", error="Email not found")
+            # Prevent email enumeration by acting as if it succeeded
+            session["verification_email"] = email
+            session["verification_purpose"] = "reset_password"
+            return redirect(url_for("auth.verify_otp"))
+            
         started, error = _start_email_verification(email, "reset_password")
         if not started:
             return render_template("forgot_password.html", error=error)

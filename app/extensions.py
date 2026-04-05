@@ -54,8 +54,8 @@ def create_mongo_client():
 
     if not connection_options:
         print("\nERROR: MongoDB is not configured.")
-        print("Set either MONGO_DIRECT_URI or MONGO_URI in your environment or .env file, then restart the app.")
-        sys.exit(1)
+        print("Set either MONGO_DIRECT_URI or MONGO_URI in your environment or .env file.")
+        return MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=2000)
 
     for label, uri in connection_options:
         if not uri or uri in tried:
@@ -78,7 +78,8 @@ def create_mongo_client():
     for uri in tried:
         print(" -", redact_mongo_uri(uri))
     print("\nCommon causes: network/DNS blocking SRV lookups, incorrect URI, or missing dnspython package.")
-    sys.exit(1)
+    print("WARNING: App starting without DB connection. DB calls will fail until connectivity is restored.")
+    return MongoClient(connection_options[0][1], serverSelectionTimeoutMS=2000)
 
 
 # Initialize on import
@@ -96,17 +97,22 @@ notifications_collection = db["notifications"]
 temp_uploads_collection = db["temp_uploads"]
 email_verifications_collection = db["email_verifications"]
 item_reports_collection = db["item_reports"]
-temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
-users_collection.create_index("email", unique=True)
-item_reports_collection.create_index([("item_id", 1), ("reported_by", 1), ("status", 1)])
-item_reports_collection.create_index("created_at")
-items_collection.create_index([("dup_fingerprint", 1), ("status", 1)])
 
-email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
-email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)
-# CLAIM DUPLICATION
-claims_collection.create_index(
-    [("requested_by", 1), ("item_id", 1)],
-    unique=True,
-    partialFilterExpression={"status": "pending"}
-)
+def init_db():
+    try:
+        temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
+        users_collection.create_index("email", unique=True)
+        item_reports_collection.create_index([("item_id", 1), ("reported_by", 1), ("status", 1)])
+        item_reports_collection.create_index("created_at")
+        items_collection.create_index([("dup_fingerprint", 1), ("status", 1)])
+        email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
+        email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)
+        claims_collection.create_index(
+            [("requested_by", 1), ("item_id", 1)],
+            unique=True,
+            partialFilterExpression={"status": "pending"}
+        )
+        print("INFO: Database indexes initialized successfully.")
+    except Exception as e:
+        print(f"WARNING: Could not initialize database indexes on startup: {e}")
+

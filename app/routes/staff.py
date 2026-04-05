@@ -27,8 +27,17 @@ def pending_claims():
 def process_claim(claim_id):
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("auth.login"))
-    claim = claims_collection.find_one({"_id": ObjectId(claim_id)})
+    try:
+        claim_obj_id = ObjectId(claim_id)
+    except Exception:
+        from flask import flash
+        flash("Invalid claim ID format.", "error")
+        return redirect(url_for("staff.pending_claims"))
+        
+    claim = claims_collection.find_one({"_id": claim_obj_id})
     if not claim:
+        from flask import flash
+        flash("Claim not found.", "error")
         return redirect(url_for("staff.pending_claims"))
     if request.method == "GET":
         return render_template("claim.html", claim=claim)
@@ -56,7 +65,8 @@ def process_claim(claim_id):
             "claimed_by_roll_no": claim.get("roll_no", ""),
             "reason": "returned", "proof": proof,
             "return_date_time": f"{return_date} {return_time}",
-            "archived_at": datetime.utcnow()
+            "archived_at": datetime.utcnow(),
+            "created_at": item.get("created_at")
         })
     student_user = users_collection.find_one({"email": claim.get("student_email", "")})
     if student_user:
@@ -74,10 +84,13 @@ def claim():
     if request.method == "GET":
         item_id = request.args.get("item_id")
         if item_id:
-            item = items_collection.find_one({"_id": ObjectId(item_id)})
-            if item:
-                return render_template("claim.html", selected_item_id=str(item["_id"]),
-                                       selected_item_name=item.get("name", ""))
+            try:
+                item = items_collection.find_one({"_id": ObjectId(item_id)})
+                if item:
+                    return render_template("claim.html", selected_item_id=str(item["_id"]),
+                                           selected_item_name=item.get("name", ""))
+            except Exception:
+                pass
         return render_template("claim.html")
     # POST
     item_id = request.form.get("item_id")
@@ -91,8 +104,13 @@ def claim():
     return_date = request.form.get("return_date")
     return_time = request.form.get("return_time")
     if item_id:
-        items_collection.update_one({"_id": ObjectId(item_id)}, {"$set": {"status": "returned"}})
-        item = items_collection.find_one({"_id": ObjectId(item_id)})
+        try:
+            item_obj_id = ObjectId(item_id)
+            items_collection.update_one({"_id": item_obj_id}, {"$set": {"status": "returned"}})
+            item = items_collection.find_one({"_id": item_obj_id})
+        except Exception:
+            item = None
+            
         if item:
             archived_items_collection.insert_one({
                 "original_item_id": item["_id"], "name": item.get("name", ""),
@@ -105,7 +123,8 @@ def claim():
                 "claimed_by_name": student_name, "claimed_by_email": student_email,
                 "claimed_by_roll_no": roll_no, "reason": "returned", "proof": proof,
                 "return_date_time": f"{return_date} {return_time}",
-                "archived_at": datetime.utcnow()
+                "archived_at": datetime.utcnow(),
+                "created_at": item.get("created_at")
             })
             if student_user:
                 create_notification(str(student_user["_id"]), "student",
@@ -119,8 +138,17 @@ def claim():
 def reject_claim(claim_id):
     if "user" not in session or session.get("role") != "staff":
         return redirect(url_for("auth.login"))
-    claim = claims_collection.find_one({"_id": ObjectId(claim_id)})
+    try:
+        claim_obj_id = ObjectId(claim_id)
+    except Exception:
+        from flask import flash
+        flash("Invalid claim ID format.", "error")
+        return redirect(url_for("staff.pending_claims"))
+        
+    claim = claims_collection.find_one({"_id": claim_obj_id})
     if not claim:
+        from flask import flash
+        flash("Claim not found.", "error")
         return redirect(url_for("staff.pending_claims"))
     reason = request.form.get("reason", "")
     is_false_claim = request.form.get("false_claim") == "on"

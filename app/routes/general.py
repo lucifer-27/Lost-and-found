@@ -23,7 +23,7 @@ def send_contact_email(to_email, subject, body):
         
         if not all([smtp_host, smtp_username, smtp_password, from_email]):
             print("Email configuration missing")
-            return False
+            return False, "SMTP configuration is missing. Please contact support via Twitter/X."
             
         msg = MIMEText(body)
         msg["Subject"] = subject
@@ -49,10 +49,11 @@ def send_contact_email(to_email, subject, body):
             socket.getaddrinfo = orig_getaddrinfo
         
         print(f"Contact email sent successfully to {to_email}")
-        return True
+        return True, ""
     except Exception as e:
-        print(f"Error sending contact email: {str(e)}")
-        return False
+        error_details = f"SMTP Error: {str(e)}"
+        print(f"Error sending contact email: {error_details}")
+        return False, error_details
 
 general_bp = Blueprint("general", __name__)
 
@@ -100,14 +101,15 @@ Message:
 Reply to: {email}
                 """
 
-                if send_contact_email(
+                success, err_msg = send_contact_email(
                     to_email="campusfind.lnf@gmail.com",
                     subject=email_subject,
                     body=send_email_body,
-                ):
+                )
+                if success:
                     success_message = "Your message has been sent successfully! We'll get back to you soon."
                 else:
-                    error_message = "Failed to send message. Please try again or email us directly at campusfind.lnf@gmail.com"
+                    error_message = f"Failed to send message: {err_msg}. Please email us directly at campusfind.lnf@gmail.com"
                 name = email = subject = message = ""  # Clear form
 
             except Exception as e:
@@ -210,26 +212,39 @@ def upload():
 
     file_id = None
 
-    # Camera (base64)
-    image_data = request.form.get("image")
-    if image_data:
-        if not image_data.startswith("data:image"):
-            return "Invalid image"
-        header, encoded_data = image_data.split(",", 1)
-        content_type = header.split(";")[0].split(":", 1)[1] if ":" in header else "image/png"
-        image_bytes = base64.b64decode(encoded_data)
-        file_id = store_temp_upload(image_bytes, content_type)
+    from flask import flash
+    try:
+        # Camera (base64)
+        image_data = request.form.get("image")
+        if image_data:
+            if not image_data.startswith("data:image"):
+                flash("Invalid image payload", "error")
+                return redirect(request.args.get("next") or url_for("items.report_found"))
+            try:
+                header, encoded_data = image_data.split(",", 1)
+                content_type = header.split(";")[0].split(":", 1)[1] if ":" in header else "image/png"
+                image_bytes = base64.b64decode(encoded_data, validate=True)
+            except Exception:
+                flash("Corrupted image data", "error")
+                return redirect(request.args.get("next") or url_for("items.report_found"))
+            file_id = store_temp_upload(image_bytes, content_type)
 
-    # File upload
-    elif "image" in request.files:
-        image = request.files["image"]
-        if image and image.filename:
-            image_bytes = image.read()
-            file_id = store_temp_upload(image_bytes, image.content_type, image.filename)
+        # File upload
+        elif "image" in request.files:
+            image = request.files["image"]
+            if image and image.filename:
+                image_bytes = image.read()
+                file_id = store_temp_upload(image_bytes, image.content_type, image.filename)
+            else:
+                flash("No image received", "error")
+                return redirect(request.args.get("next") or url_for("items.report_found"))
         else:
-            return "No image received"
-    else:
-        return "No image received"
+            flash("No image received", "error")
+            return redirect(request.args.get("next") or url_for("items.report_found"))
+            
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(request.args.get("next") or url_for("items.report_found"))
 
     # Clear any previous upload
     session.pop("show_uploaded_image_preview_once", None)
