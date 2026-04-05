@@ -43,10 +43,20 @@ def _start_email_verification(email, purpose, payload=None):
     otp, error = create_email_verification(email, purpose, payload=payload)
     if error:
         return False, error
-    success, err_msg = send_otp_email(email, otp, purpose=purpose)
+        
+    provider = os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower()
+    
+    if provider == "console":
+        # Flash the OTP directly to the screen and completely skip sending an email
+        flash(f"DEVELOPMENT MODE: Your OTP is {otp}", "success")
+        success = True
+    else:
+        success, err_msg = send_otp_email(email, otp, purpose=purpose)
+
     if not success:
         clear_email_verification(email, purpose)
         return False, f"We could not send the verification email. Error: {err_msg}"
+        
     session["verification_email"] = email
     session["verification_purpose"] = purpose
     return True, None
