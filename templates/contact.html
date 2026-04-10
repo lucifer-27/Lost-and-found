@@ -34,7 +34,8 @@
                 </div>
                 <div class="flex items-center gap-3">
                     {% if session.get('user') %}
-                    <a href="/" class="text-slate-600 hover:text-blue-600 px-3 py-2 rounded font-semibold text-sm transition-colors">
+                    <a href="/"
+                        class="text-slate-600 hover:text-blue-600 px-3 py-2 rounded font-semibold text-sm transition-colors">
                         Home
                     </a>
                     <a href="{{ url_for('auth.logout') }}"
@@ -42,7 +43,8 @@
                         Logout
                     </a>
                     {% else %}
-                    <a href="/login" class="bg-blue-600 text-white px-6 py-2 rounded font-semibold text-sm hover:bg-blue-700 transition-colors">
+                    <a href="/login"
+                        class="bg-blue-600 text-white px-6 py-2 rounded font-semibold text-sm hover:bg-blue-700 transition-colors">
                         Login
                     </a>
                     {% endif %}
@@ -56,7 +58,8 @@
         <section class="hero-gradient py-12 text-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <h1 class="text-4xl font-bold mb-4">Contact Us</h1>
-                <p class="text-lg opacity-90">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+                <p class="text-lg opacity-90">We'd love to hear from you. Send us a message and we'll respond as soon as
+                    possible.</p>
             </div>
         </section>
 
@@ -84,17 +87,16 @@
                             <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
                             <input type="text" id="name" name="name" required
                                 class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                placeholder="Your full name"
-                                value="{{ request.form.get('name', '') }}">
+                                placeholder="Your full name" value="{{ request.form.get('name', '') }}">
                         </div>
 
                         <!-- Email Field -->
                         <div>
-                            <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+                            <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">Email
+                                Address</label>
                             <input type="email" id="email" name="email" required
                                 class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                placeholder="your.email@pdeu.ac.in"
-                                value="{{ request.form.get('email', '') }}">
+                                placeholder="your.email@pdeu.ac.in" value="{{ request.form.get('email', '') }}">
                         </div>
 
                         <!-- Subject Field -->
@@ -102,8 +104,7 @@
                             <label for="subject" class="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
                             <input type="text" id="subject" name="subject" required
                                 class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                placeholder="What is this about?"
-                                value="{{ request.form.get('subject', '') }}">
+                                placeholder="What is this about?" value="{{ request.form.get('subject', '') }}">
                         </div>
 
                         <!-- Message Field -->
@@ -121,7 +122,7 @@
                                 <span class="material-icons">send</span>
                                 Send Message
                             </button>
-                            <a href="/"
+                            <a href="/register"
                                 class="flex-1 bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-semibold hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
                                 <span class="material-icons">arrow_back</span>
                                 Go Back
@@ -132,7 +133,8 @@
                     <!-- Support Email Info -->
                     <div class="mt-8 pt-8 border-t border-slate-200">
                         <p class="text-slate-600 text-sm text-center">
-                            Or email us directly at: <a href="mailto:campusfind.lnf@gmail.com" class="text-blue-600 font-semibold hover:underline">campusfind.lnf@gmail.com</a>
+                            Or email us directly at: <a href="mailto:campusfind.lnf@gmail.com"
+                                class="text-blue-600 font-semibold hover:underline">campusfind.lnf@gmail.com</a>
                         </p>
                     </div>
                 </div>

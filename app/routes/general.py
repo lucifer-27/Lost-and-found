@@ -63,6 +63,9 @@ def home():
     items = list(items_collection.find({"status": "active"}, ITEM_LIST_PROJECTION).sort("created_at", -1).limit(4))
     return render_template("index.html", recent_items=items)
 
+@general_bp.route("/privacy_policy")
+def privacy_policy():
+    return render_template("privacy_policy.html")
 
 @general_bp.route("/contact", methods=["GET", "POST"])
 @general_bp.route("/contact-us", methods=["GET", "POST"])
