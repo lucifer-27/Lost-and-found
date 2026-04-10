@@ -1,0 +1,100 @@
+/* Shared dropdown motion for CampusFind forms and filters. */
+select {
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease,
+        background-color 0.2s ease;
+}
+
+select:hover {
+    border-color: #60a5fa;
+    background-color: #f8fbff;
+}
+
+select:focus,
+select:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(37, 99, 235, 0.14);
+}
+
+.custom-dropdown-options {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transform: translateY(-8px) scaleY(0.96);
+    transform-origin: top center;
+    visibility: hidden;
+    will-change: max-height, opacity, transform;
+    transition:
+        max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.22s ease,
+        transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.38s;
+}
+
+.custom-dropdown-options.open {
+    max-height: 420px;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scaleY(1);
+    visibility: visible;
+    transition-delay: 0s;
+    animation: dropdownRollDown 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dropdown-chevron {
+    transition: transform 0.28s ease;
+}
+
+.dropdown-chevron.open {
+    transform: rotate(180deg);
+}
+
+.dropdown-option {
+    transition:
+        background-color 0.16s ease,
+        color 0.16s ease,
+        padding-left 0.16s ease;
+}
+
+.dropdown-option:hover {
+    background-color: #eff6ff;
+    color: #2563eb;
+    padding-left: 1.15rem;
+}
+
+.dropdown-option.selected {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+@keyframes dropdownRollDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) rotateX(-14deg) scaleY(0.94);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) rotateX(0) scaleY(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    select,
+    .custom-dropdown-options,
+    .dropdown-chevron,
+    .dropdown-option {
+        animation: none;
+        transition: none;
+    }
+
+    select:focus,
+    select:focus-visible {
+        transform: none;
+    }
+}
