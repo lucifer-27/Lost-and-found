@@ -1,10 +1,6 @@
-from dotenv import load_dotenv
+from app import create_app
 import os
 
-# FORCE python to prioritize the .env file over old cached terminal variables!
-load_dotenv(override=True)
-
-from app import create_app
 app = create_app()
 
 if __name__ == "__main__":
