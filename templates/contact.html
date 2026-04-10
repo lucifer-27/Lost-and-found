@@ -80,7 +80,12 @@
                         <span>{{ error_message }}</span>
                     </div>
                     {% endif %}
-
+                    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <a href="/register" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 font-medium">
+                            &larr; Back to Register
+                        </a>
+                    </div>
+                    
                     <form method="POST" class="space-y-6">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div>
@@ -122,11 +127,6 @@
                                 <span class="material-icons">send</span>
                                 Send Message
                             </button>
-                            <a href="/register"
-                                class="flex-1 bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-semibold hover:bg-slate-300 transition-colors flex items-center justify-center gap-2">
-                                <span class="material-icons">arrow_back</span>
-                                Go Back
-                            </a>
                         </div>
                     </form>
 
