@@ -137,8 +137,25 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Password</label>
-                    <input id="password" name="password" type="password" placeholder="••••••••" required
-                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                    <div class="relative">
+                        <input id="password" name="password" type="password" placeholder="••••••••" required
+                            class="block w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                        <button type="button" id="login-password-toggle" aria-label="Show password"
+                            aria-pressed="false"
+                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-primary transition-colors">
+                            <svg class="h-5 w-5 toggle-eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                <circle cx="12" cy="12" r="3" stroke-width="1.8"></circle>
+                            </svg>
+                            <svg class="hidden h-5 w-5 toggle-eye-closed" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                    d="M3 3l18 18M10.585 10.587A2 2 0 0014 12m5.232 5.229A9.956 9.956 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 012.223-3.592M9.88 5.09A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.964 9.964 0 01-1.249 2.592M6.228 6.228A9.965 9.965 0 004.455 8.41" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex justify-end">
@@ -189,6 +206,30 @@
             const input = document.getElementById("role");
             const label = document.getElementById("role-label");
             const error = document.getElementById("role-error");
+
+            function setupPasswordToggle(inputId, toggleId) {
+                const passwordInput = document.getElementById(inputId);
+                const toggleButton = document.getElementById(toggleId);
+
+                if (!passwordInput || !toggleButton) {
+                    return;
+                }
+
+                const openIcon = toggleButton.querySelector(".toggle-eye-open");
+                const closedIcon = toggleButton.querySelector(".toggle-eye-closed");
+
+                toggleButton.addEventListener("click", function () {
+                    const showPassword = passwordInput.type === "password";
+                    passwordInput.type = showPassword ? "text" : "password";
+                    toggleButton.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+                    toggleButton.setAttribute("aria-pressed", String(showPassword));
+
+                    if (openIcon && closedIcon) {
+                        openIcon.classList.toggle("hidden", showPassword);
+                        closedIcon.classList.toggle("hidden", !showPassword);
+                    }
+                });
+            }
 
             function closeDropdown() {
                 options.classList.remove("open");
@@ -250,6 +291,8 @@
                     button.focus();
                 }
             });
+
+            setupPasswordToggle("password", "login-password-toggle");
         });
     </script>
     <script src="{{ url_for('static', filename='js/chatbot-widget.js') }}"></script>
