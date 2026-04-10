@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo.errors import DuplicateKeyError
 from ..extensions import users_collection, limiter
-from ..services.email_service import send_otp_email
+
 from ..services.verification_service import (
     clear_email_verification,
     create_email_verification,
@@ -44,18 +44,8 @@ def _start_email_verification(email, purpose, payload=None):
     if error:
         return False, error
         
-    provider = os.environ.get("EMAIL_PROVIDER", "smtp").strip().lower()
-    
-    if provider == "console":
-        # Flash the OTP directly to the screen and completely skip sending an email
-        flash(f"DEVELOPMENT MODE: Your OTP is {otp}", "success")
-        success = True
-    else:
-        success, err_msg = send_otp_email(email, otp, purpose=purpose)
-
-    if not success:
-        clear_email_verification(email, purpose)
-        return False, f"We could not send the verification email. Error: {err_msg}"
+    # Always directly display the OTP on the screen
+    flash(f"DEVELOPMENT MODE: Your OTP is {otp}", "success")
         
     session["verification_email"] = email
     session["verification_purpose"] = purpose

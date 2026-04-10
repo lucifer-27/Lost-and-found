@@ -79,7 +79,11 @@ def create_mongo_client():
         print(" -", redact_mongo_uri(uri))
     print("\nCommon causes: network/DNS blocking SRV lookups, incorrect URI, or missing dnspython package.")
     print("WARNING: App starting without DB connection. DB calls will fail until connectivity is restored.")
-    return MongoClient(connection_options[0][1], serverSelectionTimeoutMS=2000)
+    # Fall back to a safe localhost client so the app can at least start
+    try:
+        return MongoClient(connection_options[0][1], serverSelectionTimeoutMS=2000)
+    except Exception:
+        return MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=2000)
 
 
 # Initialize on import
