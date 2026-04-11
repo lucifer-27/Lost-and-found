@@ -95,7 +95,7 @@
                 </div>
 
                 <!-- Right Navigation: Dashboard, Notifications, Login/Logout -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 md:gap-3">
                     <!-- Dashboard Button (only for logged-in users) -->
                     {% if session.get('user') %}
                     <a href="
@@ -105,22 +105,23 @@
                         {%- else -%}/login
                         {%- endif -%}
                     "
-                        class="text-slate-600 hover:text-brand-blue px-3 py-2 rounded-custom font-semibold text-sm transition-colors flex items-center gap-1">
-                        <span class="material-icons text-base">dashboard</span>
-                        Dashboard
+                        class="text-slate-600 hover:text-brand-blue px-2 md:px-3 py-2 rounded-custom font-semibold text-xs md:text-sm transition-colors flex items-center gap-1 min-h-11">
+                        <span class="material-icons text-sm md:text-base">dashboard</span>
+                        <span class="hidden sm:inline">Dashboard</span>
                     </a>
 
 
 
                     <!-- Logout Button -->
                     <a href="{{ url_for('auth.logout') }}"
-                        class="bg-red-500 text-white px-6 py-2 rounded-custom font-semibold text-sm hover:bg-red-600 transition-colors">
-                        Logout
+                        class="bg-red-500 text-white px-3 md:px-6 py-2 rounded-custom font-semibold text-xs md:text-sm hover:bg-red-600 transition-colors min-h-11 flex items-center">
+                        <span class="hidden sm:inline">Logout</span>
+                        <span class="sm:hidden material-icons text-base">logout</span>
                     </a>
 
                     {% else %}
                     <!-- Login Button (for not logged-in users) -->
-                    <a href="/login" class="bg-brand-blue text-white px-6 py-2 rounded-custom font-semibold text-sm hover:bg-blue-700 transition-colors">
+                    <a href="/login" class="bg-brand-blue text-white px-4 md:px-6 py-2 rounded-custom font-semibold text-xs md:text-sm hover:bg-blue-700 transition-colors min-h-11 flex items-center">
                         Login
                     </a>
                     {% endif %}
@@ -141,24 +142,24 @@
             <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full animate-float"></div>
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center text-white">
-                <h1 class="lg:text-7xl font-extrabold mb-6 drop-shadow-lg text-4xl">CampusFind</h1>
-                <p class="text-xl lg:text-2xl font-light mb-10 opacity-90 max-w-2xl mx-auto">
+                <h1 class="text-3xl sm:text-5xl lg:text-7xl font-extrabold mb-4 sm:mb-6 drop-shadow-lg">CampusFind</h1>
+                <p class="text-base sm:text-lg lg:text-2xl font-light mb-6 sm:mb-10 opacity-90 max-w-2xl mx-auto px-2">
                     Your Digital Lost &amp; Found Portal for PDEU. Helping you reconnect with your belongings swiftly
                     and securely.
                 </p>
 
                 <!--  Hero action buttons with role-based behavior -->
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-2">
                     {% if not session.get('user') %}
 
                     <!-- Not logged in: both buttons go to login -->
                     <a href="/login"
-                        class="bg-white text-brand-purple px-8 py-4 rounded-custom font-bold text-lg shadow-xl inline-block text-center hover:shadow-lg transition-shadow">
+                        class="bg-white text-brand-purple px-6 sm:px-8 py-3 sm:py-4 rounded-custom font-bold text-base sm:text-lg shadow-xl inline-block text-center hover:shadow-lg transition-shadow min-h-11 flex items-center justify-center">
                         I Found Something
                     </a>
 
                     <a href="/login"
-                        class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-custom font-bold text-lg inline-block text-center hover:bg-white/10 transition-colors">
+                        class="bg-transparent border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-custom font-bold text-base sm:text-lg inline-block text-center hover:bg-white/10 transition-colors min-h-11 flex items-center justify-center">
                         I Lost Something
                     </a>
 
@@ -167,48 +168,48 @@
         </section>
 
         <!-- ===== STATISTICS ===== -->
-        <section class="py-16 bg-white">
+        <section class="py-12 sm:py-16 bg-white">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid lg:grid-cols-4 gap-8 grid-cols-1 sm:grid-cols-2">
+                <div class="grid lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2">
 
                     <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                        class="text-center p-4 sm:p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
                         <div
                             class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <span class="material-icons">inventory_2</span>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800">1,240+</div>
-                        <div class="text-slate-500 text-sm">Items Found</div>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800">1,240+</div>
+                        <div class="text-slate-500 text-xs sm:text-sm">Items Found</div>
                     </div>
 
                     <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                        class="text-center p-4 sm:p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
                         <div
                             class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <span class="material-icons">handshake</span>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800">850+</div>
-                        <div class="text-slate-500 text-sm">Items Returned</div>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800">850+</div>
+                        <div class="text-slate-500 text-xs sm:text-sm">Items Returned</div>
                     </div>
 
                     <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                        class="text-center p-4 sm:p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
                         <div
                             class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <span class="material-icons">groups</span>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800">5,000+</div>
-                        <div class="text-slate-500 text-sm">Active Users</div>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800">5,000+</div>
+                        <div class="text-slate-500 text-xs sm:text-sm">Active Users</div>
                     </div>
 
                     <div
-                        class="text-center p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
+                        class="text-center p-4 sm:p-6 rounded-custom border border-slate-100 hover:shadow-lg transition-shadow">
                         <div
                             class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
                             <span class="material-icons">trending_up</span>
                         </div>
-                        <div class="text-3xl font-bold text-slate-800">68%</div>
-                        <div class="text-slate-500 text-sm">Success Rate</div>
+                        <div class="text-2xl sm:text-3xl font-bold text-slate-800">68%</div>
+                        <div class="text-slate-500 text-xs sm:text-sm">Success Rate</div>
                     </div>
 
                 </div>
@@ -216,51 +217,51 @@
         </section>
 
         <!-- ===== CATEGORIES ===== -->
-        <section class="py-16 bg-slate-50">
+        <section class="py-12 sm:py-16 bg-slate-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-3xl font-bold text-slate-800 mb-12 text-center">Browse by Category</h2>
-                <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-6 grid-cols-1 sm:grid-cols-2">
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-8 sm:mb-12 text-center">Browse by Category</h2>
+                <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 grid-cols-2 sm:grid-cols-3">
 
                     <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                        class="group flex flex-col items-center p-4 sm:p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue min-h-24 sm:min-h-32 justify-center">
                         <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">devices</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Electronics</span>
+                            class="material-icons text-3xl sm:text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-2 sm:mb-3">devices</span>
+                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue text-xs sm:text-sm text-center">Electronics</span>
                     </a>
 
                     <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                        class="group flex flex-col items-center p-4 sm:p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue min-h-24 sm:min-h-32 justify-center">
                         <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">description</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Documents</span>
+                            class="material-icons text-3xl sm:text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-2 sm:mb-3">description</span>
+                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue text-xs sm:text-sm text-center">Documents</span>
                     </a>
 
                     <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                        class="group flex flex-col items-center p-4 sm:p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue min-h-24 sm:min-h-32 justify-center">
                         <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">watch</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Accessories</span>
+                            class="material-icons text-3xl sm:text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-2 sm:mb-3">watch</span>
+                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue text-xs sm:text-sm text-center">Accessories</span>
                     </a>
 
                     <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                        class="group flex flex-col items-center p-4 sm:p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue min-h-24 sm:min-h-32 justify-center">
                         <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">vpn_key</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Keys</span>
+                            class="material-icons text-3xl sm:text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-2 sm:mb-3">vpn_key</span>
+                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue text-xs sm:text-sm text-center">Keys</span>
                     </a>
 
                     <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                        class="group flex flex-col items-center p-4 sm:p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue min-h-24 sm:min-h-32 justify-center">
                         <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">badge</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">IDs &amp; Cards</span>
+                            class="material-icons text-3xl sm:text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-2 sm:mb-3">badge</span>
+                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue text-xs sm:text-sm text-center">IDs &amp; Cards</span>
                     </a>
 
                     <a href="/items"
-                        class="group flex flex-col items-center p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue">
+                        class="group flex flex-col items-center p-4 sm:p-6 bg-white rounded-custom shadow-sm hover:shadow-md transition-all border border-transparent hover:border-brand-blue min-h-24 sm:min-h-32 justify-center">
                         <span
-                            class="material-icons text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-3">more_horiz</span>
-                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue">Others</span>
+                            class="material-icons text-3xl sm:text-4xl text-slate-400 group-hover:text-brand-blue transition-colors mb-2 sm:mb-3">more_horiz</span>
+                        <span class="font-semibold text-slate-700 group-hover:text-brand-blue text-xs sm:text-sm text-center">Others</span>
                     </a>
 
                 </div>
@@ -270,48 +271,48 @@
 
 
         <!-- ===== FOOTER ===== -->
-        <footer class="bg-slate-900 text-slate-400 py-12">
+        <footer class="bg-slate-900 text-slate-400 py-8 sm:py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
 
-                    <div class="col-span-1 md:col-span-2">
-                        <div class="flex items-center gap-2 mb-6">
-                            <span class="material-icons text-white text-3xl">search</span>
-                            <span class="text-2xl font-bold tracking-tight text-white">CampusFind</span>
+                    <div class="col-span-1 sm:col-span-2 md:col-span-2">
+                        <div class="flex items-center gap-2 mb-4 sm:mb-6">
+                            <span class="material-icons text-white text-2xl sm:text-3xl">search</span>
+                            <span class="text-xl sm:text-2xl font-bold tracking-tight text-white">CampusFind</span>
                         </div>
-                        <p class="max-w-md mb-6 leading-relaxed">
+                        <p class="max-w-md mb-4 sm:mb-6 leading-relaxed text-xs sm:text-sm">
                             Dedicated to helping the PDEU community recover lost items. Our platform connects finders
                             with owners through a secure and verified process.
                         </p>
-                        <div class="flex gap-4">
+                        <div class="flex gap-3 sm:gap-4">
                             <a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all"
                                 href="#">
-                                <span class="material-icons text-xl">facebook</span>
+                                <span class="material-icons text-lg">facebook</span>
                             </a>
                             <a class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all"
                                 href="#">
-                                <span class="material-icons text-xl">alternate_email</span>
+                                <span class="material-icons text-lg">alternate_email</span>
                             </a>
                         </div>
                     </div>
 
                     <div>
-                        <h4 class="text-white font-bold mb-6">Quick Links</h4>
-                        <ul class="space-y-4 text-sm">
+                        <h4 class="text-white font-bold mb-4 sm:mb-6 text-sm sm:text-base">Quick Links</h4>
+                        <ul class="space-y-2 sm:space-y-4 text-xs sm:text-sm">
                             <li><a class="hover:text-white transition-colors" href="/">Home</a></li>
                             <li><a class="hover:text-white transition-colors" href="/items">Browse Items</a></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h4 class="text-white font-bold mb-6">Contact Us</h4>
-                        <ul class="space-y-4 text-sm">
-                            <li class="flex items-start gap-3">
-                                <span class="material-icons text-slate-500 text-sm mt-0.5">place</span>
-                                PDEU Campus, Knowledge Corridor, Gandhinagar
+                        <h4 class="text-white font-bold mb-4 sm:mb-6 text-sm sm:text-base">Contact Us</h4>
+                        <ul class="space-y-2 sm:space-y-4 text-xs sm:text-sm">
+                            <li class="flex items-start gap-2 sm:gap-3">
+                                <span class="material-icons text-slate-500 text-xs sm:text-sm mt-0.5 flex-shrink-0">place</span>
+                                <span>PDEU Campus, Knowledge Corridor, Gandhinagar</span>
                             </li>
-                            <li class="flex items-start gap-3">
-                                <span class="material-icons text-slate-500 text-sm mt-0.5">email</span>
+                            <li class="flex items-start gap-2 sm:gap-3">
+                                <span class="material-icons text-slate-500 text-xs sm:text-sm mt-0.5 flex-shrink-0">email</span>
                                 <a href="/contact" class="hover:text-white transition-colors">
                                     campusfind.lnf@gmail.com
                                 </a> 
@@ -320,7 +321,7 @@
                     </div>
 
                 </div>
-                <div class="pt-12 border-t border-slate-800 text-center text-xs">
+                <div class="pt-6 sm:pt-12 border-t border-slate-800 text-center text-xs">
                     © 2026 CampusFind PDEU. All rights reserved.
                 </div>
             </div>

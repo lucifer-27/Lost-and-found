@@ -25,28 +25,28 @@
 <body class="bg-gray-50 text-gray-900">
     <!-- BEGIN: MainHeader -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl font-bold text-blue-600 flex items-center">
-                    <span class="material-icons mr-2">search</span>
-                    CampusFind
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-lg sm:text-2xl font-bold text-blue-600 flex items-center gap-1">
+                    <span class="material-icons text-base sm:text-2xl flex-shrink-0">search</span>
+                    <span class="hidden sm:inline">CampusFind</span>
                 </span>
             </div>
         </div>
     </header>
     <!-- END: MainHeader -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
         <!-- BEGIN: Header Section -->
-        <section class="mb-8">
-            <div class="flex items-center mb-6">
+        <section class="mb-6 sm:mb-8">
+            <div class="flex items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-col sm:flex-row">
                 <a href="/student"
-                    class="mr-4 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm"
+                    class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-colors shadow-sm flex-shrink-0"
                     title="Back to Dashboard">
                     <span class="material-icons">arrow_back</span>
                 </a>
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800">Lost & Found Items</h1>
-                    <p class="text-gray-600 mt-1">Browse items and request a claim if you recognize your lost item</p>
+                <div class="min-w-0">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Lost & Found Items</h1>
+                    <p class="text-gray-600 text-sm sm:text-base mt-1">Browse items and request a claim if you recognize your lost item</p>
                 </div>
             </div>
         </section>
@@ -54,42 +54,42 @@
 
         <!-- BEGIN: Success/Error Messages -->
         {% if claim_success %}
-        <div id="successBanner" class="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-            <span class="material-icons text-green-600 text-2xl">check_circle</span>
-            <div class="flex-grow">
-                <h4 class="font-bold text-green-800">Claim Submitted!</h4>
-                <p class="text-green-700 text-sm">Your claim request has been submitted successfully. Staff will review it shortly.</p>
+        <div id="successBanner" class="mb-4 sm:mb-6 bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 flex items-start gap-2 sm:gap-3 text-sm sm:text-base">
+            <span class="material-icons text-green-600 text-xl sm:text-2xl flex-shrink-0 mt-0.5">check_circle</span>
+            <div class="flex-grow min-w-0">
+                <h4 class="font-bold text-green-800 text-sm sm:text-base">Claim Submitted!</h4>
+                <p class="text-green-700 text-xs sm:text-sm">Your claim request has been submitted successfully. Staff will review it shortly.</p>
             </div>
-            <button onclick="document.getElementById('successBanner').remove()" class="text-green-400 hover:text-green-600">
-                <span class="material-icons">close</span>
+            <button onclick="document.getElementById('successBanner').remove()" class="text-green-400 hover:text-green-600 flex-shrink-0">
+                <span class="material-icons text-xl">close</span>
             </button>
         </div>
         {% endif %}
         {% if claim_error %}
-        <div id="errorBanner" class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-            <span class="material-icons text-red-600 text-2xl">error</span>
-            <div class="flex-grow">
-                <h4 class="font-bold text-red-800">Error</h4>
-                <p class="text-red-700 text-sm">{{ claim_error }}</p>
+        <div id="errorBanner" class="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-xl p-3 sm:p-4 flex items-start gap-2 sm:gap-3 text-sm sm:text-base">
+            <span class="material-icons text-red-600 text-xl sm:text-2xl flex-shrink-0 mt-0.5">error</span>
+            <div class="flex-grow min-w-0">
+                <h4 class="font-bold text-red-800 text-sm sm:text-base">Error</h4>
+                <p class="text-red-700 text-xs sm:text-sm">{{ claim_error }}</p>
             </div>
-            <button onclick="document.getElementById('errorBanner').remove()" class="text-red-400 hover:text-red-600">
-                <span class="material-icons">close</span>
+            <button onclick="document.getElementById('errorBanner').remove()" class="text-red-400 hover:text-red-600 flex-shrink-0">
+                <span class="material-icons text-xl">close</span>
             </button>
         </div>
         {% endif %}
         <!-- END: Success/Error Messages -->
 
         <!-- BEGIN: Filter Controls -->
-        <section class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-8">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">Filters</h2>
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <section class="bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm mb-6 sm:mb-8">
+            <h2 class="text-base sm:text-lg font-semibold text-gray-800 mb-4">Filters</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                 <!-- Category Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-category">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="filter-category">
                         Category
                     </label>
                     <select id="filter-category"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="block w-full px-2.5 sm:px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">All Categories</option>
                         <option value="electronics">Electronics</option>
                         <option value="clothing">Clothing</option>
@@ -100,11 +100,11 @@
 
                 <!-- Type Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-type">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="filter-type">
                         Type
                     </label>
                     <select id="filter-type"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="block w-full px-2.5 sm:px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">All Types</option>
                         <option value="lost">Lost</option>
                         <option value="found">Found</option>
@@ -113,26 +113,26 @@
 
                 <!-- Item Name Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-name">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="filter-name">
                         Item Name
                     </label>
-                    <input id="filter-name" type="text" placeholder="Search item name..."
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <input id="filter-name" type="text" placeholder="Search..."
+                        class="block w-full px-2.5 sm:px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
 
                 <!-- Month Filter -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2" for="filter-month">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="filter-month">
                         Month
                     </label>
                     <input id="filter-month" type="month"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        class="block w-full px-2.5 sm:px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
 
                 <!-- Clear Filters Button -->
                 <div class="flex items-end">
                     <button id="clear-filters-btn"
-                        class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition min-h-11">
                         Clear Filters
                     </button>
                 </div>
@@ -142,29 +142,30 @@
 
         <!-- BEGIN: Items Table -->
         <section class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
+            <!-- Desktop Table View -->
+            <div class="overflow-x-auto hidden sm:block">
                 <table class="w-full">
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <th class="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Item Name
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <th class="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Type
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <th class="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                                 Description
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <th class="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                                 Category
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <th class="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                                 Date
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <th class="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell">
                                 Location
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <th class="px-4 sm:px-6 py-2 sm:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Action
                             </th>
                         </tr>
@@ -180,24 +181,128 @@
                             data-item-url="{{ url_for('items.item_details', item_id=item._id) }}"
                             tabindex="0"
                             data-item-description="{{ item.description | default('') }}">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">
                                 {{ item.name }}
                             </td>
-                            <td class="px-6 py-4 text-sm">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
                                 {% if item.type == 'lost' %}
-                                <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                     Lost
                                 </span>
                                 {% else %}
-                                <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     Found
                                 </span>
                                 {% endif %}
                                 {% if item.is_possible_duplicate %}
-                                <span class="ml-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-                                    Possible Duplicate
+                                <span class="ml-1 sm:ml-2 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                    Duplicate
                                 </span>
                                 {% endif %}
+                            </td>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 max-w-xs truncate hidden md:table-cell">
+                                {{ item.description | default('No description') }}
+                            </td>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm hidden lg:table-cell">
+                                <span class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ item.category | default('N/A') }}
+                                </span>
+                            </td>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 hidden lg:table-cell">
+                                {{ item.date | default('Not specified') }}
+                            </td>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 hidden lg:table-cell">
+                                {{ item.location | default('Not specified') }}
+                            </td>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
+                                <button class="request-claim-btn bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs font-medium transition min-h-9"
+                                    data-item-id="{{ item._id }}" data-item-name="{{ item.name }}">
+                                    Claim
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not items %}
+                <div class="text-center py-10 text-gray-500">
+                    <p class="text-sm sm:text-lg">No items available at the moment.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Mobile Card View -->
+            <div class="block sm:hidden">
+                {% for item in items %}
+                <div class="item-row border-b border-gray-200 p-4 last:border-b-0 cursor-pointer hover:bg-blue-50 transition"
+                    data-name="{{ item.name | default('') | lower }}"
+                    data-category="{{ item.category | default('') | lower }}"
+                    data-type="{{ item.type | default('') | lower }}"
+                    data-date="{{ item.date | default('') }}"
+                    data-item-id="{{ item._id }}"
+                    data-item-url="{{ url_for('items.item_details', item_id=item._id) }}"
+                    tabindex="0"
+                    data-item-description="{{ item.description | default('') }}">
+                    <div class="space-y-3">
+                        <!-- Item Name & Type -->
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-sm">{{ item.name }}</h3>
+                                <p class="text-xs text-gray-500 mt-0.5">{{ item.category | default('N/A') }}</p>
+                            </div>
+                            {% if item.type == 'lost' %}
+                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 whitespace-nowrap flex-shrink-0">
+                                Lost
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap flex-shrink-0">
+                                Found
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        {% if item.description %}
+                        <p class="text-xs text-gray-600 line-clamp-2">{{ item.description }}</p>
+                        {% endif %}
+
+                        <!-- Date & Location -->
+                        <div class="flex gap-4 text-xs text-gray-500">
+                            {% if item.date %}
+                            <div class="flex items-center gap-1">
+                                <span class="material-icons text-xs">calendar_today</span>
+                                {{ item.date }}
+                            </div>
+                            {% endif %}
+                            {% if item.location %}
+                            <div class="flex items-center gap-1">
+                                <span class="material-icons text-xs">location_on</span>
+                                {{ item.location }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Claim Button -->
+                        <button class="request-claim-btn w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition"
+                            data-item-id="{{ item._id }}" data-item-name="{{ item.name }}">
+                            Request Claim
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if not items %}
+                <div class="text-center py-10 text-gray-500">
+                    <p class="text-sm">No items available at the moment.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div id="no-results-msg" class="text-center py-10 text-gray-500 hidden">
+                <p class="text-sm sm:text-lg">No items match your filter criteria.</p>
+            </div>
+        </section>
+        <!-- END: Items Table -->
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
                                 {{ item.description | default('No description') }}
@@ -237,50 +342,50 @@
     </main>
 
     <!-- BEGIN: Claim Request Modal -->
-    <div id="claimModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-lg max-w-md w-full">
-            <div class="flex justify-between items-center p-6 border-b border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-800">Request Item Claim</h3>
-                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+    <div id="claimModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-3 sm:p-4">
+        <div class="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white">
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Request Item Claim</h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 flex-shrink-0">
                     <span class="material-icons">close</span>
                 </button>
             </div>
-            <form id="claimForm" action="/request-claim" method="POST" class="p-6 space-y-4">
+            <form id="claimForm" action="/request-claim" method="POST" class="p-4 sm:p-6 space-y-4">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" id="itemIdField" name="item_id" />
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                         Item Name (Auto-filled)
                     </label>
                     <input type="text" id="itemNameField" readonly
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-sm" />
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-xs sm:text-sm" />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                         Your Name *
                     </label>
                     <input type="text" id="studentNameField" name="student_name" required placeholder="Enter your full name"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                         Description of Lost Item *
                     </label>
                     <textarea id="descriptionLostField" name="description_lost" required placeholder="Describe the lost item in detail..."
                         rows="3"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                 </div>
 
-                <div class="pt-4 flex gap-3">
+                <div class="pt-2 sm:pt-4 flex gap-2 sm:gap-3">
                     <button type="button" id="cancelClaimBtn"
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition">
+                        class="flex-1 px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium text-sm hover:bg-gray-50 transition min-h-10">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                        class="flex-1 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition min-h-10">
                         Submit Claim
                     </button>
                 </div>
@@ -290,10 +395,10 @@
     <!-- END: Claim Request Modal -->
 
     <!-- BEGIN: MainFooter -->
-    <footer class="bg-white border-t border-gray-200 mt-20 py-8">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-gray-500 text-sm">© 2026 CampusFind. All rights reserved.</p>
-            <div class="mt-2 flex justify-center space-x-6">
+    <footer class="bg-white border-t border-gray-200 mt-12 sm:mt-20 py-6 sm:py-8">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-500 text-xs sm:text-sm">© 2026 CampusFind. All rights reserved.</p>
+            <div class="mt-2 sm:mt-3 flex justify-center gap-3 sm:gap-6 flex-wrap">
                 <a class="text-xs text-gray-400 hover:text-gray-600" href="#">Privacy Policy</a>
                 <a class="text-xs text-gray-400 hover:text-gray-600" href="#">Terms of Service</a>
                 <a class="text-xs text-gray-400 hover:text-gray-600" href="#">Contact Support</a>

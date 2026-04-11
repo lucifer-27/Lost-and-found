@@ -49,20 +49,20 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dropdown-animations.css') }}">
 </head>
 
-<body class="bg-brandGray min-h-screen flex items-center justify-center p-4">
+<body class="bg-brandGray min-h-screen flex items-center justify-center p-3 sm:p-4">
 
     <main class="w-full max-w-md">
-        <section class="bg-white p-8 shadow-xl rounded-card border border-gray-100">
+        <section class="bg-white p-6 sm:p-8 shadow-xl rounded-card border border-gray-100">
 
-            <div class="flex flex-col items-center mb-8">
-                <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-                    <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-col items-center mb-6 sm:mb-8">
+                <div class="w-14 sm:w-16 h-14 sm:h-16 bg-primary rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
+                    <svg class="h-8 sm:h-10 w-8 sm:w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round"
                             stroke-linejoin="round" stroke-width="2" />
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900">CampusFind</h1>
-                <p class="text-sm text-gray-500 mt-1">Sign in to your account</p>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">CampusFind</h1>
+                <p class="text-xs sm:text-sm text-gray-500 mt-1">Sign in to your account</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -88,16 +88,16 @@
             </div>
             {% endif %}
 
-            <form action="/login" method="POST" class="space-y-5" id="login-form">
+            <form action="/login" method="POST" class="space-y-4 sm:space-y-5" id="login-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="role-btn">Select Role</label>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="role-btn">Select Role</label>
                     <input type="hidden" id="role" name="role" required>
 
                     <div class="relative" id="role-dropdown">
                         <button type="button" id="role-btn"
-                            class="w-full flex items-center justify-between px-4 py-2.5 border border-gray-300 rounded-lg text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white">
+                            class="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white text-sm sm:text-base min-h-11">
                             <span id="role-label">Select Role</span>
                             <svg class="dropdown-chevron w-4 h-4 text-gray-400" id="role-chevron"
                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -110,15 +110,15 @@
                         <div id="role-options"
                             class="custom-dropdown-options absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
                             <ul class="py-1">
-                                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700"
+                                <li class="dropdown-option cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-700 min-h-11 flex items-center"
                                     data-value="student">
                                     Student
                                 </li>
-                                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700"
+                                <li class="dropdown-option cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-700 min-h-11 flex items-center"
                                     data-value="staff">
                                     Security Staff
                                 </li>
-                                <li class="dropdown-option cursor-pointer px-4 py-2.5 text-sm text-gray-700"
+                                <li class="dropdown-option cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-700 min-h-11 flex items-center"
                                     data-value="admin">
                                     Admin
                                 </li>
@@ -129,20 +129,20 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="email">Email Address</label>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="email">Email Address</label>
                     <input id="email" name="email" type="email" placeholder="e.g. 24bcp001@sot.pdpu.ac.in"
                         pattern="[a-zA-Z0-9]+@[a-zA-Z0-9]+\.pdpu\.ac\.in" required
-                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                        class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Password</label>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="password">Password</label>
                     <div class="relative">
                         <input id="password" name="password" type="password" placeholder="••••••••" required
-                            class="block w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                            class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-11 sm:pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
                         <button type="button" id="login-password-toggle" aria-label="Show password"
                             aria-pressed="false"
-                            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-primary transition-colors">
+                            class="absolute inset-y-0 right-0 flex items-center px-2.5 sm:px-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-primary transition-colors">
                             <svg class="h-5 w-5 toggle-eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
@@ -160,30 +160,30 @@
 
                 <div class="flex justify-end">
                     <a href="/forgot-password"
-                        class="text-sm font-medium text-primary hover:underline transition duration-200">
+                        class="text-xs sm:text-sm font-medium text-primary hover:underline transition duration-200">
                         Forgot Password?
                     </a>
                 </div>
 
-                <div class="flex items-center">
+                <div class="flex items-center min-h-11">
                     <input id="remember-me" name="remember-me" type="checkbox"
                         class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer" />
-                    <label class="ml-2 block text-sm text-gray-700 cursor-pointer" for="remember-me">
+                    <label class="ml-2 block text-xs sm:text-sm text-gray-700 cursor-pointer" for="remember-me">
                         Remember me for 30 days
                     </label>
                 </div>
 
                 <div class="pt-2">
                     <button type="submit"
-                        class="hover-lift w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all text-base flex items-center justify-center">
+                        class="hover-lift w-full bg-primary text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all text-sm sm:text-base flex items-center justify-center min-h-11">
                         Login
                     </button>
                 </div>
 
             </form>
 
-            <div class="mt-8 text-center">
-                <p class="text-sm text-gray-600 mb-2">
+            <div class="mt-6 sm:mt-8 text-center">
+                <p class="text-xs sm:text-sm text-gray-600 mb-2">
                     New user?
                     <a class="font-medium text-primary hover:underline" href="/register">Register here</a>
                 </p>
@@ -191,7 +191,7 @@
 
         </section>
 
-        <p class="mt-6 text-center text-xs text-gray-400">
+        <p class="mt-4 sm:mt-6 text-center text-xs text-gray-400">
             © 2026 CampusFind PDEU. All rights reserved.
         </p>
     </main>
