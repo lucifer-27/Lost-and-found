@@ -139,7 +139,18 @@
             class="flex-1 min-w-[150px] inline-block text-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer">
             <span class="material-icons mr-1" style="font-size: 16px; vertical-align: -2px;">assignment_turned_in</span>
             Process Claim
-          </a>
+          
+          <!-- APPROVE BUTTON (NEW) -->
+          <form method="POST" action="{{ url_for('staff.approve_claim', claim_id=claim._id) }}" class="flex-1 min-w-[150px]">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+              class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+              <span class="material-icons mr-1" style="font-size: 16px; vertical-align: -2px;">
+                assignment_turned_in
+              </span>
+              Approve
+            </button>
+          </form>
 
           <!-- Reject Button (opens modal) -->
           <button

@@ -242,10 +242,21 @@ def upload():
                 header, encoded_data = image_data.split(",", 1)
                 content_type = header.split(";")[0].split(":", 1)[1] if ":" in header else "image/png"
                 image_bytes = base64.b64decode(encoded_data, validate=True)
+
+                # SAFE STORE
+                file_id = store_temp_upload(image_bytes, content_type)
+
+                if not file_id:
+                    flash("Invalid or too large image", "error")
+                    return redirect(request.args.get("next") or url_for("items.report_found"))
             except Exception:
                 flash("Corrupted image data", "error")
                 return redirect(request.args.get("next") or url_for("items.report_found"))
             file_id = store_temp_upload(image_bytes, content_type)
+
+            if not file_id:
+                flash("Invalid or too large image", "error")
+                return redirect(request.args.get("next") or url_for("items.report_found"))
 
         # File upload
         elif "image" in request.files:
@@ -253,6 +264,10 @@ def upload():
             if image and image.filename:
                 image_bytes = image.read()
                 file_id = store_temp_upload(image_bytes, image.content_type, image.filename)
+
+                if not file_id:
+                    flash("Invalid or too large image", "error")
+                    return redirect(request.args.get("next") or url_for("items.report_found"))
             else:
                 flash("No image received", "error")
                 return redirect(request.args.get("next") or url_for("items.report_found"))

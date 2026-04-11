@@ -196,3 +196,61 @@ def previous_items():
         return redirect(url_for("auth.login"))
     items = list(archived_items_collection.find({}, ITEM_LIST_PROJECTION).sort("archived_at", -1).limit(50))
     return render_template("previous-items.html", items=items)
+
+
+@staff_bp.route("/approve-claim/<claim_id>", methods=["POST"])
+def approve_claim(claim_id):
+    if "user" not in session or session.get("role") != "staff":
+        return redirect(url_for("auth.login"))
+
+    from bson.objectid import ObjectId
+
+    try:
+        claim_obj_id = ObjectId(claim_id)
+    except:
+        flash("Invalid claim ID", "error")
+        return redirect(url_for("admin.admin_dashboard"))
+
+    claim = claims_collection.find_one({"_id": claim_obj_id})
+    if not claim:
+        flash("Claim not found", "error")
+        return redirect(url_for("admin.admin_dashboard"))
+
+    item_id = ObjectId(claim["item_id"])
+
+    client = claims_collection.database.client
+
+    try:
+        with client.start_session() as session_db:
+            with session_db.start_transaction():
+
+                # approve claim
+                claims_collection.update_one(
+                    {"_id": claim_obj_id},
+                    {"$set": {"status": "approved"}},
+                    session=session_db
+                )
+
+                # update item
+                items_collection.update_one(
+                    {"_id": item_id},
+                    {"$set": {"status": "returned"}},
+                    session=session_db
+                )
+
+                # reject others
+                claims_collection.update_many(
+                    {
+                        "item_id": item_id,
+                        "_id": {"$ne": claim_obj_id}
+                    },
+                    {"$set": {"status": "rejected"}},
+                    session=session_db
+                )
+
+        flash("Claim approved successfully", "success")
+
+    except Exception:
+        flash("Transaction failed", "error")
+
+    return redirect(url_for("admin.admin_dashboard"))

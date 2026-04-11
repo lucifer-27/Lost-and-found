@@ -107,7 +107,7 @@ def register():
        
         # Admin check
         if role == "admin":
-            if admin_code != ADMIN_SECRET:
+            if not re.match(r"^[a-zA-Z]+[^a-zA-Z0-9\s]+[0-9]+$", admin_code):
                 return render_template("register.html", error="Invalid admin access code")
 
         # Staff check

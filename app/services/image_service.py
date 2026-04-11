@@ -1,5 +1,6 @@
 import base64
 from datetime import datetime
+from unittest import result
 from bson.binary import Binary
 from bson.objectid import ObjectId
 from ..extensions import fs, temp_uploads_collection
@@ -31,7 +32,11 @@ def build_item_image_fields(image_bytes=None, content_type=None, filename=None):
         return {"image": None, "image_content_type": None, "image_filename": None}
 
     if len(image_bytes) > MAX_IMAGE_SIZE_BYTES:
-        raise ValueError("Image exceeds the maximum allowed size of 5MB")
+        return {
+            "image": None,
+            "image_content_type": None,
+            "image_filename": None
+        }
     
     actual_mime = get_image_mime(image_bytes)
     if not actual_mime:
@@ -76,11 +81,11 @@ def store_temp_upload(image_bytes, content_type, filename=None):
     if not image_bytes:
         raise ValueError("Image data is empty")
     if len(image_bytes) > MAX_IMAGE_SIZE_BYTES:
-        raise ValueError("Image exceeds the maximum allowed size of 5MB")
+        return None
     
     actual_mime = get_image_mime(image_bytes)
     if not actual_mime:
-        raise ValueError("Invalid or unsupported image file format (must be JPEG, PNG, GIF, or WEBP)")
+        return None
         
     upload = {
         "image": Binary(image_bytes),
@@ -88,7 +93,8 @@ def store_temp_upload(image_bytes, content_type, filename=None):
         "image_filename": filename or None,
         "created_at": datetime.utcnow(),
     }
-    return str(temp_uploads_collection.insert_one(upload).inserted_id)
+    result = temp_uploads_collection.insert_one(upload)
+    return str(result.inserted_id)
 
 
 def get_temp_upload(upload_id):

@@ -347,3 +347,5 @@ def toggle_flag(user_id):
         )
 
     return redirect(request.referrer or url_for("admin.admin_dashboard"))
+
+

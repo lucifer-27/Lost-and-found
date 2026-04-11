@@ -302,42 +302,56 @@
                 <p class="text-sm sm:text-lg">No items match your filter criteria.</p>
             </div>
         </section>
-        <!-- END: Items Table -->
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                                {{ item.description | default('No description') }}
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ item.category | default('N/A') }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">
-                                {{ item.date | default('Not specified') }}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">
-                                {{ item.location | default('Not specified') }}
-                            </td>
-                            <td class="px-6 py-4 text-sm">
-                                <button class="request-claim-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition"
-                                    data-item-id="{{ item._id }}" data-item-name="{{ item.name }}">
-                                    Request Claim
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% if not items %}
-                <div class="text-center py-10 text-gray-500">
-                    <p class="text-lg">No items available at the moment.</p>
-                </div>
-                {% endif %}
-            </div>
-            <div id="no-results-msg" class="text-center py-10 text-gray-500 hidden">
-                <p class="text-lg">No items match your filter criteria.</p>
-            </div>
-        </section>
+        <tbody>
+            {% for item in items %}
+            <tr>
+
+                <td class="px-6 py-4 text-sm text-gray-900">
+                    {{ item.name }}
+                </td>
+
+                <td class="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                    {{ item.description | default('No description') }}
+                </td>
+
+                <td class="px-6 py-4 text-sm">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {{ item.category | default('N/A') }}
+                    </span>
+                </td>
+
+                <td class="px-6 py-4 text-sm text-gray-600">
+                    {{ item.date | default('Not specified') }}
+                </td>
+
+                <td class="px-6 py-4 text-sm text-gray-600">
+                    {{ item.location | default('Not specified') }}
+                </td>
+
+                <td class="px-6 py-4 text-sm">
+                    <button 
+                        class="request-claim-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs"
+                        data-item-id="{{ item._id }}" 
+                        data-item-name="{{ item.name }}"
+                    >
+                        Request Claim
+                    </button>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+
+        {% if not items %}
+        <div class="text-center py-10 text-gray-500">
+            <p class="text-lg">No items available at the moment.</p>
+        </div>
+        {% endif %}
+
+        <div id="no-results-msg" class="text-center py-10 text-gray-500 hidden">
+            <p class="text-lg">No items match your filter criteria.</p>
+        </div>
         <!-- END: Items Table -->
     </main>
 
