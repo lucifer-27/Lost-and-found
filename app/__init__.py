@@ -28,10 +28,11 @@ def create_app():
 
 
     # Config
-    app.config["SECRET_KEY"] = "test_secret"
+    from app.config import SECRET_KEY
+    app.config["SECRET_KEY"] = SECRET_KEY
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = False
+    app.config["SESSION_COOKIE_SECURE"] = True
     app.config["RATELIMIT_STORAGE_URI"] = "memory://"
 
     csrf.init_app(app)

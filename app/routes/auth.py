@@ -19,8 +19,8 @@ from ..services.verification_service import (
 
 auth_bp = Blueprint("auth", __name__)
 
-ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "")
-STAFF_SECRET = os.environ.get("STAFF_SECRET", "")
+ADMIN_SECRET = os.environ.get("ADMIN_SECRET")
+STAFF_SECRET = os.environ.get("STAFF_SECRET")
 
 
 def _set_login_session(user):
@@ -112,8 +112,8 @@ def register():
 
         # Staff check
         if role == "staff":
-            if not re.match(r"^[a-zA-Z]+@[0-9]+$", staff_code):
-                return render_template("register.html", error="Invalid staff access code. Code must be in format 'name@number' (e.g. staffniraj@123)")
+            if not re.match(r"^[a-zA-Z]+[^a-zA-Z0-9\s]+[0-9]+$", staff_code):
+                return render_template("register.html", error="Invalid staff code. Format: text + special character + numbers (e.g. staffansh@123)")
 
         if users_collection.find_one({"email": email}):
             return render_template("register.html", error="Email already registered")

@@ -10,11 +10,24 @@ from .config import (
     MONGO_DNS_TIMEOUT_SECONDS,
     redact_mongo_uri,
 )
+from flask import request, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+def get_rate_limit_key():
+    # If user is logged in, use their user ID
+    if session and session.get("user_id"):
+        return str(session["user_id"])
+    
+    # If attempting auth actions, use the provided email to prevent blocking other students on the same IP
+    if request and request.method == "POST" and request.form.get("email"):
+        return request.form.get("email").strip().lower()
+        
+    # Fallback to IP address for other endpoints
+    return get_remote_address()
+
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=get_rate_limit_key,
     default_limits=[]
 )
 

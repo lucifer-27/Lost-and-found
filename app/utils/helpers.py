@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 from bson.objectid import ObjectId
 import re
 from ..extensions import (
@@ -38,6 +39,24 @@ def create_notification(user_id, role, message, notif_type="general"):
         "created_at": datetime.utcnow()
     })
 
+def create_bulk_notifications(user_ids, role, message, notif_type="general"):
+    if not user_ids:
+        return
+    now = datetime.utcnow()
+    docs = [
+        {
+            "user_id": str(uid),
+            "role": role,
+            "message": message,
+            "type": notif_type,
+            "read": False,
+            "created_at": now
+        }
+        for uid in user_ids
+    ]
+    if docs:
+        notifications_collection.insert_many(docs)
+
 
 def get_user_display_fields(user_doc):
     if not user_doc:
@@ -72,6 +91,18 @@ def _normalize_text(value):
     if not value:
         return ""
     return re.sub(r"\s+", " ", str(value).strip().lower())
+
+
+def check_idempotency(session_dict, key, timeout=60):
+    recent = session_dict.get("_recent_submissions", {})
+    now = time.time()
+    recent = {k: v for k, v in recent.items() if now - v < timeout}
+    if key in recent:
+        session_dict["_recent_submissions"] = recent
+        return False
+    recent[key] = now
+    session_dict["_recent_submissions"] = recent
+    return True
 
 
 def build_duplicate_fingerprint(name, category, location, item_type, date_str):

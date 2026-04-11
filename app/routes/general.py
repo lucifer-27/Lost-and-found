@@ -30,23 +30,34 @@ def send_contact_email(to_email, subject, body):
         msg["From"] = from_email
         msg["To"] = to_email
         
-        # Patch socket.getaddrinfo temporarily to force IPv4
-        # This prevents the "[Errno 101] Network is unreachable" when IPv6 is selected
+        # Safely force IPv4 by overriding the socket creation for this specific SMTP instance
+        # This prevents process-wide monkey-patching which causes race conditions.
         import socket
-        orig_getaddrinfo = socket.getaddrinfo
-        def ipv4_getaddrinfo(*args, **kwargs):
-            res = orig_getaddrinfo(*args, **kwargs)
-            return [r for r in res if r[0] == socket.AF_INET]
-            
-        socket.getaddrinfo = ipv4_getaddrinfo
-        
-        try:
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
-                server.starttls()
-                server.login(smtp_username, smtp_password)
-                server.send_message(msg)
-        finally:
-            socket.getaddrinfo = orig_getaddrinfo
+        class IPv4SMTP(smtplib.SMTP):
+            def _get_socket(self, host, port, timeout):
+                err = None
+                for res in socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM):
+                    af, socktype, proto, canonname, sa = res
+                    try:
+                        sock = socket.socket(af, socktype, proto)
+                        if self.timeout is not getattr(socket, '_GLOBAL_DEFAULT_TIMEOUT', object()):
+                            sock.settimeout(self.timeout)
+                        if self.source_address:
+                            sock.bind(self.source_address)
+                        sock.connect(sa)
+                        return sock
+                    except OSError as _:
+                        err = _
+                        if sock is not None:
+                            sock.close()
+                if err is not None:
+                    raise err
+                raise OSError("getaddrinfo returns an empty list")
+
+        with IPv4SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            server.send_message(msg)
         
         print(f"Contact email sent successfully to {to_email}")
         return True, ""
@@ -104,15 +115,19 @@ Message:
 Reply to: {email}
                 """
 
-                success, err_msg = send_contact_email(
-                    to_email="campusfind.lnf@gmail.com",
-                    subject=email_subject,
-                    body=send_email_body,
-                )
-                if success:
-                    success_message = "Your message has been sent successfully! We'll get back to you soon."
-                else:
-                    error_message = f"Failed to send message: {err_msg}. Please email us directly at campusfind.lnf@gmail.com"
+                import threading
+                # Offload email sending to a background thread to prevent blocking
+                threading.Thread(
+                    target=send_contact_email,
+                    kwargs={
+                        "to_email": "campusfind.lnf@gmail.com",
+                        "subject": email_subject,
+                        "body": send_email_body
+                    },
+                    daemon=True
+                ).start()
+                
+                success_message = "Your message has been sent successfully! We'll get back to you soon."
                 name = email = subject = message = ""  # Clear form
 
             except Exception as e:
@@ -249,17 +264,11 @@ def upload():
         flash(str(e), "error")
         return redirect(request.args.get("next") or url_for("items.report_found"))
 
-    # Clear any previous upload
-    session.pop("show_uploaded_image_preview_once", None)
-    old_upload_id = session.pop("uploaded_image_id", None)
-    if old_upload_id:
-        delete_temp_upload(old_upload_id)
-
-    session["uploaded_image_id"] = str(file_id)
-    session["show_uploaded_image_preview_once"] = True
-
     next_url = request.args.get("next") or url_for("items.report_found")
-    return redirect(next_url)
+    if "?" in next_url:
+        return redirect(f"{next_url}&upload_id={file_id}")
+    else:
+        return redirect(f"{next_url}?upload_id={file_id}")
 
 
 @general_bp.route("/image/<file_id>")

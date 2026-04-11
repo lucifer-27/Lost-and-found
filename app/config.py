@@ -2,6 +2,11 @@ import os
 import re
 from dotenv import load_dotenv
 
+
+
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or '84cf1ebd744816054ebfac040509bb429e51d33f4105be392b9a6c386f82f94c'
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 project_root = os.path.abspath(os.path.join(basedir, os.pardir))
 
