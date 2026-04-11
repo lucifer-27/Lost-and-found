@@ -65,32 +65,45 @@
 
   <!-- NAVBAR -->
   <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-14 sm:h-16">
 
-        <div class="flex items-center">
-          <span class="text-2xl font-bold text-blue-600 flex items-center">
-            <span class="material-icons mr-2">search</span>
-            CampusFind
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-lg sm:text-2xl font-bold text-blue-600 flex items-center gap-1">
+            <span class="material-icons text-base sm:text-2xl flex-shrink-0">search</span>
+            <span class="hidden sm:inline">CampusFind</span>
           </span>
         </div>
 
-        <div class="hidden md:flex items-center space-x-8">
+        <div class="hidden md:flex items-center space-x-4 lg:space-x-8">
 
-          <div class="text-sm text-gray-500 mr-2 font-medium">Welcome, Administrator</div>
+          <div class="text-xs sm:text-sm text-gray-500 mr-2 font-medium">Welcome, Administrator</div>
 
-          <a class="text-gray-600 hover:text-blue-600 relative" href="/">
+          <a class="text-gray-600 hover:text-blue-600 relative flex items-center justify-center min-h-11 min-w-11" href="/" title="Home">
             <span class="material-icons">home</span>
           </a>
 
-          <a class="text-gray-600 hover:text-blue-600 relative" href="/notifications-admin">
+          <a class="text-gray-600 hover:text-blue-600 relative flex items-center justify-center min-h-11 min-w-11" href="/notifications-admin" title="Notifications">
             <span class="material-icons">notifications</span>
           </a>
 
           <a href="/logout"
-            class="flex items-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full border border-gray-200 shadow-sm transition-colors">
-            <span class="material-icons text-sm">logout</span>
-            <span class="font-medium text-sm">Logout</span>
+            class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 sm:px-4 py-2 rounded-full border border-gray-200 shadow-sm transition-colors text-xs sm:text-sm font-medium min-h-11">
+            <span class="material-icons text-base">logout</span>
+            <span class="hidden sm:inline">Logout</span>
+          </a>
+        </div>
+
+        <!-- Mobile menu buttons -->
+        <div class="md:hidden flex items-center gap-2">
+          <a class="text-gray-600 hover:text-blue-600 flex items-center justify-center min-h-11 min-w-11" href="/" title="Home">
+            <span class="material-icons">home</span>
+          </a>
+          <a class="text-gray-600 hover:text-blue-600 flex items-center justify-center min-h-11 min-w-11" href="/notifications-admin" title="Notifications">
+            <span class="material-icons">notifications</span>
+          </a>
+          <a href="/logout" class="text-gray-600 hover:text-blue-600 flex items-center justify-center min-h-11 min-w-11" title="Logout">
+            <span class="material-icons">logout</span>
           </a>
         </div>
 
@@ -101,12 +114,12 @@
   <!-- ACTION SUCCESS TOAST -->
   {% if flag_success or report_success %}
   <div id="success-toast"
-      class="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
-      style="min-width: 320px;">
-      <span class="material-icons text-3xl">check_circle</span>
-      <div>
-          <h4 class="font-bold text-base">Success</h4>
-          <p class="text-green-100 text-sm">
+      class="fixed top-16 sm:top-20 right-2 sm:right-6 z-50 bg-green-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-2 sm:gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
+      style="max-width: 95vw; min-width: 280px;">
+      <span class="material-icons text-2xl sm:text-3xl flex-shrink-0">check_circle</span>
+      <div class="min-w-0 flex-1">
+          <h4 class="font-bold text-sm sm:text-base">Success</h4>
+          <p class="text-green-100 text-xs sm:text-sm">
             {% if report_success %}
               Lost item report submitted successfully.
             {% else %}
@@ -114,7 +127,7 @@
             {% endif %}
           </p>
       </div>
-      <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white">
+      <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white flex-shrink-0">
           <span class="material-icons">close</span>
       </button>
   </div>
@@ -129,58 +142,58 @@
   </script>
   {% endif %}
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
 
     <!-- STATS BLOCKS -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" data-purpose="dashboard-stats">
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8" data-purpose="dashboard-stats">
 
       <!-- Total Reports -->
-      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+      <div class="bg-white p-4 sm:p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Reports</span>
-          <span class="p-2 bg-blue-50 text-blue-600 rounded-lg material-icons text-xl">assessment</span>
+          <span class="p-2 bg-blue-50 text-blue-600 rounded-lg material-icons text-lg sm:text-xl">assessment</span>
         </div>
-        <div class="text-3xl font-bold text-gray-800">{{ total_reports }}</div>
+        <div class="text-2xl sm:text-3xl font-bold text-gray-800">{{ total_reports }}</div>
         <div class="text-xs text-blue-600 mt-2 font-medium">All time reported items</div>
       </div>
 
       <!-- Active Items -->
-      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+      <div class="bg-white p-4 sm:p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Items</span>
-          <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg material-icons text-xl">inventory_2</span>
+          <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg material-icons text-lg sm:text-xl">inventory_2</span>
         </div>
-        <div class="text-3xl font-bold text-gray-800">{{ total_active_items }}</div>
+        <div class="text-2xl sm:text-3xl font-bold text-gray-800">{{ total_active_items }}</div>
         <div class="text-xs text-indigo-600 mt-2 font-medium">Currently unreturned</div>
       </div>
 
       <!-- Total Claims -->
-      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+      <div class="bg-white p-4 sm:p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Claims</span>
-          <span class="p-2 bg-purple-50 text-purple-600 rounded-lg material-icons text-xl">assignment</span>
+          <span class="p-2 bg-purple-50 text-purple-600 rounded-lg material-icons text-lg sm:text-xl">assignment</span>
         </div>
-        <div class="text-3xl font-bold text-gray-800">{{ total_claims_submitted }}</div>
+        <div class="text-2xl sm:text-3xl font-bold text-gray-800">{{ total_claims_submitted }}</div>
         <div class="text-xs text-purple-600 mt-2 font-medium">Claims submitted all time</div>
       </div>
 
       <!-- Pending Claims -->
-      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+      <div class="bg-white p-4 sm:p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending Claims</span>
-          <span class="p-2 bg-amber-50 text-amber-600 rounded-lg material-icons text-xl">pending_actions</span>
+          <span class="p-2 bg-amber-50 text-amber-600 rounded-lg material-icons text-lg sm:text-xl">pending_actions</span>
         </div>
-        <div class="text-3xl font-bold text-gray-800">{{ pending_claims }}</div>
+        <div class="text-2xl sm:text-3xl font-bold text-gray-800">{{ pending_claims }}</div>
         <div class="text-xs text-amber-600 mt-2 font-medium">Require staff verify</div>
       </div>
 
       <!-- Returned Items -->
-      <div class="bg-white p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
+      <div class="bg-white p-4 sm:p-6 rounded-card border border-gray-100 shadow-sm hover:shadow-md transition">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Returned Items</span>
-          <span class="p-2 bg-green-50 text-green-600 rounded-lg material-icons text-xl">verified</span>
+          <span class="p-2 bg-green-50 text-green-600 rounded-lg material-icons text-lg sm:text-xl">verified</span>
         </div>
-        <div class="text-3xl font-bold text-gray-800">{{ returned_items }}</div>
+        <div class="text-2xl sm:text-3xl font-bold text-gray-800">{{ returned_items }}</div>
         <div class="text-xs text-green-600 mt-2 font-medium">Successfully processed items</div>
       </div>
 
