@@ -43,8 +43,8 @@ def _start_email_verification(email, purpose, payload=None):
     otp, error = create_email_verification(email, purpose, payload=payload)
     if error:
         return False, error
-        
-    # Always directly display the OTP on the screen
+    
+    # Always display the OTP on screen (development mode)
     flash(f"DEVELOPMENT MODE: Your OTP is {otp}", "success")
         
     session["verification_email"] = email

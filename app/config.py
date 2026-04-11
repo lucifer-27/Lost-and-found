@@ -39,6 +39,12 @@ MONGO_DNS_RESOLVERS = [resolver.strip() for resolver in os.environ.get("MONGO_DN
 MONGO_DNS_TIMEOUT_SECONDS = float(os.environ.get("MONGO_DNS_TIMEOUT_SECONDS", "5"))
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev_secret_key")
 
+# Email config (SendGrid)
+SEND_EMAIL_OTP = os.environ.get("SEND_EMAIL_OTP", "False").lower() == "true"
+EMAIL_PROVIDER = os.environ.get("EMAIL_PROVIDER", "sendgrid")
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
+MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@lostandfound.com")
+
 
 def redact_mongo_uri(uri):
     return re.sub(r"(mongodb(?:\+srv)?://[^:]+:)[^@]+@", r"\1***@", uri)

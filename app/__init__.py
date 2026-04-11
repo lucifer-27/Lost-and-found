@@ -16,8 +16,6 @@ def create_app():
     TEMPLATE_DIR = os.path.join(PROJECT_ROOT, "templates")
     STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
 
-
-
     # Create Flask app
     app = Flask(
         __name__,
@@ -25,10 +23,9 @@ def create_app():
         static_folder=STATIC_DIR
     )
 
-
-
     # Config
     from app.config import SECRET_KEY
+    
     app.config["SECRET_KEY"] = SECRET_KEY
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -38,6 +35,7 @@ def create_app():
     csrf.init_app(app)
     limiter.init_app(app)
     
+    # Initialize database
     from app.extensions import init_db
     init_db()
 
