@@ -58,88 +58,39 @@ from datetime import datetime
 # }
 
 
-import dataclasses
-from typing import Optional, Any
-from datetime import datetime
-from bson.objectid import ObjectId
-
-@dataclasses.dataclass
-class Item:
-    name: str
-    category: str
-    type: str # "lost" or "found"
-    date: str
-    location: str
-    description: str
-    status: str
-    reported_by: str
-    created_at: datetime
-    dup_fingerprint: str = ""
-    is_possible_duplicate: bool = False
-    duplicate_of: Optional[ObjectId] = None
-    image: Optional[Any] = None
-    image_content_type: Optional[str] = None
-    image_filename: Optional[str] = None
-
-@dataclasses.dataclass
-class Claim:
-    item_id: ObjectId
-    item_name: str
-    item_description: str
-    category: str
-    location: str
-    student_name: str
-    student_email: str
-    roll_no: str
-    description_lost: str
-    status: str
-    requested_at: datetime
-    requested_by: str
-    processed_by: Optional[str] = None
-    processed_at: Optional[datetime] = None
-    rejection_reason: Optional[str] = None
-    proof: Optional[str] = None
-    return_date: Optional[str] = None
-
-def new_item(name: str, category: str, item_type: str, date: str, location: str, description: str,
-             reported_by: str, dup_fingerprint: str = "", is_possible_duplicate: bool = False, 
-             duplicate_of: Optional[ObjectId] = None, image_fields: dict = None) -> dict:
+def new_item(name, category, item_type, date, location, description,
+             reported_by, image_fields=None):
     """Return a new item document ready for insertion."""
-    item = Item(
-        name=name,
-        category=category,
-        type=item_type,
-        date=date,
-        location=location,
-        description=description,
-        status="active",
-        reported_by=reported_by,
-        created_at=datetime.utcnow(),
-        dup_fingerprint=dup_fingerprint,
-        is_possible_duplicate=is_possible_duplicate,
-        duplicate_of=duplicate_of
-    )
-    doc = dataclasses.asdict(item)
+    doc = {
+        "name": name,
+        "category": category,
+        "type": item_type,
+        "date": date,
+        "location": location,
+        "description": description,
+        "status": "active",
+        "reported_by": reported_by,
+        "created_at": datetime.utcnow(),
+    }
     if image_fields:
         doc.update(image_fields)
     return doc
 
-def new_claim(item_id: ObjectId, item: dict, student_name: str, student_email: str, roll_no: str,
-              description_lost: str, requested_by: str) -> dict:
-    """Return a new claim document ready for insertion."""
-    claim = Claim(
-        item_id=item_id,
-        item_name=item.get("name", ""),
-        item_description=item.get("description", ""),
-        category=item.get("category", ""),
-        location=item.get("location", ""),
-        student_name=student_name,
-        student_email=student_email,
-        roll_no=roll_no,
-        description_lost=description_lost,
-        status="pending",
-        requested_at=datetime.utcnow(),
-        requested_by=requested_by
-    )
-    return dataclasses.asdict(claim)
 
+def new_claim(item_id, item, student_name, student_email, roll_no,
+              description_lost, requested_by):
+    """Return a new claim document ready for insertion."""
+    return {
+        "item_id": item_id,
+        "item_name": item.get("name", ""),
+        "item_description": item.get("description", ""),
+        "category": item.get("category", ""),
+        "location": item.get("location", ""),
+        "student_name": student_name,
+        "student_email": student_email,
+        "roll_no": roll_no,
+        "description_lost": description_lost,
+        "status": "pending",
+        "requested_at": datetime.utcnow(),
+        "requested_by": requested_by,
+    }

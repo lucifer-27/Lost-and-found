@@ -5,12 +5,11 @@ from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from ..extensions import users_collection, items_collection, claims_collection, archived_items_collection, item_reports_collection
 from ..utils.helpers import (
-    create_notification, create_bulk_notifications, categories, parse_submitted_date,
-    prepare_item_detail_context, ITEM_LIST_PROJECTION, check_idempotency,
+    create_notification, categories, parse_submitted_date,
+    prepare_item_detail_context, ITEM_LIST_PROJECTION,
     REPORT_CATEGORIES, build_duplicate_fingerprint, find_possible_duplicate,
 )
 from ..services.image_service import build_item_image_fields, consume_temp_upload
-from ..models.item_model import new_item, new_claim
 
 items_bp = Blueprint("items", __name__)
 
@@ -78,10 +77,6 @@ def report_item(item_id):
     if not reason:
         session["item_report_error"] = "Please provide a short reason for reporting this item."
         return redirect(next_url)
-        
-    idempotency_key = f"report_item_{item_id}_{session.get('user_id')}"
-    if not check_idempotency(session, idempotency_key):
-        return redirect(next_url)
 
     if category not in REPORT_CATEGORIES:
         category = "Other"
@@ -116,14 +111,14 @@ def report_item(item_id):
     }
     item_reports_collection.insert_one(report_doc)
 
-    admin_users = list(users_collection.find({"role": "admin"}, {"_id": 1}))
-    admin_ids = [str(u["_id"]) for u in admin_users]
-    create_bulk_notifications(
-        admin_ids,
-        "admin",
-        f"New item report: '{context['item'].get('name', 'Unknown Item')}' ({category}).",
-        "item_report",
-    )
+    admin_users = list(users_collection.find({"role": "admin"}))
+    for admin_user in admin_users:
+        create_notification(
+            str(admin_user["_id"]),
+            "admin",
+            f"New item report: '{context['item'].get('name', 'Unknown Item')}' ({category}).",
+            "item_report",
+        )
 
     session["item_report_success"] = "Report submitted. Admins will review it shortly."
     return redirect(next_url)
@@ -133,15 +128,6 @@ def report_item(item_id):
 def request_claim():
     if "user" not in session or session.get("role") != "student":
         return redirect(url_for("auth.login"))
-
-    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
-    if not user:
-        session["claim_error"] = "Your account could not be verified. Please log in again."
-        return redirect(url_for("auth.login"))
-
-    if user.get("account_flagged", False):
-        session["claim_error"] = "Your account is flagged. You cannot submit new claims at this time."
-        return redirect(url_for("items.items_list"))
 
     item_id = (request.form.get("item_id") or "").strip()
     student_name = (request.form.get("student_name") or "").strip()
@@ -153,10 +139,6 @@ def request_claim():
     if not student_name or not description_lost:
         session["claim_error"] = "Please fill in your name and item description before submitting."
         return redirect(url_for("items.items_list"))
-        
-    idempotency_key = f"claim_{item_id}_{session.get('user_id')}"
-    if not check_idempotency(session, idempotency_key):
-        return redirect(url_for("items.items_list"))
 
     try:
         item_object_id = ObjectId(item_id)
@@ -164,6 +146,10 @@ def request_claim():
         session["claim_error"] = "Invalid item selected."
         return redirect(url_for("items.items_list"))
 
+    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
+    if not user:
+        session["claim_error"] = "Your account could not be verified. Please log in again."
+        return redirect(url_for("auth.login"))
 
     student_email = user["email"]
     roll_no = student_email.split("@")[0]
@@ -193,15 +179,20 @@ def request_claim():
         )
     )
 
-    claim_record = new_claim(
-        item_id=item_object_id,
-        item=item,
-        student_name=student_name,
-        student_email=student_email,
-        roll_no=roll_no,
-        description_lost=description_lost,
-        requested_by=session["user_id"]
-    )
+    claim_record = {
+        "item_id": item_object_id,
+        "item_name": item["name"],
+        "item_description": item.get("description", ""),
+        "category": item.get("category", ""),
+        "location": item.get("location", ""),
+        "student_name": student_name,
+        "student_email": student_email,
+        "roll_no": roll_no,
+        "description_lost": description_lost,
+        "status": "pending",
+        "requested_at": datetime.utcnow(),
+        "requested_by": session["user_id"]
+    }
 
     try:
         claims_collection.insert_one(dict(claim_record))
@@ -227,14 +218,14 @@ def request_claim():
     if prior_claimant_labels:
         attention_note = " Extra attention: pending claim already exists from " + ", ".join(prior_claimant_labels) + "."
 
-    staff_users = list(users_collection.find({"role": "staff"}, {"_id": 1}))
-    staff_ids = [str(u["_id"]) for u in staff_users]
-    create_bulk_notifications(
-        staff_ids,
-        "staff",
-        f"New claim request from {student_name} ({roll_no}) for '{item['name']}'. Description: {description_lost}.{attention_note}",
-        "claim_submitted"
-    )
+    staff_users = list(users_collection.find({"role": "staff"}))
+    for staff in staff_users:
+        create_notification(
+            str(staff["_id"]),
+            "staff",
+            f"New claim request from {student_name} ({roll_no}) for '{item['name']}'. Description: {description_lost}.{attention_note}",
+            "claim_submitted"
+        )
 
     session["claim_success"] = True
     return redirect(url_for("items.items_list"))
@@ -244,11 +235,6 @@ def request_claim():
 def report_lost():
     if "user" not in session:
         return redirect(url_for("auth.login"))
-
-    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
-    if user and user.get("account_flagged", False):
-        flash("Your account is flagged. You cannot report lost items at this time.", "error")
-        return redirect(url_for("items.items_list"))
 
     today = datetime.now().date()
     today_str = today.isoformat()
@@ -272,12 +258,6 @@ def report_lost():
                                    error="Lost date cannot be in the future.")
 
         dup_fingerprint = build_duplicate_fingerprint(name, category, location, "lost", date)
-        
-        idempotency_key = f"lost_{dup_fingerprint}_{session.get('user_id')}"
-        if not check_idempotency(session, idempotency_key):
-            session["report_success"] = True
-            return redirect(url_for("student.student_dashboard") if session.get("role") != "admin" else url_for("admin.admin_dashboard"))
-
         existing, same_reporter = find_possible_duplicate(dup_fingerprint, session.get("user_id"))
         if same_reporter:
             return render_template(
@@ -289,42 +269,39 @@ def report_lost():
 
         if image and image.filename:
             image_bytes = image.read()
-            try:
-                image_fields = build_item_image_fields(
-                    image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
-            except ValueError as e:
-                return render_template("report_lost.html", categories=categories, today=today_str,
-                                       error=str(e))
+            image_fields = build_item_image_fields(
+                image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
 
-        item_document = new_item(
-            name=name, category=category, item_type="lost",
-            date=date, location=location, description=description,
-            reported_by=session["user_id"],
-            dup_fingerprint=dup_fingerprint,
-            is_possible_duplicate=bool(existing),
-            duplicate_of=existing["_id"] if existing else None,
-            image_fields=image_fields
-        )
+        item_document = {
+            "name": name, "category": category, "type": "lost",
+            "date": date, "location": location, "description": description,
+            "status": "active", "reported_by": session["user_id"],
+            "created_at": datetime.utcnow(),
+            "dup_fingerprint": dup_fingerprint,
+            "is_possible_duplicate": bool(existing),
+            "duplicate_of": existing["_id"] if existing else None,
+        }
+        item_document.update(image_fields)
         items_collection.insert_one(item_document)
 
         if existing:
-            admin_users = list(users_collection.find({"role": "admin"}, {"_id": 1}))
-            admin_ids = [str(u["_id"]) for u in admin_users]
-            create_bulk_notifications(
-                admin_ids,
-                "admin",
-                f"Possible duplicate lost item report: '{name}'.",
-                "duplicate_report",
-            )
+            admin_users = list(users_collection.find({"role": "admin"}))
+            for admin_user in admin_users:
+                create_notification(
+                    str(admin_user["_id"]),
+                    "admin",
+                    f"Possible duplicate lost item report: '{name}'.",
+                    "duplicate_report",
+                )
 
         if session.get("role") == "admin":
-            staff_users = list(users_collection.find({"role": "staff"}, {"_id": 1}))
-            staff_ids = [str(u["_id"]) for u in staff_users]
-            create_bulk_notifications(
-                staff_ids, "staff",
-                f"Administrator reported a lost item: '{name}'. Please assist if necessary.",
-                "admin_lost_report"
-            )
+            staff_users = users_collection.find({"role": "staff"})
+            for staff_user in staff_users:
+                create_notification(
+                    str(staff_user["_id"]), "staff",
+                    f"Administrator reported a lost item: '{name}'. Please assist if necessary.",
+                    "admin_lost_report"
+                )
             session["report_success"] = True
             return redirect(url_for("admin.admin_dashboard"))
         else:
@@ -340,11 +317,6 @@ def report_found():
     if "user" not in session:
         return redirect(url_for("auth.login"))
 
-    user = users_collection.find_one({"_id": ObjectId(session["user_id"])})
-    if user and user.get("account_flagged", False):
-        flash("Your account is flagged. You cannot report found items at this time.", "error")
-        return redirect(url_for("items.items_list"))
-
     today = datetime.now().date()
     today_str = today.isoformat()
 
@@ -359,74 +331,83 @@ def report_found():
 
         if not selected_date:
             return render_template("report_found.html",
-                uploaded_image=(request.form.get("uploaded_image") or request.args.get("upload_id") or "").strip() or None,
+                uploaded_image=(request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip() or None,
                 categories=categories, today=today_str, error="Please select a valid found date.")
 
         if selected_date > today:
             return render_template("report_found.html",
-                uploaded_image=(request.form.get("uploaded_image") or request.args.get("upload_id") or "").strip() or None,
+                uploaded_image=(request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip() or None,
                 categories=categories, today=today_str, error="Found date cannot be in the future.")
 
         date_combined = f"{date} {time_found}" if time_found else date
 
         dup_fingerprint = build_duplicate_fingerprint(name, category, location, "found", date_combined)
-        
-        idempotency_key = f"found_{dup_fingerprint}_{session.get('user_id')}"
-        if not check_idempotency(session, idempotency_key):
-            session["report_success"] = True
-            return redirect(url_for("staff.staff_dashboard"))
-
         existing, same_reporter = find_possible_duplicate(dup_fingerprint, session.get("user_id"))
         if same_reporter:
             return render_template(
                 "report_found.html",
-                uploaded_image=(request.form.get("uploaded_image") or request.args.get("upload_id") or "").strip() or None,
+                uploaded_image=(request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip() or None,
                 categories=categories,
                 today=today_str,
                 error="You already reported a very similar found item. If this is different, please add more specific details.",
             )
 
-        try:
-            if image and image.filename:
-                image_bytes = image.read()
-                image_fields = build_item_image_fields(
-                    image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
-            else:
-                temp_upload_id = (request.form.get("uploaded_image") or request.args.get("upload_id") or "").strip()
-                image_bytes, content_type, filename = consume_temp_upload(temp_upload_id)
-                if image_bytes:
-                    image_fields = build_item_image_fields(
-                        image_bytes=image_bytes, content_type=content_type, filename=filename)
-        except ValueError as e:
-            return render_template("report_found.html",
-                uploaded_image=(request.form.get("uploaded_image") or request.args.get("upload_id") or "").strip() or None,
-                categories=categories, today=today_str, error=str(e))
+        image = request.files.get("image")
+        image_fields = build_item_image_fields()
 
-        item = new_item(
-            name=name, category=category, item_type="found",
-            date=date_combined, location=location, description=description,
-            reported_by=session["user_id"],
-            dup_fingerprint=dup_fingerprint,
-            is_possible_duplicate=bool(existing),
-            duplicate_of=existing["_id"] if existing else None,
-            image_fields=image_fields
-        )
+        if image and image.filename:
+            image_bytes = image.read()
+            image_fields = build_item_image_fields(
+                image_bytes=image_bytes, content_type=image.content_type, filename=image.filename)
+        else:
+            temp_upload_id = (request.form.get("uploaded_image") or session.get("uploaded_image_id") or "").strip()
+            image_bytes, content_type, filename = consume_temp_upload(temp_upload_id)
+            if image_bytes:
+                image_fields = build_item_image_fields(
+                    image_bytes=image_bytes, content_type=content_type, filename=filename)
+
+        item = {
+            "name": name, "category": category, "type": "found",
+            "date": date_combined, "location": location, "description": description,
+            "status": "active", "reported_by": session["user_id"],
+            "created_at": datetime.utcnow(),
+            "dup_fingerprint": dup_fingerprint,
+            "is_possible_duplicate": bool(existing),
+            "duplicate_of": existing["_id"] if existing else None,
+        }
+        item.update(image_fields)
         items_collection.insert_one(item)
 
         if existing:
-            admin_users = list(users_collection.find({"role": "admin"}, {"_id": 1}))
-            admin_ids = [str(u["_id"]) for u in admin_users]
-            create_bulk_notifications(
-                admin_ids,
-                "admin",
-                f"Possible duplicate found item report: '{name}'.",
-                "duplicate_report",
-            )
+            admin_users = list(users_collection.find({"role": "admin"}))
+            for admin_user in admin_users:
+                create_notification(
+                    str(admin_user["_id"]),
+                    "admin",
+                    f"Possible duplicate found item report: '{name}'.",
+                    "duplicate_report",
+                )
+
+        # Clear uploaded image session
+        session.pop("show_uploaded_image_preview_once", None)
+        upload_id = session.pop("uploaded_image_id", None)
+        if upload_id:
+            from ..services.image_service import delete_temp_upload
+            delete_temp_upload(upload_id)
 
         session["report_success"] = True
         return redirect(url_for("staff.staff_dashboard"))
 
-    uploaded_image = request.args.get("upload_id")
+    show_uploaded_image_preview = session.pop("show_uploaded_image_preview_once", False)
+    uploaded_image = session.get("uploaded_image_id") if show_uploaded_image_preview else None
+
+    if not show_uploaded_image_preview and session.get("uploaded_image_id"):
+        session.pop("show_uploaded_image_preview_once", None)
+        upload_id = session.pop("uploaded_image_id", None)
+        if upload_id:
+            from ..services.image_service import delete_temp_upload
+            delete_temp_upload(upload_id)
+
     return render_template("report_found.html", uploaded_image=uploaded_image, categories=categories, today=today_str)
 
 

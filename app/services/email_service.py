@@ -1,167 +1,231 @@
-"""Email service for sending OTP emails using SendGrid API."""
-
+import json
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
-from ..config import SEND_EMAIL_OTP
+import smtplib
+from email.mime.text import MIMEText
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+RESEND_API_URL = "https://api.resend.com/emails"
 
 
-# Email templates
-OTP_LOGIN_TEMPLATE = """
-<html>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #2c3e50; text-align: center;">Lost & Found - Login Verification</h2>
-            <p>Hi,</p>
-            <p>You requested to login to your Lost & Found account. Please use the OTP below to verify your login:</p>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0;">
-                <p style="font-size: 28px; font-weight: bold; color: #007bff; letter-spacing: 5px; margin: 0;">{{ otp }}</p>
-            </div>
-            
-            <p><strong>This OTP will expire in {{ expiry_minutes }} minutes.</strong></p>
-            
-            <p style="color: #e74c3c;"><strong>⚠️ Important:</strong> Please don't share this OTP with anyone. Our staff will never ask for your OTP.</p>
-            
-            <p>If you didn't request this, please ignore this email.</p>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="font-size: 12px; color: #7f8c8d; text-align: center;">
-                Lost & Found System<br>
-                © 2024 All rights reserved
-            </p>
-        </div>
-    </body>
-</html>
-"""
-
-OTP_REGISTER_TEMPLATE = """
-<html>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #2c3e50; text-align: center;">Lost & Found - Email Verification</h2>
-            <p>Welcome,</p>
-            <p>We're excited to help you get started! Please verify your email address using the OTP below:</p>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0;">
-                <p style="font-size: 28px; font-weight: bold; color: #28a745; letter-spacing: 5px; margin: 0;">{{ otp }}</p>
-            </div>
-            
-            <p><strong>This OTP will expire in {{ expiry_minutes }} minutes.</strong></p>
-            
-            <p style="color: #e74c3c;"><strong>⚠️ Important:</strong> Please don't share this OTP with anyone. Our staff will never ask for your OTP.</p>
-            
-            <p>If you didn't create this account, please ignore this email.</p>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="font-size: 12px; color: #7f8c8d; text-align: center;">
-                Lost & Found System<br>
-                © 2024 All rights reserved
-            </p>
-        </div>
-    </body>
-</html>
-"""
-
-OTP_RESET_PASSWORD_TEMPLATE = """
-<html>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #2c3e50; text-align: center;">Lost & Found - Password Reset</h2>
-            <p>Hi,</p>
-            <p>We received a request to reset your password. Please use the OTP below to proceed with password reset:</p>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0;">
-                <p style="font-size: 28px; font-weight: bold; color: #ff9800; letter-spacing: 5px; margin: 0;">{{ otp }}</p>
-            </div>
-            
-            <p><strong>This OTP will expire in {{ expiry_minutes }} minutes.</strong></p>
-            
-            <p style="color: #e74c3c;"><strong>⚠️ Important:</strong> Please don't share this OTP with anyone. Our staff will never ask for your OTP.</p>
-            
-            <p>If you didn't request a password reset, please ignore this email and your password will remain unchanged.</p>
-            
-            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="font-size: 12px; color: #7f8c8d; text-align: center;">
-                Lost & Found System<br>
-                © 2024 All rights reserved
-            </p>
-        </div>
-    </body>
-</html>
-"""
+def _build_sender(from_email):
+    sender_name = os.environ.get("EMAIL_FROM_NAME", "CampusFind").strip() or "CampusFind"
+    if not from_email:
+        return ""
+    return f"{sender_name} <{from_email}>"
 
 
-def send_otp_email(email, otp, purpose, expiry_minutes=10):
-    """
-    Send OTP email using SendGrid API.
-    
-    Args:
-        email: User's email address
-        otp: Generated OTP code
-        purpose: Purpose of OTP ('login', 'register', or 'reset_password')
-        expiry_minutes: OTP validity period in minutes
-    
-    Returns:
-        tuple: (success: bool, message: str)
-    """
-    
-    if not SEND_EMAIL_OTP:
-        return True, "Email sending is disabled"
-    
-    if not email or not otp or not purpose:
-        return False, "Missing required parameters"
-    
-    try:
-        # Select template based on purpose
-        templates = {
-            "login": OTP_LOGIN_TEMPLATE,
-            "register": OTP_REGISTER_TEMPLATE,
-            "reset_password": OTP_RESET_PASSWORD_TEMPLATE,
-        }
-        
-        template = templates.get(purpose, OTP_LOGIN_TEMPLATE)
-        
-        # Render template with OTP and expiry
-        html_body = template.replace("{{ otp }}", otp).replace("{{ expiry_minutes }}", str(expiry_minutes))
-        
-        # Get SendGrid API key
-        sendgrid_api_key = os.environ.get("SENDGRID_API_KEY", "").strip()
-        if not sendgrid_api_key:
-            return False, "SendGrid API key not configured"
-        
-        from ..config import MAIL_DEFAULT_SENDER
-        
-        # Create SendGrid client
-        sg = SendGridAPIClient(sendgrid_api_key)
-        
-        # Create email
-        mail = Mail(
-            from_email=Email(MAIL_DEFAULT_SENDER),
-            to_emails=To(email),
-            subject=_get_email_subject(purpose),
-            html_content=Content("text/html", html_body)
-        )
-        
-        # Send email
-        response = sg.send(mail)
-        
-        if response.status_code in [200, 201, 202]:
-            return True, f"OTP sent successfully to {email}"
-        else:
-            return False, f"SendGrid API error: {response.status_code}"
-    
-    except Exception as e:
-        error_msg = f"Failed to send email: {str(e)}"
-        print(f"ERROR: {error_msg}")
-        return False, error_msg
+def _smtp_settings():
+    legacy_email = os.environ.get("EMAIL", "").strip()
+    legacy_password = os.environ.get("EMAIL_PASS", "").strip()
+    smtp_username = os.environ.get("SMTP_USERNAME", "").strip() or legacy_email
+    smtp_password = os.environ.get("SMTP_PASSWORD", "").strip() or legacy_password
+    from_email = os.environ.get("SMTP_FROM_EMAIL", "").strip() or legacy_email or smtp_username
+    smtp_host = os.environ.get("SMTP_HOST", "").strip()
+    if not smtp_host and legacy_email:
+        smtp_host = "smtp.gmail.com"
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    return smtp_host, smtp_port, smtp_username, smtp_password, from_email
 
 
-def _get_email_subject(purpose):
-    """Get email subject based on purpose."""
-    subjects = {
-        "login": "Your Lost & Found Login OTP",
-        "register": "Verify Your Email - Lost & Found",
-        "reset_password": "Reset Your Lost & Found Password",
+def _has_resend_config():
+    return bool(os.environ.get("RESEND_API_KEY", "").strip() and os.environ.get("RESEND_FROM_EMAIL", "").strip())
+
+
+def _has_brevo_config():
+    return bool(os.environ.get("BREVO_API_KEY", "").strip() and os.environ.get("BREVO_FROM_EMAIL", "").strip())
+
+
+def _has_smtp_config():
+    smtp_host, _, smtp_username, smtp_password, from_email = _smtp_settings()
+    return bool(smtp_host and smtp_username and smtp_password and from_email)
+
+
+def _build_otp_message(otp, purpose):
+    labels = {
+        "register": ("Verify your CampusFind account", "Complete your registration"),
+        "login": ("Your CampusFind login code", "Complete your login"),
+        "reset_password": ("Reset your CampusFind password", "Reset your password"),
     }
-    return subjects.get(purpose, "Lost & Found Verification")
+    subject, heading = labels.get(purpose, ("Your CampusFind verification code", "Verify your email"))
+    text = (
+        f"{heading}\n\n"
+        f"Your one-time code is: {otp}\n\n"
+        "This code expires in 10 minutes. If you did not request this, you can ignore this email."
+    )
+    html = f"""
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+        <h2 style="margin-bottom: 12px;">{heading}</h2>
+        <p>Use this one-time code to continue:</p>
+        <div style="font-size: 32px; font-weight: 700; letter-spacing: 8px; margin: 24px 0; color: #0d6efd;">
+            {otp}
+        </div>
+        <p>This code expires in 10 minutes.</p>
+        <p style="color: #6b7280;">If you did not request this, you can safely ignore this email.</p>
+    </div>
+    """
+    return subject, text, html
+
+
+def _send_via_resend(to_email, subject, text_body, html_body):
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
+    if not api_key or not from_email:
+        print("RESEND CONFIG MISSING: RESEND_API_KEY or RESEND_FROM_EMAIL not set")
+        return False
+
+    payload = {
+        "from": f"{os.environ.get('EMAIL_FROM_NAME', 'CampusFind')} <{from_email}>",
+        "to": [to_email],
+        "subject": subject,
+        "text": text_body,
+        "html": html_body,
+    }
+
+    try:
+        import requests
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=15)
+
+        if response.status_code in [200, 201]:
+            print(f"[SUCCESS] OTP email sent successfully via Resend to {to_email}")
+            return True, ""
+        else:
+            err = f"RESEND ERROR: {response.status_code} - {response.text}"
+            print(f"[ERROR] {err}")
+            return False, err
+
+    except requests.exceptions.RequestException as e:
+        err = f"RESEND NETWORK ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+    except Exception as e:
+        err = f"RESEND UNEXPECTED ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+
+
+def _send_via_brevo(to_email, subject, text_body, html_body):
+    api_key = os.environ.get("BREVO_API_KEY", "").strip()
+    from_email = os.environ.get("BREVO_FROM_EMAIL", "").strip()
+    if not api_key or not from_email:
+        err = "BREVO CONFIG MISSING: BREVO_API_KEY or BREVO_FROM_EMAIL not set"
+        print(err)
+        return False, err
+
+    sender_name = os.environ.get('EMAIL_FROM_NAME', 'CampusFind').strip()
+    payload = {
+        "sender": {"name": sender_name, "email": from_email},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "textContent": text_body,
+        "htmlContent": html_body,
+    }
+
+    try:
+        import requests
+        headers = {
+            "api-key": api_key,
+            "Content-Type": "application/json",
+        }
+        response = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers, timeout=15)
+
+        if response.status_code in [200, 201]:
+            print(f"[SUCCESS] OTP email sent successfully via Brevo to {to_email}")
+            return True, ""
+        else:
+            err = f"BREVO ERROR: {response.status_code} - {response.text}"
+            print(f"[ERROR] {err}")
+            return False, err
+
+    except requests.exceptions.RequestException as e:
+        err = f"BREVO NETWORK ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+    except Exception as e:
+        err = f"BREVO UNEXPECTED ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+
+
+
+def _send_via_smtp(to_email, subject, text_body):
+    smtp_host, smtp_port, smtp_username, smtp_password, from_email = _smtp_settings()
+    if not smtp_host or not smtp_username or not smtp_password or not from_email:
+        print("SMTP CONFIG MISSING: Missing SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, or SMTP_FROM_EMAIL")
+        return False
+
+    msg = MIMEText(text_body)
+    msg["Subject"] = subject
+    msg["From"] = f"{os.environ.get('EMAIL_FROM_NAME', 'CampusFind')} <{from_email}>"
+    msg["To"] = to_email
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        print(f"[SUCCESS] OTP email sent successfully via SMTP to {to_email}")
+        return True, ""
+    except smtplib.SMTPAuthenticationError as e:
+        err = f"SMTP AUTH ERROR: {str(e)} - Check credentials"
+        print(f"[ERROR] {err}")
+        return False, err
+    except smtplib.SMTPConnectError as e:
+        err = f"SMTP CONNECT ERROR: {str(e)} - Check SMTP host/port"
+        print(f"[ERROR] {err}")
+        return False, err
+    except smtplib.SMTPException as e:
+        err = f"SMTP ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+    except Exception as e:
+        err = f"SMTP UNEXPECTED ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+
+
+def send_otp_email(to_email, otp, purpose="verification"):
+    subject, text_body, html_body = _build_otp_message(otp, purpose)
+    provider = os.environ.get("EMAIL_PROVIDER", "auto").strip().lower()
+
+    print(f"DEBUG OTP for {to_email}: {otp}")
+
+    # Try Brevo
+    if provider in ["auto", "brevo"]:
+        if _has_brevo_config():
+            success, error_msg = _send_via_brevo(to_email, subject, text_body, html_body)
+            if success:
+                return True, ""
+            if provider == "brevo":
+                return False, f"Brevo API Failed: {error_msg}"
+            print("[WARNING] Brevo delivery failed. Proceeding to fallback...")
+        elif provider == "brevo":
+            return False, "Brevo configuration is missing."
+
+    # Try Resend
+    if provider in ["auto", "resend"]:
+        if _has_resend_config():
+            success, error_msg = _send_via_resend(to_email, subject, text_body, html_body)
+            if success:
+                return True, ""
+            if provider == "resend":
+                return False, f"Resend API Failed: {error_msg}"
+            print("[WARNING] Resend delivery failed. Attempting SMTP fallback...")
+        elif provider == "resend":
+            return False, "Resend configuration is missing."
+
+    # Fallback to SMTP 
+    if _has_smtp_config():
+        success, error_msg = _send_via_smtp(to_email, subject, text_body)
+        if success:
+            return True, ""
+        return False, f"SMTP Delivery Failed: {error_msg}"
+
+    msg = "EMAIL CONFIG MISSING - No email provider configured or fallback failed"
+    print(msg)
+    return False, msg

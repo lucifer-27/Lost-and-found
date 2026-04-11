@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo.errors import DuplicateKeyError
 from ..extensions import users_collection, limiter
-
+from ..services.email_service import send_otp_email
 from ..services.verification_service import (
     clear_email_verification,
     create_email_verification,
@@ -19,8 +19,8 @@ from ..services.verification_service import (
 
 auth_bp = Blueprint("auth", __name__)
 
-ADMIN_SECRET = os.environ.get("ADMIN_SECRET")
-STAFF_SECRET = os.environ.get("STAFF_SECRET")
+ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "")
+STAFF_SECRET = os.environ.get("STAFF_SECRET", "")
 
 
 def _set_login_session(user):
@@ -43,10 +43,10 @@ def _start_email_verification(email, purpose, payload=None):
     otp, error = create_email_verification(email, purpose, payload=payload)
     if error:
         return False, error
-    
-    # Always display the OTP on screen (development mode)
-    flash(f"DEVELOPMENT MODE: Your OTP is {otp}", "success")
-        
+    success, err_msg = send_otp_email(email, otp, purpose=purpose)
+    if not success:
+        clear_email_verification(email, purpose)
+        return False, f"We could not send the verification email. Error: {err_msg}"
     session["verification_email"] = email
     session["verification_purpose"] = purpose
     return True, None
@@ -107,13 +107,13 @@ def register():
        
         # Admin check
         if role == "admin":
-            if not re.match(r"^[a-zA-Z]+[^a-zA-Z0-9\s]+[0-9]+$", admin_code):
+            if admin_code != ADMIN_SECRET:
                 return render_template("register.html", error="Invalid admin access code")
 
         # Staff check
         if role == "staff":
-            if not re.match(r"^[a-zA-Z]+[^a-zA-Z0-9\s]+[0-9]+$", staff_code):
-                return render_template("register.html", error="Invalid staff code. Format: text + special character + numbers (e.g. staffansh@123)")
+            if not re.match(r"^[a-zA-Z]+@[0-9]+$", staff_code):
+                return render_template("register.html", error="Invalid staff access code. Code must be in format 'name@number' (e.g. staffniraj@123)")
 
         if users_collection.find_one({"email": email}):
             return render_template("register.html", error="Email already registered")
@@ -169,7 +169,6 @@ def login():
     return render_template("login.html")
 
 
-
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 @limiter.limit("2 per minute")
 def forgot_password():
@@ -177,11 +176,7 @@ def forgot_password():
         email = (request.form.get("email") or "").strip().lower()
         user = users_collection.find_one({"email": email})
         if not user:
-            # Prevent email enumeration by acting as if it succeeded
-            session["verification_email"] = email
-            session["verification_purpose"] = "reset_password"
-            return redirect(url_for("auth.verify_otp"))
-            
+            return render_template("forgot_password.html", error="Email not found")
         started, error = _start_email_verification(email, "reset_password")
         if not started:
             return render_template("forgot_password.html", error=error)

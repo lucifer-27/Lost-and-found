@@ -3,7 +3,6 @@ from math import ceil
 from datetime import datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
 from .otp_service import generate_otp
-from .email_service import send_otp_email
 from ..extensions import email_verifications_collection
 
 
@@ -53,7 +52,6 @@ def create_email_verification(email, purpose, payload=None):
     now = datetime.utcnow()
     if payload is None and existing:
         payload = existing.get("payload") or {}
-    
     email_verifications_collection.update_one(
         {"email": email, "purpose": purpose},
         {
@@ -70,14 +68,6 @@ def create_email_verification(email, purpose, payload=None):
         },
         upsert=True,
     )
-    
-    # Send OTP email
-    expiry_minutes = _otp_expiry_minutes()
-    success, message = send_otp_email(email, otp, purpose, expiry_minutes)
-    
-    if not success:
-        print(f"WARNING: Email sending failed for {email}: {message}")
-    
     return otp, None
 
 

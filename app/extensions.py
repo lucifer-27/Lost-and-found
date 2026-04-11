@@ -10,24 +10,11 @@ from .config import (
     MONGO_DNS_TIMEOUT_SECONDS,
     redact_mongo_uri,
 )
-from flask import request, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-def get_rate_limit_key():
-    # If user is logged in, use their user ID
-    if session and session.get("user_id"):
-        return str(session["user_id"])
-    
-    # If attempting auth actions, use the provided email to prevent blocking other students on the same IP
-    if request and request.method == "POST" and request.form.get("email"):
-        return request.form.get("email").strip().lower()
-        
-    # Fallback to IP address for other endpoints
-    return get_remote_address()
-
 limiter = Limiter(
-    key_func=get_rate_limit_key,
+    key_func=get_remote_address,
     default_limits=[]
 )
 
@@ -67,8 +54,8 @@ def create_mongo_client():
 
     if not connection_options:
         print("\nERROR: MongoDB is not configured.")
-        print("Set either MONGO_DIRECT_URI or MONGO_URI in your environment or .env file.")
-        return MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=2000)
+        print("Set either MONGO_DIRECT_URI or MONGO_URI in your environment or .env file, then restart the app.")
+        sys.exit(1)
 
     for label, uri in connection_options:
         if not uri or uri in tried:
@@ -91,12 +78,7 @@ def create_mongo_client():
     for uri in tried:
         print(" -", redact_mongo_uri(uri))
     print("\nCommon causes: network/DNS blocking SRV lookups, incorrect URI, or missing dnspython package.")
-    print("WARNING: App starting without DB connection. DB calls will fail until connectivity is restored.")
-    # Fall back to a safe localhost client so the app can at least start
-    try:
-        return MongoClient(connection_options[0][1], serverSelectionTimeoutMS=2000)
-    except Exception:
-        return MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=2000)
+    sys.exit(1)
 
 
 # Initialize on import
@@ -114,22 +96,17 @@ notifications_collection = db["notifications"]
 temp_uploads_collection = db["temp_uploads"]
 email_verifications_collection = db["email_verifications"]
 item_reports_collection = db["item_reports"]
+temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
+users_collection.create_index("email", unique=True)
+item_reports_collection.create_index([("item_id", 1), ("reported_by", 1), ("status", 1)])
+item_reports_collection.create_index("created_at")
+items_collection.create_index([("dup_fingerprint", 1), ("status", 1)])
 
-def init_db():
-    try:
-        temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
-        users_collection.create_index("email", unique=True)
-        item_reports_collection.create_index([("item_id", 1), ("reported_by", 1), ("status", 1)])
-        item_reports_collection.create_index("created_at")
-        items_collection.create_index([("dup_fingerprint", 1), ("status", 1)])
-        email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
-        email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)
-        claims_collection.create_index(
-            [("requested_by", 1), ("item_id", 1)],
-            unique=True,
-            partialFilterExpression={"status": "pending"}
-        )
-        print("INFO: Database indexes initialized successfully.")
-    except Exception as e:
-        print(f"WARNING: Could not initialize database indexes on startup: {e}")
-
+email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
+email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)
+# CLAIM DUPLICATION
+claims_collection.create_index(
+    [("requested_by", 1), ("item_id", 1)],
+    unique=True,
+    partialFilterExpression={"status": "pending"}
+)

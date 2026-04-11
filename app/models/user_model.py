@@ -17,26 +17,13 @@ provides helper functions for user operations.
 # }
 
 
-import dataclasses
-from typing import Optional
-
-@dataclasses.dataclass
-class User:
-    name: str
-    full_name: str
-    email: str
-    role: str
-    password_hash: str
-    account_flagged: bool = False
-    flag_reason: Optional[str] = None
-
-def new_user(full_name: str, email: str, role: str, password_hash: str) -> dict:
+def new_user(full_name, email, role, password_hash):
     """Return a new user document ready for insertion."""
-    user = User(
-        name=full_name,
-        full_name=full_name,
-        email=email,
-        role=role,
-        password_hash=password_hash
-    )
-    return dataclasses.asdict(user)
+    return {
+        "name": full_name,
+        "full_name": full_name,
+        "email": email,
+        "role": role,
+        "password_hash": password_hash,
+        "account_flagged": False,
+    }

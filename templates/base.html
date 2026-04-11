@@ -55,141 +55,48 @@
     </script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dropdown-animations.css') }}">
     {% block extra_head %}{% endblock %}
 </head>
 
 <body class="bg-brandGray min-h-screen text-slate-900 flex flex-col">
 
     <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div class="container-responsive">
-            <div class="flex items-center justify-between h-16">
-                <!-- Brand Logo -->
-                <a class="flex items-center gap-2 no-underline flex-shrink-0" href="{{ url_for('general.home') }}">
-                    <span class="material-icons text-[28px] md:text-[30px] text-blue-600">search</span>
-                    <span class="text-lg md:text-2xl font-bold tracking-tight text-blue-600">CampusFind</span>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="h-16 flex items-center justify-between">
+                <a class="flex items-center gap-2 no-underline" href="{{ url_for('general.home') }}">
+                    <span class="material-icons text-[30px] text-blue-600">search</span>
+                    <span class="text-2xl font-bold tracking-tight text-blue-600">CampusFind</span>
                 </a>
 
-                <!-- Hamburger Menu for Mobile -->
-                <button class="hamburger-menu md:hidden" id="hamburger-btn" aria-label="Toggle menu" aria-expanded="false">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-
-                <!-- Desktop Navigation -->
-                <nav class="nav-desktop md:flex items-center gap-6 text-sm font-medium">
+                <div class="flex items-center gap-3 text-sm font-medium">
                     <a class="text-gray-600 hover:text-blue-600 no-underline transition-colors" href="{{ url_for('general.home') }}">
                         Home
                     </a>
                     {% if session.get('user') %}
-                    <a class="text-gray-600 hover:text-blue-600 no-underline transition-colors hidden lg:inline" 
-                        href="{%- if session.get('role') == 'student' -%}/student{%- elif session.get('role') == 'staff' -%}/staff{%- elif session.get('role') == 'admin' -%}/admin{%- else -%}/login{%- endif -%}">
-                        Dashboard
-                    </a>
-                    <a class="bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 md:px-4 py-2 rounded-full border border-gray-200 no-underline transition-colors shadow-sm text-xs md:text-sm"
+                    <a class="bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full border border-gray-200 no-underline transition-colors shadow-sm"
                         href="{%- if session.get('role') == 'student' -%}/student{%- elif session.get('role') == 'staff' -%}/staff{%- elif session.get('role') == 'admin' -%}/admin{%- else -%}/login{%- endif -%}">
                         Dashboard
                     </a>
                     {% else %}
-                    <a class="bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 md:px-4 py-2 rounded-full border border-gray-200 no-underline transition-colors shadow-sm text-xs md:text-sm"
+                    <a class="bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full border border-gray-200 no-underline transition-colors shadow-sm"
                         href="{{ url_for('auth.login') }}">
                         Login
                     </a>
                     {% endif %}
-                </nav>
+                </div>
             </div>
-
-            <!-- Mobile Navigation Menu -->
-            <nav class="nav-menu" id="nav-menu">
-                <a class="nav-item" href="{{ url_for('general.home') }}">
-                    <span class="material-icons">home</span>
-                    <span>Home</span>
-                </a>
-                {% if session.get('user') %}
-                <a class="nav-item" href="{%- if session.get('role') == 'student' -%}/student{%- elif session.get('role') == 'staff' -%}/staff{%- elif session.get('role') == 'admin' -%}/admin{%- else -%}/login{%- endif -%}">
-                    <span class="material-icons">dashboard</span>
-                    <span>Dashboard</span>
-                </a>
-                <a class="nav-item" href="{{ url_for('auth.logout') }}">
-                    <span class="material-icons">logout</span>
-                    <span>Logout</span>
-                </a>
-                {% else %}
-                <a class="nav-item" href="{{ url_for('auth.login') }}">
-                    <span class="material-icons">login</span>
-                    <span>Login</span>
-                </a>
-                <a class="nav-item" href="{{ url_for('auth.register') }}">
-                    <span class="material-icons">person_add</span>
-                    <span>Register</span>
-                </a>
-                {% endif %}
-            </nav>
         </div>
     </header>
 
-    <main class="flex-1 w-full py-6 md:py-8">
-        <div class="container-responsive">
+    <main class="flex-1 w-full py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {% block content %}
             {% endblock %}
         </div>
     </main>
 
-    <footer class="mt-8 md:mt-12 py-6 md:py-8 bg-white border-t border-gray-100">
-        <div class="container-responsive text-center">
-            <p class="text-xs md:text-sm text-gray-600">&copy; 2026 CampusFind. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <!-- Mobile Menu Toggle Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburgerBtn = document.getElementById('hamburger-btn');
-            const navMenu = document.getElementById('nav-menu');
-
-            // Toggle menu on hamburger click
-            if (hamburgerBtn) {
-                hamburgerBtn.addEventListener('click', function() {
-                    this.classList.toggle('open');
-                    navMenu.classList.toggle('active');
-                    this.setAttribute('aria-expanded', navMenu.classList.contains('active'));
-                });
-
-                // Close menu when a nav item is clicked
-                const navItems = navMenu.querySelectorAll('.nav-item');
-                navItems.forEach(item => {
-                    item.addEventListener('click', function() {
-                        hamburgerBtn.classList.remove('open');
-                        navMenu.classList.remove('active');
-                        hamburgerBtn.setAttribute('aria-expanded', 'false');
-                    });
-                });
-
-                // Close menu when clicking outside
-                document.addEventListener('click', function(event) {
-                    if (!event.target.closest('.hamburger-menu') && !event.target.closest('.nav-menu')) {
-                        hamburgerBtn.classList.remove('open');
-                        navMenu.classList.remove('active');
-                        hamburgerBtn.setAttribute('aria-expanded', 'false');
-                    }
-                });
-
-                // Close menu on window resize (if resizing from mobile to desktop)
-                window.addEventListener('resize', function() {
-                    if (window.innerWidth > 768) {
-                        hamburgerBtn.classList.remove('open');
-                        navMenu.classList.remove('active');
-                        hamburgerBtn.setAttribute('aria-expanded', 'false');
-                    }
-                });
-            }
-        });
-    </script>
-</body>
-
-</html>
+    <footer class="mt-12 py-8 bg-white border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="text-center text-xs text-gray-500">
                 © 2026 CampusFind PDEU. All rights reserved.
             </div>

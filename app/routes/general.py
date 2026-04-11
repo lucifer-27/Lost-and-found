@@ -23,48 +23,23 @@ def send_contact_email(to_email, subject, body):
         
         if not all([smtp_host, smtp_username, smtp_password, from_email]):
             print("Email configuration missing")
-            return False, "SMTP configuration is missing. Please contact support via Twitter/X."
+            return False
             
         msg = MIMEText(body)
         msg["Subject"] = subject
         msg["From"] = from_email
         msg["To"] = to_email
         
-        # Safely force IPv4 by overriding the socket creation for this specific SMTP instance
-        # This prevents process-wide monkey-patching which causes race conditions.
-        import socket
-        class IPv4SMTP(smtplib.SMTP):
-            def _get_socket(self, host, port, timeout):
-                err = None
-                for res in socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM):
-                    af, socktype, proto, canonname, sa = res
-                    try:
-                        sock = socket.socket(af, socktype, proto)
-                        if self.timeout is not getattr(socket, '_GLOBAL_DEFAULT_TIMEOUT', object()):
-                            sock.settimeout(self.timeout)
-                        if self.source_address:
-                            sock.bind(self.source_address)
-                        sock.connect(sa)
-                        return sock
-                    except OSError as _:
-                        err = _
-                        if sock is not None:
-                            sock.close()
-                if err is not None:
-                    raise err
-                raise OSError("getaddrinfo returns an empty list")
-
-        with IPv4SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
             server.starttls()
             server.login(smtp_username, smtp_password)
             server.send_message(msg)
         
         print(f"Contact email sent successfully to {to_email}")
-        return True, ""
+        return True
     except Exception as e:
-        error_details = f"SMTP Error: {str(e)}"
-        print(f"Error sending contact email: {error_details}")
-        return False, error_details
+        print(f"Error sending contact email: {str(e)}")
+        return False
 
 general_bp = Blueprint("general", __name__)
 
@@ -74,9 +49,6 @@ def home():
     items = list(items_collection.find({"status": "active"}, ITEM_LIST_PROJECTION).sort("created_at", -1).limit(4))
     return render_template("index.html", recent_items=items)
 
-@general_bp.route("/privacy_policy")
-def privacy_policy():
-    return render_template("privacy_policy.html")
 
 @general_bp.route("/contact", methods=["GET", "POST"])
 @general_bp.route("/contact-us", methods=["GET", "POST"])
@@ -115,19 +87,14 @@ Message:
 Reply to: {email}
                 """
 
-                import threading
-                # Offload email sending to a background thread to prevent blocking
-                threading.Thread(
-                    target=send_contact_email,
-                    kwargs={
-                        "to_email": "campusfind.lnf@gmail.com",
-                        "subject": email_subject,
-                        "body": send_email_body
-                    },
-                    daemon=True
-                ).start()
-                
-                success_message = "Your message has been sent successfully! We'll get back to you soon."
+                if send_contact_email(
+                    to_email="campusfind.lnf@gmail.com",
+                    subject=email_subject,
+                    body=send_email_body,
+                ):
+                    success_message = "Your message has been sent successfully! We'll get back to you soon."
+                else:
+                    error_message = "Failed to send message. Please try again or email us directly at campusfind.lnf@gmail.com"
                 name = email = subject = message = ""  # Clear form
 
             except Exception as e:
@@ -230,60 +197,38 @@ def upload():
 
     file_id = None
 
-    from flask import flash
-    try:
-        # Camera (base64)
-        image_data = request.form.get("image")
-        if image_data:
-            if not image_data.startswith("data:image"):
-                flash("Invalid image payload", "error")
-                return redirect(request.args.get("next") or url_for("items.report_found"))
-            try:
-                header, encoded_data = image_data.split(",", 1)
-                content_type = header.split(";")[0].split(":", 1)[1] if ":" in header else "image/png"
-                image_bytes = base64.b64decode(encoded_data, validate=True)
+    # Camera (base64)
+    image_data = request.form.get("image")
+    if image_data:
+        if not image_data.startswith("data:image"):
+            return "Invalid image"
+        header, encoded_data = image_data.split(",", 1)
+        content_type = header.split(";")[0].split(":", 1)[1] if ":" in header else "image/png"
+        image_bytes = base64.b64decode(encoded_data)
+        file_id = store_temp_upload(image_bytes, content_type)
 
-                # SAFE STORE
-                file_id = store_temp_upload(image_bytes, content_type)
-
-                if not file_id:
-                    flash("Invalid or too large image", "error")
-                    return redirect(request.args.get("next") or url_for("items.report_found"))
-            except Exception:
-                flash("Corrupted image data", "error")
-                return redirect(request.args.get("next") or url_for("items.report_found"))
-            file_id = store_temp_upload(image_bytes, content_type)
-
-            if not file_id:
-                flash("Invalid or too large image", "error")
-                return redirect(request.args.get("next") or url_for("items.report_found"))
-
-        # File upload
-        elif "image" in request.files:
-            image = request.files["image"]
-            if image and image.filename:
-                image_bytes = image.read()
-                file_id = store_temp_upload(image_bytes, image.content_type, image.filename)
-
-                if not file_id:
-                    flash("Invalid or too large image", "error")
-                    return redirect(request.args.get("next") or url_for("items.report_found"))
-            else:
-                flash("No image received", "error")
-                return redirect(request.args.get("next") or url_for("items.report_found"))
+    # File upload
+    elif "image" in request.files:
+        image = request.files["image"]
+        if image and image.filename:
+            image_bytes = image.read()
+            file_id = store_temp_upload(image_bytes, image.content_type, image.filename)
         else:
-            flash("No image received", "error")
-            return redirect(request.args.get("next") or url_for("items.report_found"))
-            
-    except ValueError as e:
-        flash(str(e), "error")
-        return redirect(request.args.get("next") or url_for("items.report_found"))
+            return "No image received"
+    else:
+        return "No image received"
+
+    # Clear any previous upload
+    session.pop("show_uploaded_image_preview_once", None)
+    old_upload_id = session.pop("uploaded_image_id", None)
+    if old_upload_id:
+        delete_temp_upload(old_upload_id)
+
+    session["uploaded_image_id"] = str(file_id)
+    session["show_uploaded_image_preview_once"] = True
 
     next_url = request.args.get("next") or url_for("items.report_found")
-    if "?" in next_url:
-        return redirect(f"{next_url}&upload_id={file_id}")
-    else:
-        return redirect(f"{next_url}?upload_id={file_id}")
+    return redirect(next_url)
 
 
 @general_bp.route("/image/<file_id>")

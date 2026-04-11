@@ -16,6 +16,15 @@ def create_app():
     TEMPLATE_DIR = os.path.join(PROJECT_ROOT, "templates")
     STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
 
+    # Debug (safe)
+    print("PROJECT_ROOT:", PROJECT_ROOT)
+    print("TEMPLATE_DIR:", TEMPLATE_DIR)
+
+    if os.path.exists(TEMPLATE_DIR):
+        print("FILES:", os.listdir(TEMPLATE_DIR))
+    else:
+        print("ERROR: TEMPLATE_DIR not found")
+
     # Create Flask app
     app = Flask(
         __name__,
@@ -23,21 +32,16 @@ def create_app():
         static_folder=STATIC_DIR
     )
 
+    print("FINAL TEMPLATE PATH:", app.template_folder)
+
     # Config
-    from app.config import SECRET_KEY
-    
-    app.config["SECRET_KEY"] = SECRET_KEY
+    app.config["SECRET_KEY"] = "test_secret"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = True
-    app.config["RATELIMIT_STORAGE_URI"] = "memory://"
+    app.config["SESSION_COOKIE_SECURE"] = False
 
     csrf.init_app(app)
     limiter.init_app(app)
-    
-    # Initialize database
-    from app.extensions import init_db
-    init_db()
 
     # Import and register blueprints
     from app.routes.auth import auth_bp

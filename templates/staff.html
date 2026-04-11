@@ -46,43 +46,30 @@
 
     <!-- NAVBAR -->
     <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-14 sm:h-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
 
-                <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-lg sm:text-2xl font-bold text-blue-600 flex items-center gap-1">
-                        <span class="material-icons text-base sm:text-2xl flex-shrink-0">search</span>
-                        <span class="hidden sm:inline">CampusFind</span>
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-blue-600 flex items-center">
+                        <span class="material-icons mr-2">search</span>
+                        CampusFind
                     </span>
                 </div>
 
-                <div class="hidden md:flex items-center space-x-4 lg:space-x-8">
+                <div class="hidden md:flex items-center space-x-8">
 
-                    <a class="text-gray-600 hover:text-blue-600 relative flex items-center justify-center min-h-11 min-w-11" href="/" title="Home">
+                    <a class="text-gray-600 hover:text-blue-600 relative" href="/">
                         <span class="material-icons">home</span>
                     </a>
 
-                    <a class="text-gray-600 hover:text-blue-600 relative flex items-center justify-center min-h-11 min-w-11" href="/notifications" title="Notifications">
+                    <a class="text-gray-600 hover:text-blue-600 relative" href="/notifications">
                         <span class="material-icons">notifications</span>
                     </a>
 
                     <a href="/logout"
-                        class="flex items-center space-x-1 sm:space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 sm:px-4 py-2 rounded-full border border-gray-200 text-xs sm:text-sm font-medium min-h-11">
-                        <span class="material-icons text-base">logout</span>
-                        <span class="hidden sm:inline">Logout</span>
-                    </a>
-                </div>
-
-                <!-- Mobile menu buttons -->
-                <div class="md:hidden flex items-center gap-2">
-                    <a class="text-gray-600 hover:text-blue-600 flex items-center justify-center min-h-11 min-w-11" href="/" title="Home">
-                        <span class="material-icons">home</span>
-                    </a>
-                    <a class="text-gray-600 hover:text-blue-600 flex items-center justify-center min-h-11 min-w-11" href="/notifications" title="Notifications">
-                        <span class="material-icons">notifications</span>
-                    </a>
-                    <a href="/logout" class="text-gray-600 hover:text-blue-600 flex items-center justify-center min-h-11 min-w-11" title="Logout">
-                        <span class="material-icons">logout</span>
+                        class="flex items-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full border border-gray-200">
+                        <span class="material-icons text-sm">logout</span>
+                        <span class="font-medium text-sm">Logout</span>
                     </a>
                 </div>
 
@@ -90,19 +77,19 @@
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <!-- REPORT SUCCESS TOAST -->
         {% if report_success %}
         <div id="success-toast"
-            class="fixed top-16 sm:top-20 right-2 sm:right-6 z-50 bg-green-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-2xl flex items-center gap-2 sm:gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
-            style="max-width: 95vw; min-width: 280px;">
-            <span class="material-icons text-2xl sm:text-3xl flex-shrink-0">check_circle</span>
-            <div class="min-w-0 flex-1">
-                <h4 class="font-bold text-sm sm:text-base">Report Submitted!</h4>
-                <p class="text-green-100 text-xs sm:text-sm">Found item has been logged successfully.</p>
+            class="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-[120%] transition-transform duration-500 ease-out"
+            style="min-width: 320px;">
+            <span class="material-icons text-3xl">check_circle</span>
+            <div>
+                <h4 class="font-bold text-base">Report Submitted!</h4>
+                <p class="text-green-100 text-sm">Found item has been logged successfully.</p>
             </div>
-            <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white flex-shrink-0">
+            <button onclick="dismissToast()" class="ml-auto text-green-200 hover:text-white">
                 <span class="material-icons">close</span>
             </button>
         </div>
@@ -119,61 +106,61 @@
         {% endif %}
 
         <!-- HERO -->
-        <section class="mb-6 sm:mb-8">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-card p-6 sm:p-8 md:p-12 text-white shadow-lg">
-                <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Security Dashboard</h1>
-                <p class="text-blue-100 text-sm sm:text-base md:text-lg">Manage lost property and verify claims.</p>
+        <section class="mb-8">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-card p-8 md:p-12 text-white shadow-lg">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2">Security Dashboard</h1>
+                <p class="text-blue-100 text-lg">Manage lost property and verify claims.</p>
             </div>
         </section>
 
         <!-- QUICK ACTIONS -->
-        <section class="mb-8 sm:mb-12">
-            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6">Quick Actions</h2>
+        <section class="mb-12">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Quick Actions</h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
                 <!-- Report Found Item -->
                 <a href="/report-found"
-                    class="bg-white p-5 sm:p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                    class="bg-white p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                     <div
-                        class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-green-600 group-hover:text-white">
+                        class="w-12 h-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:text-white">
                         <span class="material-icons">inventory_2</span>
                     </div>
-                    <h3 class="font-bold text-gray-900 mb-1 text-sm sm:text-base">Report Found Item</h3>
-                    <p class="text-gray-500 text-xs sm:text-sm">Log a recovered item.</p>
+                    <h3 class="font-bold text-gray-900 mb-1">Report Found Item</h3>
+                    <p class="text-gray-500 text-sm">Log a recovered item.</p>
                 </a>
 
                 <!-- View All Items -->
                 <a href="/items"
-                    class="bg-white p-5 sm:p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                    class="bg-white p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                     <div
-                        class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-blue-600 group-hover:text-white">
+                        class="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white">
                         <span class="material-icons">manage_search</span>
                     </div>
-                    <h3 class="font-bold text-gray-900 mb-1 text-sm sm:text-base">View All Items</h3>
-                    <p class="text-gray-500 text-xs sm:text-sm">Search the inventory.</p>
+                    <h3 class="font-bold text-gray-900 mb-1">View All Items</h3>
+                    <p class="text-gray-500 text-sm">Search the inventory.</p>
                 </a>
 
                 <!-- Process Claims -->
                 <a href="/claim"
-                    class="bg-white p-5 sm:p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                    class="bg-white p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                     <div
-                        class="w-12 h-12 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-purple-600 group-hover:text-white">
+                        class="w-12 h-12 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white">
                         <span class="material-icons">verified_user</span>
                     </div>
-                    <h3 class="font-bold text-gray-900 mb-1 text-sm sm:text-base">Process Claims</h3>
-                    <p class="text-gray-500 text-xs sm:text-sm">Verify ownership and return item.</p>
+                    <h3 class="font-bold text-gray-900 mb-1">Process Claims</h3>
+                    <p class="text-gray-500 text-sm">Verify ownership and return item.</p>
                 </a>
 
                 <!-- Notifications -->
                 <a href="/notifications"
-                    class="bg-white p-5 sm:p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                    class="bg-white p-6 rounded-card shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
                     <div
-                        class="w-12 h-12 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-amber-600 group-hover:text-white">
+                        class="w-12 h-12 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-amber-600 group-hover:text-white">
                         <span class="material-icons">notifications_active</span>
                     </div>
-                    <h3 class="font-bold text-gray-900 mb-1 text-sm sm:text-base">Notifications</h3>
-                    <p class="text-gray-500 text-xs sm:text-sm">System alerts and updates.</p>
+                    <h3 class="font-bold text-gray-900 mb-1">Notifications</h3>
+                    <p class="text-gray-500 text-sm">System alerts and updates.</p>
                 </a>
 
             </div>
@@ -183,8 +170,8 @@
 
     </main>
 
-    <footer class="mt-8 sm:mt-12 py-6 sm:py-8 bg-white border-t border-gray-100">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 text-center">
+    <footer class="mt-12 py-8 bg-white border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="text-center text-xs">
                 © 2026 CampusFind PDEU. All rights reserved.
             </div>

@@ -31,22 +31,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
         }
-
-        @keyframes slideDownFade {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-slide-down {
-            animation: slideDownFade 0.3s ease-out forwards;
-        }
     </style>
 
     <script>
@@ -64,29 +48,28 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dropdown-animations.css') }}">
 </head>
 
-<body class="bg-brandGray min-h-screen flex items-center justify-center p-3 sm:p-4">
+<body class="bg-brandGray min-h-screen flex items-center justify-center p-4">
 
     <main class="w-full max-w-md">
-        <section class="bg-white p-6 sm:p-8 shadow-xl rounded-card border border-gray-100">
+        <section class="bg-white p-8 shadow-xl rounded-card border border-gray-100">
 
             <!-- Logo -->
-            <div class="flex flex-col items-center mb-6 sm:mb-8">
-                <div class="w-14 sm:w-16 h-14 sm:h-16 bg-primary rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
-                    <svg class="h-8 sm:h-10 w-8 sm:w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                    <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
                             stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                     </svg>
                 </div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Create Account</h1>
-                <p class="text-xs sm:text-sm text-gray-500 mt-1">Join CampusFind at PDEU</p>
+                <h1 class="text-2xl font-bold text-gray-900">Create Account</h1>
+                <p class="text-sm text-gray-500 mt-1">Join CampusFind at PDEU</p>
             </div>
 
             <!-- Flask error message -->
             {% if error %}
-            <div class="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-card text-xs sm:text-sm mb-4 sm:mb-6 font-medium">
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
                 {{ error }}
             </div>
             {% endif %}
@@ -94,79 +77,53 @@
             <!-- Flask success message -->
             {% if success %}
             <div
-                class="bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 sm:py-3 rounded-card text-xs sm:text-sm mb-4 sm:mb-6 font-medium">
+                class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-card text-sm mb-6 font-medium">
                 {{ success }}
             </div>
             {% endif %}
 
             <!-- ✅ Form posts to Flask /register route -->
-            <form action="/register" method="POST" class="space-y-4 sm:space-y-5" id="register-form">
+            <form action="/register" method="POST" class="space-y-5">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <!-- Role -->
                 <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="role-btn">Register As</label>
-                    <input type="hidden" id="role" name="role" required>
-
-                    <div class="relative" id="role-dropdown">
-                        <button type="button" id="role-btn"
-                            class="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white text-sm sm:text-base min-h-11">
-                            <span id="role-label">Select Role</span>
-                            <svg class="dropdown-chevron w-4 h-4 text-gray-400" id="role-chevron"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-
-                        <div id="role-options"
-                            class="custom-dropdown-options absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
-                            <ul class="py-1">
-                                <li class="dropdown-option cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-700 min-h-11 flex items-center"
-                                    data-value="student">
-                                    Student
-                                </li>
-                                <li class="dropdown-option cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-700 min-h-11 flex items-center"
-                                    data-value="staff">
-                                    Security Staff
-                                </li>
-                                <li class="dropdown-option cursor-pointer px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-700 min-h-11 flex items-center"
-                                    data-value="admin">
-                                    Admin
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <p id="role-error" class="hidden text-xs text-red-600 mt-1">Please select a role.</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="role">Register As</label>
+                    <select id="role" name="role" required
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white">
+                        <option value="" disabled selected hidden>Select Role</option>
+                        <option value="student">Student</option>
+                        <option value="staff">Security Staff</option>
+                        <option value="admin">Admin</option>
+                    </select>
                 </div>
 
                 <!-- Dynamic Role-Specific Fields (Hidden until role selected) -->
-                <div id="dynamic-fields" class="space-y-4 sm:space-y-5 hidden pt-1">
+                <div id="dynamic-fields" class="space-y-5 hidden pt-1">
 
                     <!-- Roll No for Student -->
                     <div id="student-fields" class="hidden focus-within:ring-0">
-                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="roll_no">Roll Number</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="roll_no">Roll Number</label>
                         <input id="roll_no" name="roll_no" type="text" placeholder="Enter your roll number"
-                            class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
+                            class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                     </div>
 
                     <!-- Staff Code for Staff -->
                     <div id="staff-fields" class="hidden">
-                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="staff_code">Staff Code</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="staff_code">Staff Code</label>
                         <input id="staff_code" name="staff_code" type="text" placeholder="e.g. staff@123"
                             pattern="^[a-zA-Z0-9]+[@#$%^&+=_!-]+[0-9]+$"
                             title="Must include alphanumeric characters and at least one special character like @"
-                            class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
+                            class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                     </div>
 
                     <!-- Admin Code for Admin -->
                     <div id="admin-fields" class="hidden">
-                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="admin_code">Admin Code</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="admin_code">Admin Code</label>
                         <input id="admin_code" name="admin_code" type="text" placeholder="e.g. admin@123"
                             pattern="^[a-zA-Z0-9]+[@#$%^&+=_!-]+[0-9]+$"
                             title="Must include alphanumeric characters and at least one special character like @"
-                            class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
+                            class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                     </div>
 
                 </div>
@@ -174,91 +131,58 @@
 
                 <!-- Full Name -->
                 <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="full_name">Full Name</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="full_name">Full Name</label>
                     <input id="full_name" name="full_name" type="text" placeholder="Enter your full name" required
-                        class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                 </div>
 
                 <!-- Email -->
                 <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="email">College Email</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="email">College Email</label>
                     <input id="email" name="email" type="email" placeholder="rollno@dept.pdpu.ac.in"
                         pattern="[a-zA-Z0-9]+@[a-zA-Z0-9]+\.pdpu\.ac\.in"
                         title="Use your college email — e.g. 24bcp001@sot.pdpu.ac.in" required
-                        class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                 </div>
 
 
                 <!-- Password -->
                 <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="password">Password</label>
-                    <div class="relative">
-                        <input id="password" name="password" type="password" placeholder="e.g. Pass@123" minlength="8"
-                            pattern="(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@#$%^&+=_!\-]).{8,}"
-                            title="Must be 8+ characters with letters, numbers, and a special character (@, #, $, etc.)"
-                            required
-                            class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-11 sm:pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
-                        <button type="button" id="register-password-toggle" aria-label="Show password"
-                            aria-pressed="false"
-                            class="absolute inset-y-0 right-0 flex items-center px-2.5 sm:px-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-primary transition-colors">
-                            <svg class="h-5 w-5 toggle-eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                <circle cx="12" cy="12" r="3" stroke-width="1.8"></circle>
-                            </svg>
-                            <svg class="hidden h-5 w-5 toggle-eye-closed" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                    d="M3 3l18 18M10.585 10.587A2 2 0 0014 12m5.232 5.229A9.956 9.956 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 012.223-3.592M9.88 5.09A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.964 9.964 0 01-1.249 2.592M6.228 6.228A9.965 9.965 0 004.455 8.41" />
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1">Must include letters, numbers & a special character (@, #, $ etc.)</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Password</label>
+                    <input id="password" name="password" type="password" placeholder="e.g. Pass@123" minlength="8"
+                        pattern="(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@#$%^&+=_!\-]).{8,}"
+                        title="Must be 8+ characters with letters, numbers, and a special character (@, #, $, etc.)"
+                        required
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                    <p class="text-xs text-gray-400 mt-1">Must include letters, numbers & a special character (@, #, $
+                        etc.)</p>
                 </div>
 
                 <!-- Confirm Password -->
                 <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2" for="confirm_password">Confirm
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="confirm_password">Confirm
                         Password</label>
-                    <div class="relative">
-                        <input id="confirm_password" name="confirm_password" type="password"
-                            placeholder="Re-enter your password" minlength="8" required
-                            class="block w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-11 sm:pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-base sm:text-base min-h-11" />
-                        <button type="button" id="confirm-password-toggle" aria-label="Show password"
-                            aria-pressed="false"
-                            class="absolute inset-y-0 right-0 flex items-center px-2.5 sm:px-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-primary transition-colors">
-                            <svg class="h-5 w-5 toggle-eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                <circle cx="12" cy="12" r="3" stroke-width="1.8"></circle>
-                            </svg>
-                            <svg class="hidden h-5 w-5 toggle-eye-closed" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                    d="M3 3l18 18M10.585 10.587A2 2 0 0014 12m5.232 5.229A9.956 9.956 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 012.223-3.592M9.88 5.09A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.964 9.964 0 01-1.249 2.592M6.228 6.228A9.965 9.965 0 004.455 8.41" />
-                            </svg>
-                        </button>
-                    </div>
+                    <input id="confirm_password" name="confirm_password" type="password"
+                        placeholder="Re-enter your password" minlength="8" required
+                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
                 </div>
 
                 <!-- Terms -->
-                <div class="flex items-start gap-2 min-h-11">
+                <div class="flex items-start gap-2">
                     <input id="terms" name="terms" type="checkbox" required
-                        class="h-4 w-4 mt-1 sm:mt-0.5 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer" />
-                    <label class="text-xs sm:text-sm text-gray-600 cursor-pointer" for="terms">
+                        class="h-4 w-4 mt-0.5 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer" />
+                    <label class="text-sm text-gray-600 cursor-pointer" for="terms">
                         I agree to the
                         <a href="#" class="text-primary font-medium hover:underline">Terms of Service</a>
                         and
-                        <a href="/privacy_policy" class="text-primary font-medium hover:underline">Privacy Policy</a>
+                        <a href="#" class="text-primary font-medium hover:underline">Privacy Policy</a>
                     </label>
                 </div>
 
                 <!-- Submit -->
                 <div class="pt-2">
                     <button type="submit"
-                        class="hover-lift w-full bg-primary text-white font-semibold py-2.5 sm:py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all text-sm sm:text-base flex items-center justify-center min-h-11">
+                        class="hover-lift w-full bg-primary text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all text-base flex items-center justify-center">
                         Create Account
                     </button>
                 </div>
@@ -266,12 +190,12 @@
             </form>
 
             <!-- Footer links -->
-            <div class="mt-6 sm:mt-8 text-center">
-                <p class="text-xs sm:text-sm text-gray-600 mb-2">
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray-600 mb-2">
                     Already have an account?
                     <a class="font-medium text-primary hover:underline" href="/login">Login here</a>
                 </p>
-                <p class="text-xs sm:text-sm text-gray-600">
+                <p class="text-sm text-gray-600">
                     Trouble registering?
                     <a class="font-medium text-primary hover:underline" href="/contact">Contact Support</a>
                 </p>
@@ -279,7 +203,7 @@
 
         </section>
 
-        <p class="mt-4 sm:mt-6 text-center text-xs text-gray-400">
+        <p class="mt-6 text-center text-xs text-gray-400">
             © 2026 CampusFind PDEU. All rights reserved.
         </p>
     </main>
@@ -298,104 +222,8 @@
             const staffInput = document.getElementById("staff_code");
             const adminInput = document.getElementById("admin_code");
 
-            const dropdown = document.getElementById("role-dropdown");
-            const button = document.getElementById("role-btn");
-            const options = document.getElementById("role-options");
-            const chevron = document.getElementById("role-chevron");
-            const label = document.getElementById("role-label");
-            const error = document.getElementById("role-error");
-
-            function setupPasswordToggle(inputId, toggleId) {
-                const passwordInput = document.getElementById(inputId);
-                const toggleButton = document.getElementById(toggleId);
-
-                if (!passwordInput || !toggleButton) {
-                    return;
-                }
-
-                const openIcon = toggleButton.querySelector(".toggle-eye-open");
-                const closedIcon = toggleButton.querySelector(".toggle-eye-closed");
-
-                toggleButton.addEventListener("click", function () {
-                    const showPassword = passwordInput.type === "password";
-                    passwordInput.type = showPassword ? "text" : "password";
-                    toggleButton.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
-                    toggleButton.setAttribute("aria-pressed", String(showPassword));
-
-                    if (openIcon && closedIcon) {
-                        openIcon.classList.toggle("hidden", showPassword);
-                        closedIcon.classList.toggle("hidden", !showPassword);
-                    }
-                });
-            }
-
-            function closeDropdown() {
-                options.classList.remove("open");
-                chevron.classList.remove("open");
-                button.setAttribute("aria-expanded", "false");
-            }
-
-            function openDropdown() {
-                options.classList.add("open");
-                chevron.classList.add("open");
-                button.setAttribute("aria-expanded", "true");
-            }
-
-            button.setAttribute("aria-haspopup", "listbox");
-            button.setAttribute("aria-expanded", "false");
-
-            button.addEventListener("click", function () {
-                if (options.classList.contains("open")) {
-                    closeDropdown();
-                } else {
-                    openDropdown();
-                }
-            });
-
-            document.querySelectorAll("#role-options .dropdown-option").forEach(function (option) {
-                option.addEventListener("click", function () {
-                    roleSelect.value = option.dataset.value;
-                    label.textContent = option.textContent.trim();
-                    label.classList.remove("text-gray-500");
-                    label.classList.add("text-gray-900");
-                    error.classList.add("hidden");
-                    button.classList.remove("border-red-400", "ring-2", "ring-red-100");
-
-                    document.querySelectorAll("#role-options .dropdown-option").forEach(function (item) {
-                        item.classList.remove("selected");
-                    });
-                    option.classList.add("selected");
-                    closeDropdown();
-                    updateDynamicFields();
-                });
-            });
-
-            document.addEventListener("click", function (event) {
-                if (!dropdown.contains(event.target)) {
-                    closeDropdown();
-                }
-            });
-
-            document.addEventListener("keydown", function (event) {
-                if (event.key === "Escape") {
-                    closeDropdown();
-                }
-            });
-
-            const form = document.getElementById("register-form");
-            
-            form.addEventListener("submit", function(event) {
-                if (!roleSelect.value) {
-                    event.preventDefault();
-                    error.classList.remove("hidden");
-                    button.classList.add("border-red-400", "ring-2", "ring-red-100");
-                    button.focus();
-                }
-            });
-
             function updateDynamicFields() {
                 const role = roleSelect.value;
-
 
                 // Hide entire dynamic block if nothing is chosen to collapse spacing
                 if (!role) {
@@ -406,11 +234,8 @@
 
                 // Hide all and remove required
                 studentSection.classList.add("hidden");
-                studentSection.classList.remove("animate-slide-down");
                 staffSection.classList.add("hidden");
-                staffSection.classList.remove("animate-slide-down");
                 adminSection.classList.add("hidden");
-                adminSection.classList.remove("animate-slide-down");
 
                 rollInput.removeAttribute("required");
                 staffInput.removeAttribute("required");
@@ -419,22 +244,18 @@
                 // Toggle visibility and required constraint
                 if (role === "student") {
                     studentSection.classList.remove("hidden");
-                    studentSection.classList.add("animate-slide-down");
                     rollInput.setAttribute("required", "required");
                 } else if (role === "staff") {
                     staffSection.classList.remove("hidden");
-                    staffSection.classList.add("animate-slide-down");
                     staffInput.setAttribute("required", "required");
                 } else if (role === "admin") {
                     adminSection.classList.remove("hidden");
-                    adminSection.classList.add("animate-slide-down");
                     adminInput.setAttribute("required", "required");
                 }
             }
 
+            roleSelect.addEventListener("change", updateDynamicFields);
             updateDynamicFields();
-            setupPasswordToggle("password", "register-password-toggle");
-            setupPasswordToggle("confirm_password", "confirm-password-toggle");
         });
     </script>
 
