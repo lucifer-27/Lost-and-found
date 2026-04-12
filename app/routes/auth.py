@@ -47,6 +47,13 @@ def _start_email_verification(email, purpose, payload=None):
     if not success:
         clear_email_verification(email, purpose)
         return False, f"We could not send the verification email. Error: {err_msg}"
+    
+    # Store OTP in session for development if using console mode
+    if os.environ.get("EMAIL_PROVIDER") == "console":
+        session["debug_otp"] = otp
+    else:
+        session.pop("debug_otp", None)
+
     session["verification_email"] = email
     session["verification_purpose"] = purpose
     return True, None
@@ -75,6 +82,7 @@ def _verification_page_context():
     context["max_attempts"] = get_otp_max_attempts()
     context["resend_cooldown_seconds"] = get_otp_resend_cooldown_seconds()
     context["resend_wait_seconds"] = get_resend_wait_seconds(email, purpose) if email and purpose else 0
+    context["debug_otp"] = session.get("debug_otp")
     return context
 
 
@@ -201,6 +209,7 @@ def verify_otp():
 
         session.pop("verification_email", None)
         session.pop("verification_purpose", None)
+        session.pop("debug_otp", None)
 
         if verification_purpose == "register":
             payload = verification_record.get("payload", {})
