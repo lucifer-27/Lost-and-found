@@ -195,6 +195,15 @@ def send_otp_email(to_email, otp, purpose="verification"):
 
     print(f"DEBUG OTP for {to_email}: {otp}")
 
+    # Console Mode
+    if provider == "console":
+        print("\n" + "="*50)
+        print(f"[CONSOLE MODE] OTP for {to_email}")
+        print(f"Code: {otp}")
+        print(f"Purpose: {purpose}")
+        print("="*50 + "\n")
+        return True, ""
+
     # Try Brevo
     if provider in ["auto", "brevo"]:
         if _has_brevo_config():
@@ -203,9 +212,9 @@ def send_otp_email(to_email, otp, purpose="verification"):
                 return True, ""
             if provider == "brevo":
                 return False, f"Brevo API Failed: {error_msg}"
-            print("[WARNING] Brevo delivery failed. Proceeding to fallback...")
+            print(f"[WARNING] Brevo delivery failed: {error_msg}. Proceeding to fallback...")
         elif provider == "brevo":
-            return False, "Brevo configuration is missing."
+            return False, "Brevo configuration is missing (BREVO_API_KEY/BREVO_FROM_EMAIL)."
 
     # Try Resend
     if provider in ["auto", "resend"]:
@@ -215,9 +224,9 @@ def send_otp_email(to_email, otp, purpose="verification"):
                 return True, ""
             if provider == "resend":
                 return False, f"Resend API Failed: {error_msg}"
-            print("[WARNING] Resend delivery failed. Attempting SMTP fallback...")
+            print(f"[WARNING] Resend delivery failed: {error_msg}. Attempting SMTP fallback...")
         elif provider == "resend":
-            return False, "Resend configuration is missing."
+            return False, "Resend configuration is missing (RESEND_API_KEY/RESEND_FROM_EMAIL)."
 
     # Fallback to SMTP 
     if _has_smtp_config():
@@ -226,6 +235,11 @@ def send_otp_email(to_email, otp, purpose="verification"):
             return True, ""
         return False, f"SMTP Delivery Failed: {error_msg}"
 
-    msg = "EMAIL CONFIG MISSING - No email provider configured or fallback failed"
-    print(msg)
+    # If we reached here, no provider worked
+    if provider == "auto":
+        msg = "EMAIL CONFIG MISSING - All providers (Brevo, Resend, SMTP) are unconfigured or failed."
+    else:
+        msg = f"EMAIL CONFIG MISSING - Provider '{provider}' is not configured or failed, and fallback failed."
+    
+    print(f"[ERROR] {msg}")
     return False, msg
