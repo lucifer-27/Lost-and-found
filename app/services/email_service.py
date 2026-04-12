@@ -209,7 +209,9 @@ def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
     provider = os.environ.get("EMAIL_PROVIDER", "auto").strip().lower()
 
-    print(f"DEBUG OTP for {to_email}: {otp}")
+    if provider == "debug":
+        print(f"[DEBUG MODE] OTP for {to_email}: {otp}")
+        return True, None
 
     # Console Mode
     if provider == "console":
