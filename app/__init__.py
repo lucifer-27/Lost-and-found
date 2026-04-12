@@ -14,32 +14,20 @@ def create_app():
     PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
 
     # Correct paths (your case: templates outside app)
-    TEMPLATE_DIR = os.path.join(PROJECT_ROOT, "templates")
-    STATIC_DIR = os.path.join(PROJECT_ROOT, "static")
-
-    # Debug (safe)
-    print("PROJECT_ROOT:", PROJECT_ROOT)
-    print("TEMPLATE_DIR:", TEMPLATE_DIR)
-
-    if os.path.exists(TEMPLATE_DIR):
-        print("FILES:", os.listdir(TEMPLATE_DIR))
-    else:
-        print("ERROR: TEMPLATE_DIR not found")
 
     # Create Flask app
     app = Flask(
         __name__,
-        template_folder=TEMPLATE_DIR,
-        static_folder=STATIC_DIR
+        template_folder=os.path.join(PROJECT_ROOT, "templates"),
+        static_folder=os.path.join(PROJECT_ROOT, "static")
     )
-
-    print("FINAL TEMPLATE PATH:", app.template_folder)
 
     # Config
     app.config["SECRET_KEY"] = SECRET_KEY
+    app.config["DEBUG"] = os.environ.get("DEBUG", "False").lower() == "true"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = False
+    app.config["SESSION_COOKIE_SECURE"] = not app.config["DEBUG"]
 
     # Rate limiter storage: use Redis if available, fallback to memory
     redis_url = os.environ.get("REDIS_URL")

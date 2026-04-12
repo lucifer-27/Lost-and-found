@@ -164,7 +164,23 @@ def _send_via_smtp(to_email, subject, text_body):
     msg["To"] = to_email
 
     try:
-        server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+        import socket
+        # Resolve to IPv4 manually to prevent "Network is unreachable" errors on IPv6-prioritized systems
+        # without patching the global socket module.
+        try:
+            addr_infos = socket.getaddrinfo(smtp_host, smtp_port, family=socket.AF_INET, type=socket.SOCK_STREAM)
+            if addr_infos:
+                resolved_ip = addr_infos[0][4][0]
+                server = smtplib.SMTP(timeout=15)
+                server.connect(resolved_ip, smtp_port)
+                # Set host back to original hostname for STARTTLS certificate validation
+                server.host = smtp_host
+            else:
+                server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+        except Exception as e:
+            print(f"[WARNING] IPv4 resolution failed for {smtp_host}: {e}. Falling back to default.")
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+
         server.starttls()
         server.login(smtp_username, smtp_password)
         server.send_message(msg)
