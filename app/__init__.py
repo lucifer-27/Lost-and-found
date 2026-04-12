@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_wtf import CSRFProtect
 from app.extensions import limiter
+from app.config import SECRET_KEY
 
 csrf = CSRFProtect()
 
@@ -35,10 +36,19 @@ def create_app():
     print("FINAL TEMPLATE PATH:", app.template_folder)
 
     # Config
-    app.config["SECRET_KEY"] = "test_secret"
+    app.config["SECRET_KEY"] = SECRET_KEY
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = False
+
+    # Rate limiter storage: use Redis if available, fallback to memory
+    redis_url = os.environ.get("REDIS_URL")
+    if redis_url:
+        app.config["RATELIMIT_STORAGE_URI"] = redis_url
+        print(f"INFO: Rate limiter using Redis: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}")
+    else:
+        app.config["RATELIMIT_STORAGE_URI"] = "memory://"
+        print("WARNING: Rate limiter using in-memory storage. Set REDIS_URL for production.")
 
     csrf.init_app(app)
     limiter.init_app(app)

@@ -39,8 +39,13 @@ def _connect_mongo(uri):
         serverSelectionTimeoutMS=10000,
         connectTimeoutMS=10000,
         socketTimeoutMS=10000,
+        maxPoolSize=20,           # Max 20 connections (prevents exhaustion)
+        minPoolSize=5,            # Keep 5 connections warm
+        maxIdleTimeMS=45000,      # Close idle connections after 45s
+        waitQueueTimeoutMS=5000,  # Timeout if pool is full after 5s
     )
     client.admin.command("ping")
+    print("INFO: MongoDB connected with pool: maxPoolSize=20, minPoolSize=5")
     return client
 
 

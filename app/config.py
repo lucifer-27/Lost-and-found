@@ -32,7 +32,18 @@ MONGO_DIRECT_URI = os.environ.get("MONGO_DIRECT_URI", "").strip()
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "lost_found_db")
 MONGO_DNS_RESOLVERS = [resolver.strip() for resolver in os.environ.get("MONGO_DNS_RESOLVERS", "1.1.1.1,8.8.8.8").split(",") if resolver.strip()]
 MONGO_DNS_TIMEOUT_SECONDS = float(os.environ.get("MONGO_DNS_TIMEOUT_SECONDS", "5"))
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev_secret_key")
+_env_mode = os.environ.get("ENV", "development").lower()
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+if not SECRET_KEY:
+    if _env_mode == "production":
+        raise ValueError(
+            "CRITICAL: SECRET_KEY environment variable not set! "
+            "Generate one with: python -c 'import secrets; print(secrets.token_hex(32))'"
+        )
+    else:
+        SECRET_KEY = "dev_only_insecure_key_do_not_use_in_production"
+        print("WARNING: Using insecure dev SECRET_KEY. Set SECRET_KEY env var for production.")
 
 
 def redact_mongo_uri(uri):
