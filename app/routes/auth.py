@@ -1,5 +1,6 @@
 import os
 import re
+from hmac import compare_digest
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -21,6 +22,20 @@ auth_bp = Blueprint("auth", __name__)
 
 ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "")
 STAFF_SECRET = os.environ.get("STAFF_SECRET", "")
+ROLE_CODE_PATTERN = re.compile(r"^[A-Za-z]+[^A-Za-z0-9\s]+[0-9]+$")
+
+
+def _is_valid_role_code_format(code):
+    return bool(ROLE_CODE_PATTERN.fullmatch(code or ""))
+
+
+def _should_show_otp_on_screen():
+    setting = os.environ.get("SHOW_OTP_ON_SCREEN", "").strip().lower()
+    if setting in {"1", "true", "yes", "on"}:
+        return True
+    if setting in {"0", "false", "no", "off"}:
+        return False
+    return os.environ.get("ENV", "development").strip().lower() != "production"
 
 
 def _set_login_session(user):
@@ -47,6 +62,13 @@ def _start_email_verification(email, purpose, payload=None):
     if not success:
         clear_email_verification(email, purpose)
         return False, f"We could not send the verification email. Error: {err_msg}"
+    
+    # Show OTP on the verification screen for local testing only.
+    if _should_show_otp_on_screen():
+        session["debug_otp"] = otp
+    else:
+        session.pop("debug_otp", None)
+
     session["verification_email"] = email
     session["verification_purpose"] = purpose
     return True, None
@@ -75,6 +97,7 @@ def _verification_page_context():
     context["max_attempts"] = get_otp_max_attempts()
     context["resend_cooldown_seconds"] = get_otp_resend_cooldown_seconds()
     context["resend_wait_seconds"] = get_resend_wait_seconds(email, purpose) if email and purpose else 0
+    context["debug_otp"] = session.get("debug_otp")
     return context
 
 
@@ -107,13 +130,17 @@ def register():
        
         # Admin check
         if role == "admin":
-            if admin_code != ADMIN_SECRET:
+            if not _is_valid_role_code_format(admin_code):
+                return render_template("register.html", error="Admin code must be in format letters + special character + numbers (e.g. admin@123)")
+            if not ADMIN_SECRET or not _is_valid_role_code_format(ADMIN_SECRET):
+                return render_template("register.html", error="Admin access code is not configured correctly.")
+            if not compare_digest(admin_code, ADMIN_SECRET):
                 return render_template("register.html", error="Invalid admin access code")
 
         # Staff check
         if role == "staff":
-            if not re.match(r"^[a-zA-Z]+@[0-9]+$", staff_code):
-                return render_template("register.html", error="Invalid staff access code. Code must be in format 'name@number' (e.g. staffniraj@123)")
+            if not _is_valid_role_code_format(staff_code):
+                return render_template("register.html", error="Invalid staff access code. Code must be in format letters + special character + numbers (e.g. staff@123)")
 
         if users_collection.find_one({"email": email}):
             return render_template("register.html", error="Email already registered")
@@ -201,6 +228,7 @@ def verify_otp():
 
         session.pop("verification_email", None)
         session.pop("verification_purpose", None)
+        session.pop("debug_otp", None)
 
         if verification_purpose == "register":
             payload = verification_record.get("payload", {})

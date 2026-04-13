@@ -25,6 +25,29 @@ def items_list():
 
     if role == "staff":
         items = list(items_collection.find({}, ITEM_LIST_PROJECTION).sort("created_at", -1).limit(50))
+        item_ids = [item["_id"] for item in items]
+        pending_claims_by_item = {}
+        if item_ids:
+            pending_claims = claims_collection.find(
+                {"item_id": {"$in": item_ids}, "status": "pending"},
+                {"item_id": 1, "student_name": 1, "roll_no": 1, "requested_at": 1},
+            ).sort("requested_at", -1)
+            for claim in pending_claims:
+                item_key = claim.get("item_id")
+                entry = pending_claims_by_item.setdefault(
+                    item_key,
+                    {"claim": claim, "count": 0},
+                )
+                entry["count"] += 1
+
+        for item in items:
+            pending = pending_claims_by_item.get(item["_id"])
+            if pending:
+                item["pending_claim_id"] = pending["claim"]["_id"]
+                item["pending_claim_count"] = pending["count"]
+                item["pending_claim_student"] = pending["claim"].get("student_name") or "Student"
+                item["pending_claim_roll_no"] = pending["claim"].get("roll_no") or "--"
+
         return render_template("items_staff.html", items=items)
     else:
         items = list(items_collection.find({"status": "active"}, ITEM_LIST_PROJECTION).sort("created_at", -1).limit(50))

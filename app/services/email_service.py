@@ -164,7 +164,23 @@ def _send_via_smtp(to_email, subject, text_body):
     msg["To"] = to_email
 
     try:
-        server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+        import socket
+        # Resolve to IPv4 manually to prevent "Network is unreachable" errors on IPv6-prioritized systems
+        # without patching the global socket module.
+        try:
+            addr_infos = socket.getaddrinfo(smtp_host, smtp_port, family=socket.AF_INET, type=socket.SOCK_STREAM)
+            if addr_infos:
+                resolved_ip = addr_infos[0][4][0]
+                server = smtplib.SMTP(timeout=15)
+                server.connect(resolved_ip, smtp_port)
+                # Set host back to original hostname for STARTTLS certificate validation
+                server.host = smtp_host
+            else:
+                server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+        except Exception as e:
+            print(f"[WARNING] IPv4 resolution failed for {smtp_host}: {e}. Falling back to default.")
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+
         server.starttls()
         server.login(smtp_username, smtp_password)
         server.send_message(msg)
@@ -193,7 +209,18 @@ def send_otp_email(to_email, otp, purpose="verification"):
     subject, text_body, html_body = _build_otp_message(otp, purpose)
     provider = os.environ.get("EMAIL_PROVIDER", "auto").strip().lower()
 
-    print(f"DEBUG OTP for {to_email}: {otp}")
+    if provider == "debug":
+        print(f"[DEBUG MODE] OTP for {to_email}: {otp}")
+        return True, None
+
+    # Console Mode
+    if provider == "console":
+        print("\n" + "="*50)
+        print(f"[CONSOLE MODE] OTP for {to_email}")
+        print(f"Code: {otp}")
+        print(f"Purpose: {purpose}")
+        print("="*50 + "\n")
+        return True, ""
 
     # Try Brevo
     if provider in ["auto", "brevo"]:
@@ -203,9 +230,9 @@ def send_otp_email(to_email, otp, purpose="verification"):
                 return True, ""
             if provider == "brevo":
                 return False, f"Brevo API Failed: {error_msg}"
-            print("[WARNING] Brevo delivery failed. Proceeding to fallback...")
+            print(f"[WARNING] Brevo delivery failed: {error_msg}. Proceeding to fallback...")
         elif provider == "brevo":
-            return False, "Brevo configuration is missing."
+            return False, "Brevo configuration is missing (BREVO_API_KEY/BREVO_FROM_EMAIL)."
 
     # Try Resend
     if provider in ["auto", "resend"]:
@@ -215,9 +242,9 @@ def send_otp_email(to_email, otp, purpose="verification"):
                 return True, ""
             if provider == "resend":
                 return False, f"Resend API Failed: {error_msg}"
-            print("[WARNING] Resend delivery failed. Attempting SMTP fallback...")
+            print(f"[WARNING] Resend delivery failed: {error_msg}. Attempting SMTP fallback...")
         elif provider == "resend":
-            return False, "Resend configuration is missing."
+            return False, "Resend configuration is missing (RESEND_API_KEY/RESEND_FROM_EMAIL)."
 
     # Fallback to SMTP 
     if _has_smtp_config():
@@ -226,6 +253,11 @@ def send_otp_email(to_email, otp, purpose="verification"):
             return True, ""
         return False, f"SMTP Delivery Failed: {error_msg}"
 
-    msg = "EMAIL CONFIG MISSING - No email provider configured or fallback failed"
-    print(msg)
+    # If we reached here, no provider worked
+    if provider == "auto":
+        msg = "EMAIL CONFIG MISSING - All providers (Brevo, Resend, SMTP) are unconfigured or failed."
+    else:
+        msg = f"EMAIL CONFIG MISSING - Provider '{provider}' is not configured or failed, and fallback failed."
+    
+    print(f"[ERROR] {msg}")
     return False, msg
