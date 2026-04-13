@@ -44,6 +44,8 @@ OTP_MAX_ATTEMPTS=5
 SECRET_KEY=your_random_secret_key_here
 ```
 
+Important: if your MongoDB username or password contains characters like `@`, `:`, `/`, or `#`, use the exact Atlas connection string or make sure those credentials are URL-encoded in Render.
+
 ### Step 3: Update Build Command
 
 Make sure your Render build command is:

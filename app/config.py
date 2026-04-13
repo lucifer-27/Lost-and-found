@@ -1,5 +1,6 @@
 import os
 import re
+from urllib.parse import quote, unquote
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -21,14 +22,50 @@ def load_local_env(env_path):
                 os.environ[key] = value
 
 
+def normalize_mongo_uri(uri):
+    uri = uri.strip().strip('"').strip("'")
+    if not uri.startswith(("mongodb://", "mongodb+srv://")):
+        return uri
+
+    scheme, remainder = uri.split("://", 1)
+    at_index = remainder.rfind("@")
+    if at_index == -1:
+        return uri
+
+    credentials = remainder[:at_index]
+    host_and_rest = remainder[at_index + 1:]
+
+    host_boundary = len(host_and_rest)
+    for separator in ("/", "?"):
+        index = host_and_rest.find(separator)
+        if index != -1:
+            host_boundary = min(host_boundary, index)
+
+    hosts = host_and_rest[:host_boundary]
+    rest = host_and_rest[host_boundary:]
+    if not hosts:
+        return uri
+
+    if ":" in credentials:
+        username, password = credentials.split(":", 1)
+        safe_credentials = (
+            f"{quote(unquote(username), safe='')}:"
+            f"{quote(unquote(password), safe='')}"
+        )
+    else:
+        safe_credentials = quote(unquote(credentials), safe="")
+
+    return f"{scheme}://{safe_credentials}@{hosts}{rest}"
+
+
 # Load .env files
 load_dotenv(os.path.join(project_root, ".env"))
 load_local_env(os.path.join(project_root, ".env"))
 load_local_env(os.path.join(basedir, ".env"))
 
 # Mongo config
-MONGO_URI = os.environ.get("MONGO_URI", "").strip()
-MONGO_DIRECT_URI = os.environ.get("MONGO_DIRECT_URI", "").strip()
+MONGO_URI = normalize_mongo_uri(os.environ.get("MONGO_URI", ""))
+MONGO_DIRECT_URI = normalize_mongo_uri(os.environ.get("MONGO_DIRECT_URI", ""))
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "lost_found_db")
 MONGO_DNS_RESOLVERS = [resolver.strip() for resolver in os.environ.get("MONGO_DNS_RESOLVERS", "1.1.1.1,8.8.8.8").split(",") if resolver.strip()]
 MONGO_DNS_TIMEOUT_SECONDS = float(os.environ.get("MONGO_DNS_TIMEOUT_SECONDS", "5"))

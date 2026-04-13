@@ -1,6 +1,7 @@
 import sys
 import dns.resolver
 from pymongo import MongoClient
+from pymongo.errors import OperationFailure
 from gridfs import GridFS
 from .config import (
     MONGO_URI,
@@ -49,6 +50,21 @@ def _connect_mongo(uri):
     return client
 
 
+def _print_mongo_connection_hint(uri, exc):
+    if not isinstance(exc, OperationFailure):
+        return
+
+    message = str(exc)
+    if "Authentication failed" not in message:
+        return
+
+    print("Hint: MongoDB rejected the username or password for this connection.")
+    print("Hint: If your Atlas password contains characters like @, :, /, or #, keep it URL-encoded in Render env vars.")
+    print("Hint: Also verify the Render MONGO_URI/MONGO_DIRECT_URI value has no extra quotes, spaces, or outdated password.")
+    if uri.startswith("mongodb://") and "authSource=" not in uri:
+        print("Hint: Direct Atlas URIs usually need authSource=admin.")
+
+
 def create_mongo_client():
     tried = []
     connection_options = []
@@ -77,6 +93,7 @@ def create_mongo_client():
                 print(f"WARNING: {label} failed.")
             print(f"URI: {redact_mongo_uri(uri)}")
             print("Reason:", repr(exc))
+            _print_mongo_connection_hint(uri, exc)
 
     print("\nERROR: Failed to connect to MongoDB.")
     print("Tried these URIs:")
