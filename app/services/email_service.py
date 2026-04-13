@@ -6,6 +6,15 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 RESEND_API_URL = "https://api.resend.com/emails"
+SENDGRID_API_URL = "https://api.sendgrid.com/v3/mail/send"
+
+
+def _first_env(*keys):
+    for key in keys:
+        value = os.environ.get(key, "").strip()
+        if value:
+            return value
+    return ""
 
 
 def _build_sender(from_email):
@@ -20,7 +29,7 @@ def _smtp_settings():
     legacy_password = os.environ.get("EMAIL_PASS", "").strip()
     smtp_username = os.environ.get("SMTP_USERNAME", "").strip() or legacy_email
     smtp_password = os.environ.get("SMTP_PASSWORD", "").strip() or legacy_password
-    from_email = os.environ.get("SMTP_FROM_EMAIL", "").strip() or legacy_email or smtp_username
+    from_email = _first_env("SMTP_FROM_EMAIL", "MAIL_DEFAULT_SENDER") or legacy_email or smtp_username
     smtp_host = os.environ.get("SMTP_HOST", "").strip()
     if not smtp_host and legacy_email:
         smtp_host = "smtp.gmail.com"
@@ -29,11 +38,15 @@ def _smtp_settings():
 
 
 def _has_resend_config():
-    return bool(os.environ.get("RESEND_API_KEY", "").strip() and os.environ.get("RESEND_FROM_EMAIL", "").strip())
+    return bool(_first_env("RESEND_API_KEY") and _first_env("RESEND_FROM_EMAIL", "MAIL_DEFAULT_SENDER"))
 
 
 def _has_brevo_config():
-    return bool(os.environ.get("BREVO_API_KEY", "").strip() and os.environ.get("BREVO_FROM_EMAIL", "").strip())
+    return bool(_first_env("BREVO_API_KEY") and _first_env("BREVO_FROM_EMAIL", "MAIL_DEFAULT_SENDER"))
+
+
+def _has_sendgrid_config():
+    return bool(_first_env("SENDGRID_API_KEY") and _first_env("MAIL_DEFAULT_SENDER", "SENDGRID_FROM_EMAIL"))
 
 
 def _has_smtp_config():
@@ -68,8 +81,8 @@ def _build_otp_message(otp, purpose):
 
 
 def _send_via_resend(to_email, subject, text_body, html_body):
-    api_key = os.environ.get("RESEND_API_KEY", "").strip()
-    from_email = os.environ.get("RESEND_FROM_EMAIL", "").strip()
+    api_key = _first_env("RESEND_API_KEY")
+    from_email = _first_env("RESEND_FROM_EMAIL", "MAIL_DEFAULT_SENDER")
     if not api_key or not from_email:
         print("RESEND CONFIG MISSING: RESEND_API_KEY or RESEND_FROM_EMAIL not set")
         return False
@@ -109,8 +122,8 @@ def _send_via_resend(to_email, subject, text_body, html_body):
 
 
 def _send_via_brevo(to_email, subject, text_body, html_body):
-    api_key = os.environ.get("BREVO_API_KEY", "").strip()
-    from_email = os.environ.get("BREVO_FROM_EMAIL", "").strip()
+    api_key = _first_env("BREVO_API_KEY")
+    from_email = _first_env("BREVO_FROM_EMAIL", "MAIL_DEFAULT_SENDER")
     if not api_key or not from_email:
         err = "BREVO CONFIG MISSING: BREVO_API_KEY or BREVO_FROM_EMAIL not set"
         print(err)
@@ -147,6 +160,52 @@ def _send_via_brevo(to_email, subject, text_body, html_body):
         return False, err
     except Exception as e:
         err = f"BREVO UNEXPECTED ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+
+
+def _send_via_sendgrid(to_email, subject, text_body, html_body):
+    api_key = _first_env("SENDGRID_API_KEY")
+    from_email = _first_env("MAIL_DEFAULT_SENDER", "SENDGRID_FROM_EMAIL")
+    if not api_key or not from_email:
+        err = "SENDGRID CONFIG MISSING: SENDGRID_API_KEY or MAIL_DEFAULT_SENDER not set"
+        print(err)
+        return False, err
+
+    payload = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {
+            "email": from_email,
+            "name": os.environ.get("EMAIL_FROM_NAME", "CampusFind").strip() or "CampusFind",
+        },
+        "subject": subject,
+        "content": [
+            {"type": "text/plain", "value": text_body},
+            {"type": "text/html", "value": html_body},
+        ],
+    }
+
+    try:
+        import requests
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        response = requests.post(SENDGRID_API_URL, json=payload, headers=headers, timeout=15)
+
+        if response.status_code in [200, 201, 202]:
+            print(f"[SUCCESS] OTP email sent successfully via SendGrid to {to_email}")
+            return True, ""
+
+        err = f"SENDGRID ERROR: {response.status_code} - {response.text}"
+        print(f"[ERROR] {err}")
+        return False, err
+    except requests.exceptions.RequestException as e:
+        err = f"SENDGRID NETWORK ERROR: {str(e)}"
+        print(f"[ERROR] {err}")
+        return False, err
+    except Exception as e:
+        err = f"SENDGRID UNEXPECTED ERROR: {str(e)}"
         print(f"[ERROR] {err}")
         return False, err
 
@@ -221,6 +280,18 @@ def send_otp_email(to_email, otp, purpose="verification"):
         print(f"Purpose: {purpose}")
         print("="*50 + "\n")
         return True, ""
+
+    # Try SendGrid
+    if provider in ["auto", "sendgrid"]:
+        if _has_sendgrid_config():
+            success, error_msg = _send_via_sendgrid(to_email, subject, text_body, html_body)
+            if success:
+                return True, ""
+            if provider == "sendgrid":
+                return False, f"SendGrid API Failed: {error_msg}"
+            print(f"[WARNING] SendGrid delivery failed: {error_msg}. Proceeding to fallback...")
+        elif provider == "sendgrid":
+            return False, "SendGrid configuration is missing (SENDGRID_API_KEY/MAIL_DEFAULT_SENDER)."
 
     # Try Brevo
     if provider in ["auto", "brevo"]:
