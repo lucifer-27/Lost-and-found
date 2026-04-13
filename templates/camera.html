@@ -4,6 +4,31 @@
 
 {% extends "base.html" %}
 {% block content %}
+<style>
+    .camera-stage {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .camera-media {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        max-height: 70vh;
+        border-radius: 0.5rem;
+        background: #111827;
+    }
+
+    #canvas {
+        display: none;
+    }
+
+    #canvas.has-preview {
+        display: block;
+    }
+</style>
 <div class="container d-flex justify-content-center">
     <div class="card shadow-sm p-4 text-center" style="max-width:500px; width:100%; border-radius:12px;">
 
@@ -11,8 +36,8 @@
         <p class="text-muted mb-4">Use your camera to take a clear picture of the item.</p>
 
         <!-- Camera -->
-        <div class="d-flex justify-content-center">
-            <video id="video" autoplay class="border rounded" width="400" height="300"></video>
+        <div class="camera-stage">
+            <video id="video" autoplay playsinline class="border camera-media"></video>
         </div>
 
         <!-- Buttons -->
@@ -25,8 +50,8 @@
         </div>
 
         <!-- Canvas Preview -->
-        <div class="mt-4">
-            <canvas id="canvas" width="400" height="300" class="border rounded"></canvas>
+        <div class="camera-stage mt-4">
+            <canvas id="canvas" class="border camera-media"></canvas>
         </div>
 
         <!-- Upload -->
@@ -45,6 +70,8 @@
 <script>
 
     const video = document.getElementById("video")
+    const canvas = document.getElementById("canvas")
+    const context = canvas.getContext("2d")
 
     navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: "environment" } }
@@ -56,12 +83,23 @@
             alert("Camera access denied")
         })
 
+    video.addEventListener("loadedmetadata", function () {
+        if (!video.videoWidth || !video.videoHeight) {
+            return
+        }
+
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+    })
+
     function capture() {
+        const frameWidth = video.videoWidth || 400
+        const frameHeight = video.videoHeight || 300
 
-        const canvas = document.getElementById("canvas")
-        const context = canvas.getContext("2d")
-
-        context.drawImage(video, 0, 0, 400, 300)
+        canvas.width = frameWidth
+        canvas.height = frameHeight
+        context.drawImage(video, 0, 0, frameWidth, frameHeight)
+        canvas.classList.add("has-preview")
 
         const image = canvas.toDataURL("image/png")
 

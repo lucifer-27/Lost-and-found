@@ -67,6 +67,12 @@ def home():
     return render_template("index.html", recent_items=items)
 
 
+@general_bp.route("/privacy_policy")
+@general_bp.route("/privacy-policy")
+def privacy_policy():
+    return render_template("privacy_policy.html")
+
+
 @general_bp.route("/contact", methods=["GET", "POST"])
 @general_bp.route("/contact-us", methods=["GET", "POST"])
 @general_bp.route("/support", methods=["GET", "POST"])
