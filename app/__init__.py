@@ -1,7 +1,8 @@
 import os
 from flask import Flask
 from flask_wtf import CSRFProtect
-from app.extensions import limiter
+from pymongo.errors import OperationFailure
+from app.extensions import initialize_database_indexes, limiter
 from app.config import SECRET_KEY
 
 csrf = CSRFProtect()
@@ -55,5 +56,13 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(staff_bp)
     app.register_blueprint(student_bp)
+
+    try:
+        initialize_database_indexes()
+    except OperationFailure as exc:
+        print(f"WARNING: Could not initialize database indexes on startup: {exc}")
+        print("WARNING: Check Render MONGO_URI/MONGO_DIRECT_URI credentials and authSource settings.")
+    except Exception as exc:
+        print(f"WARNING: Could not initialize database indexes on startup: {exc}")
 
     return app

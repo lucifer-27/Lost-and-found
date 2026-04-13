@@ -25,3 +25,23 @@ def test_normalize_mongo_uri_preserves_already_encoded_credentials():
     normalized = config.normalize_mongo_uri(uri)
 
     assert normalized == uri
+
+
+def test_build_mongo_uri_candidates_adds_admin_and_db_auth_source_fallbacks():
+    uri = "mongodb://lostfound:pass@db.example.net:27017/?retryWrites=true"
+
+    candidates = config.build_mongo_uri_candidates(uri, "lost_found_db")
+
+    assert candidates == [
+        "mongodb://lostfound:pass@db.example.net:27017/?retryWrites=true",
+        "mongodb://lostfound:pass@db.example.net:27017/?retryWrites=true&authSource=admin",
+        "mongodb://lostfound:pass@db.example.net:27017/?retryWrites=true&authSource=lost_found_db",
+    ]
+
+
+def test_build_mongo_uri_candidates_preserves_existing_auth_source():
+    uri = "mongodb+srv://lostfound:pass@cluster0.example.mongodb.net/?authSource=admin&retryWrites=true"
+
+    candidates = config.build_mongo_uri_candidates(uri, "lost_found_db")
+
+    assert candidates == [uri]

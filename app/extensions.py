@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 from gridfs import GridFS
 from .config import (
+    build_mongo_uri_candidates,
     MONGO_URI,
     MONGO_DIRECT_URI,
     MONGO_DB_NAME,
@@ -78,21 +79,29 @@ def create_mongo_client():
         sys.exit(1)
 
     for label, uri in connection_options:
-        if not uri or uri in tried:
-            continue
-        tried.append(uri)
-        try:
-            return _connect_mongo(uri)
-        except Exception as exc:
-            if label == "MONGO_DIRECT_URI" and MONGO_URI:
-                print(f"WARNING: {label} failed, trying MONGO_URI fallback.")
-            elif label == "MONGO_URI" and uri.startswith("mongodb+srv://") and MONGO_DIRECT_URI:
-                print(f"WARNING: {label} failed, trying MONGO_DIRECT_URI fallback.")
-            else:
-                print(f"WARNING: {label} failed.")
-            print(f"URI: {redact_mongo_uri(uri)}")
-            print("Reason:", repr(exc))
-            _print_mongo_connection_hint(uri, exc)
+        candidates = build_mongo_uri_candidates(uri, MONGO_DB_NAME)
+        for index, candidate in enumerate(candidates, start=1):
+            if not candidate or candidate in tried:
+                continue
+            tried.append(candidate)
+            try:
+                if len(candidates) > 1:
+                    print(f"INFO: Trying {label} candidate {index}/{len(candidates)}")
+                return _connect_mongo(candidate)
+            except Exception as exc:
+                is_last_candidate = index == len(candidates)
+                if is_last_candidate:
+                    if label == "MONGO_DIRECT_URI" and MONGO_URI:
+                        print(f"WARNING: {label} failed, trying MONGO_URI fallback.")
+                    elif label == "MONGO_URI" and candidate.startswith("mongodb+srv://") and MONGO_DIRECT_URI:
+                        print(f"WARNING: {label} failed, trying MONGO_DIRECT_URI fallback.")
+                    else:
+                        print(f"WARNING: {label} failed.")
+                else:
+                    print(f"WARNING: {label} candidate {index} failed, trying authSource fallback.")
+                print(f"URI: {redact_mongo_uri(candidate)}")
+                print("Reason:", repr(exc))
+                _print_mongo_connection_hint(candidate, exc)
 
     print("\nERROR: Failed to connect to MongoDB.")
     print("Tried these URIs:")
@@ -117,17 +126,19 @@ notifications_collection = db["notifications"]
 temp_uploads_collection = db["temp_uploads"]
 email_verifications_collection = db["email_verifications"]
 item_reports_collection = db["item_reports"]
-temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
-users_collection.create_index("email", unique=True)
-item_reports_collection.create_index([("item_id", 1), ("reported_by", 1), ("status", 1)])
-item_reports_collection.create_index("created_at")
-items_collection.create_index([("dup_fingerprint", 1), ("status", 1)])
 
-email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
-email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)
-# CLAIM DUPLICATION
-claims_collection.create_index(
-    [("requested_by", 1), ("item_id", 1)],
-    unique=True,
-    partialFilterExpression={"status": "pending"}
-)
+
+def initialize_database_indexes():
+    temp_uploads_collection.create_index("created_at", expireAfterSeconds=3600)
+    users_collection.create_index("email", unique=True)
+    item_reports_collection.create_index([("item_id", 1), ("reported_by", 1), ("status", 1)])
+    item_reports_collection.create_index("created_at")
+    items_collection.create_index([("dup_fingerprint", 1), ("status", 1)])
+    email_verifications_collection.create_index("expires_at", expireAfterSeconds=0)
+    email_verifications_collection.create_index([("email", 1), ("purpose", 1)], unique=True)
+    claims_collection.create_index(
+        [("requested_by", 1), ("item_id", 1)],
+        unique=True,
+        partialFilterExpression={"status": "pending"}
+    )
+    print("INFO: Database indexes initialized successfully.")

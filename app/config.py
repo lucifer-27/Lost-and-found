@@ -1,6 +1,6 @@
 import os
 import re
-from urllib.parse import quote, unquote
+from urllib.parse import parse_qsl, quote, urlencode, unquote
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -56,6 +56,44 @@ def normalize_mongo_uri(uri):
         safe_credentials = quote(unquote(credentials), safe="")
 
     return f"{scheme}://{safe_credentials}@{hosts}{rest}"
+
+
+def build_mongo_uri_candidates(uri, db_name):
+    normalized = normalize_mongo_uri(uri)
+    if not normalized.startswith(("mongodb://", "mongodb+srv://")):
+        return [normalized] if normalized else []
+
+    scheme, remainder = normalized.split("://", 1)
+    at_index = remainder.rfind("@")
+    if at_index == -1:
+        return [normalized]
+
+    host_and_rest = remainder[at_index + 1:]
+    prefix = f"{scheme}://{remainder}"
+    query = ""
+    prefix_without_query = prefix
+    query_separator = prefix.find("?")
+    if query_separator != -1:
+        prefix_without_query = prefix[:query_separator]
+        query = prefix[query_separator + 1:]
+
+    query_pairs = parse_qsl(query, keep_blank_values=True)
+    query_keys = {key for key, _ in query_pairs}
+    if "authSource" in query_keys:
+        return [normalized]
+
+    candidates = [normalized]
+    for auth_source in ("admin", db_name):
+        auth_source = (auth_source or "").strip()
+        if not auth_source:
+            continue
+        updated_query = query_pairs + [("authSource", auth_source)]
+        encoded_query = urlencode(updated_query)
+        candidate = f"{prefix_without_query}?{encoded_query}"
+        if candidate not in candidates:
+            candidates.append(candidate)
+
+    return candidates
 
 
 # Load .env files
