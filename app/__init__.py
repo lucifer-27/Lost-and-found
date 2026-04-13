@@ -26,6 +26,7 @@ def create_app():
     # Config
     app.config["SECRET_KEY"] = SECRET_KEY
     app.config["DEBUG"] = os.environ.get("DEBUG", "False").lower() == "true"
+    app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_CONTENT_LENGTH_MB", "12")) * 1024 * 1024
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_SECURE"] = not app.config["DEBUG"]

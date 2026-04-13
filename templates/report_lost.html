@@ -54,6 +54,16 @@
       color: #1d4ed8;
       font-weight: 600;
     }
+
+    .preview-thumb {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: 10rem;
+      object-fit: contain;
+      background: #fff;
+    }
   </style>
 </head>
 
@@ -110,10 +120,11 @@
           <div id="lost-file-preview" class="hidden mt-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
             <div class="flex items-start gap-4">
               <img id="lost-file-preview-image" alt="Selected image preview"
-                class="w-24 h-24 rounded-md border border-blue-200 object-cover bg-white" />
+                class="preview-thumb rounded-md border border-blue-200" />
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-semibold text-blue-800">Selected image</p>
                 <p id="lost-file-name-label" class="text-sm text-blue-700 font-medium truncate mt-1"></p>
+                <p id="lost-file-size-label" class="text-xs text-blue-600 mt-1"></p>
               </div>
               <button type="button" onclick="clearLostImagePreview()"
                 class="text-blue-400 hover:text-red-500 transition-colors">
@@ -204,6 +215,9 @@
     const chevronEl = document.getElementById('chevron');
     const inputEl = document.getElementById('category-input');
     const labelEl = document.getElementById('category-label');
+    const MAX_UPLOAD_DIMENSION = 1600;
+    const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+    const MIN_JPEG_QUALITY = 0.55;
 
     function toggleDropdown() {
       const isOpen = optionsEl.classList.toggle('open');
@@ -234,18 +248,110 @@
       }
     });
 
-    function showLostImagePreview(input) {
+    function formatBytes(bytes) {
+      if (!bytes) {
+        return '0 B';
+      }
+      if (bytes < 1024) {
+        return `${bytes} B`;
+      }
+      if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toFixed(1)} KB`;
+      }
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    function loadImageFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('Could not load image.'));
+          img.src = event.target.result;
+        };
+        reader.onerror = () => reject(new Error('Could not read image.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function canvasToBlob(canvas, quality) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (blob) {
+            resolve(blob);
+            return;
+          }
+          reject(new Error('Could not prepare image for upload.'));
+        }, 'image/jpeg', quality);
+      });
+    }
+
+    async function compressImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        return file;
+      }
+
+      const image = await loadImageFromFile(file);
+      const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
+      const scale = longestSide > MAX_UPLOAD_DIMENSION ? MAX_UPLOAD_DIMENSION / longestSide : 1;
+      const targetWidth = Math.max(1, Math.round(image.naturalWidth * scale));
+      const targetHeight = Math.max(1, Math.round(image.naturalHeight * scale));
+
+      if (scale === 1 && file.size <= MAX_UPLOAD_BYTES) {
+        return file;
+      }
+
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+      let quality = 0.85;
+      let blob = await canvasToBlob(canvas, quality);
+
+      while (blob.size > MAX_UPLOAD_BYTES && quality > MIN_JPEG_QUALITY) {
+        quality = Math.max(MIN_JPEG_QUALITY, quality - 0.1);
+        blob = await canvasToBlob(canvas, quality);
+      }
+
+      const originalName = file.name.replace(/\.[^.]+$/, '');
+      return new File([blob], `${originalName || 'upload'}.jpg`, { type: 'image/jpeg' });
+    }
+
+    async function setCompressedFile(input, file) {
+      const optimizedFile = await compressImageFile(file);
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(optimizedFile);
+      input.files = dataTransfer.files;
+      return optimizedFile;
+    }
+
+    async function showLostImagePreview(input) {
       const preview = document.getElementById('lost-file-preview');
       const imagePreview = document.getElementById('lost-file-preview-image');
       const label = document.getElementById('lost-file-name-label');
+      const sizeLabel = document.getElementById('lost-file-size-label');
 
       if (input.files && input.files[0]) {
+        label.textContent = 'Optimizing image for upload...';
+        sizeLabel.textContent = '';
         if (imagePreview.src && imagePreview.src.startsWith('blob:')) {
           URL.revokeObjectURL(imagePreview.src);
         }
 
-        imagePreview.src = URL.createObjectURL(input.files[0]);
-        label.textContent = input.files[0].name;
+        try {
+          const optimizedFile = await setCompressedFile(input, input.files[0]);
+          imagePreview.src = URL.createObjectURL(optimizedFile);
+          label.textContent = optimizedFile.name;
+          sizeLabel.textContent = `Upload size: ${formatBytes(optimizedFile.size)}`;
+        } catch (error) {
+          clearLostImagePreview();
+          alert(error.message || 'Could not process this image. Please choose another one.');
+          return;
+        }
+
         preview.classList.remove('hidden');
       } else {
         clearLostImagePreview();
@@ -265,6 +371,7 @@
 
       imagePreview.removeAttribute('src');
       label.textContent = '';
+      document.getElementById('lost-file-size-label').textContent = '';
       preview.classList.add('hidden');
     }
   </script>
