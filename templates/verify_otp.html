@@ -40,6 +40,7 @@
             </div>
             {% endif %}
 
+            <!--
             {% if debug_otp %}
             <div
                 class="bg-yellow-50 border-2 border-dashed border-yellow-300 text-yellow-800 px-4 py-4 rounded-card text-sm mb-6 text-center">
@@ -50,6 +51,7 @@
                     in production.</p>
             </div>
             {% endif %}
+            -->
 
             <form method="POST" class="space-y-5">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
