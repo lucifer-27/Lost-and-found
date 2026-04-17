@@ -31,6 +31,117 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
         }
+
+        .role-dropdown {
+            position: relative;
+        }
+
+        .role-dropdown-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .role-dropdown-trigger {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            background: #ffffff;
+            color: #111827;
+            text-align: left;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        .role-dropdown-trigger:focus-visible {
+            outline: none;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.14);
+        }
+
+        .role-dropdown.is-open .role-dropdown-trigger,
+        .role-dropdown.has-value .role-dropdown-trigger {
+            border-color: #0071e3;
+        }
+
+        .role-dropdown.is-invalid .role-dropdown-trigger {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+        }
+
+        .role-dropdown-label {
+            font-size: 1rem;
+            line-height: 1.5rem;
+        }
+
+        .role-dropdown-icon {
+            color: #6b7280;
+            transition: transform 0.3s ease, color 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .role-dropdown.is-open .role-dropdown-icon {
+            transform: rotate(180deg);
+            color: #0071e3;
+        }
+
+        .role-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.45rem);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #dbe4f0;
+            border-radius: 0.9rem;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-10px) scaleY(0.96);
+            transform-origin: top;
+            pointer-events: none;
+            transition: max-height 0.32s ease, opacity 0.24s ease, transform 0.32s ease;
+            z-index: 30;
+        }
+
+        .role-dropdown.is-open .role-dropdown-menu {
+            max-height: 14rem;
+            opacity: 1;
+            transform: translateY(0) scaleY(1);
+            pointer-events: auto;
+        }
+
+        .role-dropdown-option {
+            width: 100%;
+            display: block;
+            padding: 0.95rem 1rem;
+            background: #ffffff;
+            color: #111827;
+            text-align: left;
+            transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+        }
+
+        .role-dropdown-option:hover,
+        .role-dropdown-option:focus-visible {
+            outline: none;
+            background: #eef6ff;
+            color: #0071e3;
+            padding-left: 1.2rem;
+        }
+
+        .role-dropdown-option + .role-dropdown-option {
+            border-top: 1px solid #edf2f7;
+        }
+
+        .role-dropdown-option.is-selected {
+            background: #e0efff;
+            color: #0071e3;
+            font-weight: 600;
+        }
     </style>
 
     <script>
@@ -89,13 +200,24 @@
                 <!-- Role -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="role">Register As</label>
-                    <select id="role" name="role" required
-                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-white">
-                        <option value="" disabled selected hidden>Select Role</option>
-                        <option value="student">Student</option>
-                        <option value="staff">Security Staff</option>
-                        <option value="admin">Admin</option>
-                    </select>
+                    <div class="role-dropdown" data-role-dropdown data-placeholder="Select Role">
+                        <input id="role" name="role" type="hidden" value="" data-role-input />
+                        <button type="button"
+                            class="role-dropdown-trigger"
+                            data-role-trigger
+                            aria-haspopup="listbox"
+                            aria-expanded="false">
+                            <span class="role-dropdown-label" data-role-label>Select Role</span>
+                            <svg class="role-dropdown-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="role-dropdown-menu" data-role-menu role="listbox" aria-label="Register As">
+                            <button type="button" class="role-dropdown-option" data-role-option data-value="student" role="option">Student</button>
+                            <button type="button" class="role-dropdown-option" data-role-option data-value="staff" role="option">Security Staff</button>
+                            <button type="button" class="role-dropdown-option" data-role-option data-value="admin" role="option">Admin</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Dynamic Role-Specific Fields (Hidden until role selected) -->
@@ -149,11 +271,32 @@
                 <!-- Password -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Password</label>
-                    <input id="password" name="password" type="password" placeholder="e.g. Pass@123" minlength="8"
-                        pattern="(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@#$%^&+=_!\-]).{8,}"
-                        title="Must be 8+ characters with letters, numbers, and a special character (@, #, $, etc.)"
-                        required
-                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                    <div class="relative">
+                        <input id="password" name="password" type="password" placeholder="e.g. Pass@123" minlength="8"
+                            pattern="(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@#$%^&+=_!\-]).{8,}"
+                            title="Must be 8+ characters with letters, numbers, and a special character (@, #, $, etc.)"
+                            required
+                            class="block w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                        <button type="button"
+                            onclick="togglePasswordWithIcon('password', 'register-eye-open', 'register-eye-closed')"
+                            class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-primary"
+                            aria-label="Toggle password visibility">
+                            <svg id="register-eye-open" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.036 12.322a1 1 0 010-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178a1 1 0 010 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <svg id="register-eye-closed" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"
+                                class="w-5 h-5 hidden">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M10.73 5.08A10.45 10.45 0 0112 4.5c4.638 0 8.573 3.007 9.963 7.178a1 1 0 010 .644 10.474 10.474 0 01-4.293 5.523M6.228 6.228A10.45 10.45 0 002.036 11.678a1 1 0 000 .644C3.423 16.49 7.36 19.5 12 19.5a10.5 10.5 0 005.272-1.421M9.88 9.88a3 3 0 104.24 4.24" />
+                            </svg>
+                        </button>
+                    </div>
                     <p class="text-xs text-gray-400 mt-1">Must include letters, numbers & a special character (@, #, $
                         etc.)</p>
                 </div>
@@ -162,9 +305,30 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="confirm_password">Confirm
                         Password</label>
-                    <input id="confirm_password" name="confirm_password" type="password"
-                        placeholder="Re-enter your password" minlength="8" required
-                        class="block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                    <div class="relative">
+                        <input id="confirm_password" name="confirm_password" type="password"
+                            placeholder="Re-enter your password" minlength="8" required
+                            class="block w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-primary transition-colors" />
+                        <button type="button"
+                            onclick="togglePasswordWithIcon('confirm_password', 'confirm-eye-open', 'confirm-eye-closed')"
+                            class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-primary"
+                            aria-label="Toggle confirm password visibility">
+                            <svg id="confirm-eye-open" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.036 12.322a1 1 0 010-.644C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178a1 1 0 010 .644C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <svg id="confirm-eye-closed" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"
+                                class="w-5 h-5 hidden">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M10.73 5.08A10.45 10.45 0 0112 4.5c4.638 0 8.573 3.007 9.963 7.178a1 1 0 010 .644 10.474 10.474 0 01-4.293 5.523M6.228 6.228A10.45 10.45 0 002.036 11.678a1 1 0 000 .644C3.423 16.49 7.36 19.5 12 19.5a10.5 10.5 0 005.272-1.421M9.88 9.88a3 3 0 104.24 4.24" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Terms -->
@@ -257,6 +421,7 @@
         });
     </script>
 
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script src="{{ url_for('static', filename='js/chatbot-widget.js') }}"></script>
 </body>
 
